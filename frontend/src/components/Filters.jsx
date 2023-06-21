@@ -149,7 +149,6 @@ const handleMainSearch=(e)=>{
   return (
     <div className='sidebar'>
     
-    
       <div className="accordion2">
         <div className="accordion-item2">
         <div style={{display:"flex",padding:"10px 32px"}}>

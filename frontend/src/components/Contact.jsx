@@ -59,7 +59,7 @@ const Contact = () => {
     <br/>
     <textarea className="contact-input" id="help"  style={{width:"100%",height:"20%"}}/>
   </div>
-        <button className='btn  send-btn'>Send</button>
+        <button className='btn  send-btn ms-auto'>Send</button>
         </form>
         </div>
     </div>

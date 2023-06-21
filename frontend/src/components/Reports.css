@@ -1,3 +1,6 @@
+.filters{
+  margin: auto;
+}
 .report{
     padding-top:20px ;
 }
@@ -57,7 +60,6 @@ color: #293750;
 
 .generate-btn{
     display: flex;
-    /* flex-direction: column; */
     justify-content: center;
     align-items: stretch;
     gap: 10px;
@@ -92,3 +94,9 @@ font-size: 14px;
 line-height: 19px;
 letter-spacing: 0.03em;
   }
+  @media (max-width: 576px) { 
+    .generate-btn{
+      padding:10px 30px;
+    }
+
+   }

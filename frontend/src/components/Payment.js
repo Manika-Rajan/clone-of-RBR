@@ -159,7 +159,7 @@ const Payment = () => {
            </div>
            <div className='' style={{paddingRight:"30px"}}>
            {
-            editName? <input  className='edit-input'  style={{border:"none",background:"transparent",borderBottom:"1px solid #0263c7"}} name="inputName" value={inputName} onChange={(e)=>setInputname(e.target.value)} onKeyDown={handleName}
+            editName? <input  className='edit-input'  style={{border:"none",background:"transparent",borderBottom:"1px solid #0263c7",width:"90%"}} name="inputName" value={inputName} onChange={(e)=>setInputname(e.target.value)} onKeyDown={handleName}
             
             />:
             <p style={{fontSize:"20px",fontWeight:"400"}}>{name}</p>
@@ -187,7 +187,7 @@ const Payment = () => {
            </div>
            <div className='' style={{paddingRight:"30px"}}>
            {
-            editEmail? <input className='edit-input' style={{border:"none",background:"transparent",borderBottom:"1px solid #0263c7"}}
+            editEmail? <input className='edit-input' style={{border:"none",background:"transparent",borderBottom:"1px solid #0263c7",width:"90%"}}
             name="inputEmail" value={inputEmail}
             onChange={(e)=>setInputEmail(e.target.value)}
             onKeyDown={handleEmail}

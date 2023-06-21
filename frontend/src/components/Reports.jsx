@@ -206,18 +206,18 @@ const Reports = () => {
     <>
     <Navbar reports/>
     {popup&&<div className="nav-popup row">
-    <div className="col-md-11">
+    <div className="col-md-11 col-sm-10 col-10">
     <p className='container'>Use the Promo code "<strong>RBideas 25</strong>"to get an instant 25% discount during the purchase.Valid till 31st August 2023 
     </p>
     </div>
-   <div className="col-md-1 icon" style={{fontSize:"20px"}}>
+   <div className="col-md-1 col-sm-1 col-1 icon" style={{fontSize:"20px"}}>
   <img src={wrong} alt="" style={{cursor:"pointer"}} onClick={()=>setPopup(false)}/>
    </div>
    
     </div>}
 
     <div className='report row'>
-      <div className="col-md-4 filters">
+      <div className="col-md-4 col-sm-10 col-11 filters">
       <Filters updateIndustry={updateIndustry} updateCity={updateCity} updateCompetitors={updateCompetitors} updateMarket={updateMarket} updatePain={updatePain}
       country={country} setCountry={setCountry} city={city}
       industry={industry} setIndustry={setIndustry} 
@@ -226,12 +226,12 @@ const Reports = () => {
       select_competitors={select_competitors} select_industry={select_industry} select_market={select_market} select_pain={select_pain} noSearch={noSearch} setNoSearch={setNoSearch} nogenerate={nogenerate} setNoGenerate={setNoGenerate}
       />
       </div>
-      <div className="col-md-8">
+      <div className="col-md-8 col-sm-11 col-11" style={{margin:"auto"}}>
         <div className="row personalized-report">
           <div className=" col-md-10 personalized-report-left">
            {generate?<HeadingAfter/>:<HeadingBefore/>}
           </div>
-           <div className="col-md-2 personalized-report-right"
+           <div className="col-md-2 col-sm-2 col-2 personalized-report-right ms-auto"
            style={{textAlign:'center',justifyContent:'flex-end'}}
            >
             <img src={india} alt="" />
@@ -239,8 +239,8 @@ const Reports = () => {
             <span>India</span>
            </div>
         </div>
-        <div className="row">
-            <div className="col-md-8">
+        <div className="row" style={{margin:"auto"}}>
+            <div className="col-md-8 col-sm-11 col-11">
               {generate? <p className='after-head'>based on the following selections</p>: <p
     className='before-head'
     >Select the filters for your requirement and we do the rest</p>}
@@ -533,12 +533,12 @@ const Reports = () => {
                </div>
                
             </div>
-            <div className="col-md-3 col-sm-12" style={{margin:"auto"}}>
+            <div className="col-md-3 col-sm-11 col-11" style={{margin:"auto"}}>
                 <PriceCard price={price}/>
             </div>
         </div>
         <div className="row">
-        <div className="col-md-8 mt-4" style={{alignItems:"center"}}>
+        <div className="col-md-8 col-sm-12 col-12 mt-4" style={{alignItems:"center"}}>
           {select_industry.length===0&&select_city.length===0&&select_market.length===0&&select_pain.length===0&&select_competitors.length===0? 
             <>
             <button className='generate-btn' style={{background:" white",color:"black"}} onClick={()=>setNoGenerate(true)} >

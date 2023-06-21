@@ -1,7 +1,11 @@
 .footer{
 background: #293750;
 color: white;
+margin-top: 6%;
 padding: 3% 2%;
+}
+.footer div{
+    margin: auto;
 }
 .footer-head{
     font-family: 'Baskerville Old Face';
@@ -25,4 +29,11 @@ border: none;
 background: #0263C7;
 box-shadow: 4px 4px 15px rgba(78, 78, 78, 0.25);
 border-radius: 9px;
+}
+.footer-email{
+height: 38px;
+border:none;
+background: #FFFFFF;
+border-radius: 9px;
+margin-bottom: 10px;
 }

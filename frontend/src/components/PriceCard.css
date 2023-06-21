@@ -1,8 +1,6 @@
 .price-card{
   width: 233.1px;
   height: 197px;
-  flex-grow: 0;
-  /* margin: 22px 46.9px 78px 81px; */
   padding: 33.5px 36.1px 30px;
   border-radius: 20px;
   background-image: linear-gradient(to bottom, #2756a9 0%, #0263c7 100%);

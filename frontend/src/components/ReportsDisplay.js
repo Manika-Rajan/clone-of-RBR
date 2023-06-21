@@ -42,7 +42,7 @@ const ReportsDisplay = () => {
   return (
     <>
     <div className='report-display'>
-    <nav className="navbar navbar-expand-lg bg-light" style={{marginLeft:"35px",paddingTop:"3%"}}>
+    <nav className="navbar navbar-expand-lg bg-light" >
     <div className="container-fluid">
       <div className="nav-left">
        <div className="logo">
@@ -59,9 +59,9 @@ const ReportsDisplay = () => {
         <span className="navbar-toggler-icon"></span>
       </button>
       <div className="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul className="navbar-nav">
+        <ul className="navbar-nav ms-auto">
         
-          <li className="nav-item" style={{marginLeft:"113%"}}>
+          <li className="nav-item">
           <button className="buy-btn" onClick={handlePayment} style={{color:"white"}}
            >BUY NOW</button>
           </li>

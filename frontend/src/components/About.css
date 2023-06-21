@@ -44,7 +44,8 @@ margin-left: -9%;
   grid-gap:60px;
 }
 .steps{
-    width: 310px;
+    width:90%;
+    margin:auto;
     box-sizing: border-box;
 background: #FFFFFF;
 border: 1px solid #0263C7;
@@ -117,3 +118,28 @@ margin-top:1%;
   width:80%;
   height:80%;
 }
+@media (max-width: 576px) { 
+    .image-one{
+        width: 165px;
+        height:160px;
+    }
+    .image-two{
+        width: 88px;
+        height: 89px;
+        margin-left: 1%;
+     margin-top: 25%;
+    }
+    .image-three{
+        width: 157px;
+    height: 73;
+     margin-left: 10%;
+     margin-top: 2%;
+    }
+    .image-four{
+    width: 178px;
+    height: 70px;
+    margin-top: 2%;
+    margin-left: -9%;
+    }
+
+   }

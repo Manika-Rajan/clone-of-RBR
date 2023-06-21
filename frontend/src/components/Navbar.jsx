@@ -20,7 +20,7 @@ const Navbar = (props) => {
   return (
     <>
     <div className='header'>
-      <nav className="navbar navbar-expand-lg bg-light" style={{marginLeft:"2%"}}>
+      <nav className="navbar navbar-expand-lg bg-light">
   <div className="container-fluid">
     <div className="nav-left">
      <div className="logo">
@@ -37,7 +37,8 @@ const Navbar = (props) => {
       <span className="navbar-toggler-icon"></span>
     </button>
     <div className="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul className="navbar-nav">
+    
+      <ul className="navbar-nav ms-auto">
         <li className="nav-item" style={{marginRight:"80px"}}>
           <Link to="/about" className="nav-link" aria-current="page" href="#">About</Link>
           <div className={props.about?"active":""} ></div>
