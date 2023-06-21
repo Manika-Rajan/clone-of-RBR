@@ -226,7 +226,7 @@ const Reports = () => {
       select_competitors={select_competitors} select_industry={select_industry} select_market={select_market} select_pain={select_pain} noSearch={noSearch} setNoSearch={setNoSearch} nogenerate={nogenerate} setNoGenerate={setNoGenerate}
       />
       </div>
-      <div className="col-md-8 col-sm-11 col-11" style={{margin:"auto"}}>
+      <div className="col-md-8 col-sm-11 col-11">
         <div className="row personalized-report">
           <div className=" col-md-10 personalized-report-left">
            {generate?<HeadingAfter/>:<HeadingBefore/>}
