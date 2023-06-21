@@ -1,0 +1,159 @@
+body 
+{
+  background-color: #f4f8fb;
+}
+.navbar-custom{
+  background-color:transparent;
+}
+.header{
+  background-color: #fff;
+}
+.nav-left{
+  display: flex;
+}
+.nav-title{
+  width: 585px;
+  font-family: BaskervilleOldFace;
+  font-size: 29px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: 0.87px;
+  text-align: left;
+  color: #181818;
+}
+.nav-left text p{
+  width: 163px;
+  font-family: OpenSans;
+  font-size: 10px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: 0.1px;
+  text-align: left;
+  color: #000;
+}
+
+
+.navbar-collapse ul li a{
+  font-size: 19px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: left;
+  color: #000;
+}
+
+.active{
+  height:3px;
+  width:75px;
+  background-color: #0263c7;
+}
+.login-btn{
+  width: 84px;
+  height: 36px;
+  border-radius: 9px;
+  background-color: #0263c7;
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: 0.48px;
+  text-align:center;
+  color: #fff;
+  padding:8px, 16px, 8px, 16px
+}
+.nav-item .login-btn{
+  color: white;
+}
+.nav-item .login-btn:hover{
+  color: white;
+}
+.nav-popup{
+  background-color:#293750;
+  padding-top:10px ;
+  padding-bottom: 1px;
+}
+.nav-popup{
+  display: flex;
+  color: white;
+}
+.nav-popup p{
+  text-align: center;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+@media all and (max-width:1279px)
+{
+    
+.nav-title{
+  width: 355px;
+  font-family: BaskervilleOldFace;
+  font-size: 19px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: 0.87px;
+  text-align: left;
+  color: #181818;
+}
+.nav-left text p{
+  width: 63px;
+  font-family: OpenSans;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+}
+ 
+}
+
+@media all and (max-width:767px)
+{
+.nav-title{
+  width: 150px;
+  font-family: BaskervilleOldFace;
+  font-size: 15px;
+}
+.text-desc{
+  width: 100px;
+  font-family: OpenSans;
+  font-size: 10px;
+ }
+
+}
+.user-name{
+
+font-weight: 600;
+font-size: 16px;
+line-height: 22px;
+/* identical to box height */
+
+letter-spacing: 0.03em;
+margin-top: 8%;
+color: #0263C7;
+
+}
+.logout{
+  text-align: center;
+  background-color: #b7b7b8;
+  padding: 5%;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 400;
+}

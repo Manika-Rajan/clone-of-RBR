@@ -1,0 +1,28 @@
+.footer{
+background: #293750;
+color: white;
+padding: 3% 2%;
+}
+.footer-head{
+    font-family: 'Baskerville Old Face';
+font-style: normal;
+font-weight: 400;
+font-size: 24px;
+line-height: 24px;
+
+letter-spacing: 0.01em;
+
+}
+.footer ul li{
+gap: 16px;
+font-size: 14px;
+}
+.notify-btn{
+    padding: 8px 16px;
+gap: 10px;
+color:white;
+border: none;
+background: #0263C7;
+box-shadow: 4px 4px 15px rgba(78, 78, 78, 0.25);
+border-radius: 9px;
+}

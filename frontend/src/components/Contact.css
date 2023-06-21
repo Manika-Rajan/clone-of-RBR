@@ -1,0 +1,74 @@
+.info-div{
+height: 185px;
+left: 0px;
+top: 79px;
+
+background: linear-gradient(180deg, #0263C7 0%, #293750 100%);
+display: flex;
+justify-content: space-between;
+color: white;
+padding: 5% 6%;
+}
+.contact-head{
+    font-family: 'Baskerville Old Face';
+font-style: normal;
+font-weight: 400;
+font-size: 29px;
+line-height: 29px;
+text-align: center;
+letter-spacing: 0.03em;
+
+color: #293750;
+
+}
+.form-div{
+    width:70%;
+    margin: auto;
+    padding: 3%;
+    background: #FFFFFF;
+    border: 2px solid #0263C7;
+    border-radius: 10px;    filter: drop-shadow(7px 7px 17px rgba(197, 197, 197, 0.25));
+}
+.send-btn{
+    background: #0263C7;
+box-shadow: 4px 4px 15px rgba(78, 78, 78, 0.25);
+border-radius: 9px;
+color: white;
+justify-content: end;
+text-align: right;
+margin-left: 92%;
+}
+.number-info{
+    font-family: 'Open Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 13px;
+
+color: #293750;
+
+}
+
+
+
+.contact-input{
+    background: #ECECEC;
+    border: none;
+    border-radius: 5px;
+    border-color:#ECECEC;
+    height: 43px;
+}
+.contact-input:focus {
+    border-color:#ECECEC;
+    box-shadow: 0 0 0 0.2rem rgba(245, 246, 245, 0.25);
+    background: #ECECEC;
+
+} 
+.form-div .contact-label{
+    font-weight: 400;
+font-size: 20px;
+line-height: 27px;
+text-align: center;
+letter-spacing: 0.03em;
+
+color: #293750;
+}
