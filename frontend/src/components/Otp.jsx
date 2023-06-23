@@ -50,14 +50,14 @@ const Otp = ({setVerify,sendOtp,setLogin}) => {
       }
 
       console.log('User confirmed successfully.');
-      
+      sendOtp(false)
+      setLogin(false)
+      setVerify(true)
 
     } catch (error) {
       console.log('Error:', error);
     }
-    sendOtp(false)
-    setLogin(false)
-    setVerify(true)
+   
   };
   
   return (
@@ -69,7 +69,7 @@ const Otp = ({setVerify,sendOtp,setLogin}) => {
     <div className='login-paragraph'>
     <p>OTP has been sent </p>
   <div className="otp-fields">
-  <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} />
+  <input className='otp-input' type="text" value={otp} onChange={(e) => setOtp(e.target.value)} />
     
    </div>
    </div>

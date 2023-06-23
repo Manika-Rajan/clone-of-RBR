@@ -108,10 +108,12 @@ const Navbar = (props) => {
       login&&<Login sendOtp={sendOtp}  setVerify={setVerify} setLogin={setLogin}/>
     }
     {
-      otp&&<Otp sendOtp={sendOtp}  setVerify={setVerify} setLogin={setVerify}/>
+      otp&&<Otp sendOtp={sendOtp}  setVerify={setVerify} setLogin={setLogin}/>
     }
     {
-      verify&&<EmailVerify sendOtp={sendOtp}  setLogin={setLogin}/>
+      verify&&<EmailVerify sendOtp={sendOtp}  setLogin={setLogin}
+      setVerify={setVerify}
+      />
     }
     </ModalBody>
     </Modal>

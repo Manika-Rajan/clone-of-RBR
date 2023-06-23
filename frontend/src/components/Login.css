@@ -56,7 +56,10 @@ text-align: center;
   margin-bottom: 30px;
 }
 .otp-fields input{
-    width: 50px;
+    width:50%;
     border: none;
     border-bottom: 1px solid grey;
+}
+.otp-fields input:focus{
+    outline: none;
 }

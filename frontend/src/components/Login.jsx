@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import './Login.css';
 import UserPool from './UserPool';
 import {Amplify} from 'aws-amplify';
 import Auth from '@aws-amplify/auth';
-
+import { Store } from '../Store'
 import awsconfig from '../aws-exports.js';
 Amplify.configure(awsconfig);
 
@@ -17,8 +17,9 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
   setLogin(true)
   sendOtp(false)
   setVerify(false)
-  
-  
+  const {state,dispatch:cxtDispatch}=useContext(Store)
+  const {totalPrice,name,phone,email,status}=state  
+
   //const [user, setUser] = useState(null);
   //const [session, setSession] = useState(null);
   //const [otp, setOtp] = useState('');
@@ -97,6 +98,7 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
       event.preventDefault();
       let number1 ="+91"+number;
       console.log(number1)
+       cxtDispatch({type:'SET_PHONE',payload:number1})
       UserPool.signUp(number1, password,[], null, (err,data)=>{
         if(err){
           console.error(err);
