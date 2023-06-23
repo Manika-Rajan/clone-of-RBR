@@ -62,7 +62,7 @@ const Otp = ({setVerify,sendOtp,setLogin}) => {
   
   return (
     <div>
-    <div  style={{textAlign:"center",height:"48vh",margin:"auto",marginTop:"3%"}}>
+    <div  className='login-popup'>
     <div className='login-title' style={{padding:"0 20px"}}>
       <h3>Please Enter the One Time Password to Login</h3>
     </div>

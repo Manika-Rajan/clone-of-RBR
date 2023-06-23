@@ -1,3 +1,12 @@
+/* .login-popup-container{
+    height: 100vh;
+} */
+.login-popup{
+    margin: auto;
+    /* margin-top: 50%; */
+    /* transform: translate(-50%,-50%); */
+    text-align: center;
+}
 .login-title{
     font-family: 'Baskerville Old Face';
 font-style: normal;

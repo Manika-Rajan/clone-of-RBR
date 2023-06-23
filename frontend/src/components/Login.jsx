@@ -122,7 +122,8 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
   
   
   return (
-    <div style={{textAlign:"center",height:"60vh",margin:"auto",marginTop:"13%"}}>
+    <div className='login-popup-container'>
+    <div className='login-popup' >
       
       <div className='login-title'>
         <h3>Please Enter Your Mobile Number</h3>
@@ -147,7 +148,7 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
       onClick={Signup}
      >SEND OTP</button>
      </div>
-     
+     </div>
     </div>
   )
 }

@@ -33,7 +33,7 @@ const EmailVerify = ({setVerify,sendOtp,setLogin}) => {
       };
   return (
     <div>
-    <div style={{textAlign:"center",height:"50vh",margin:"auto",marginTop:"5%"}}>
+    <div className='login-popup'>
     <div className='login-title'>
       <h3 className='login-title'>Please Verify Your Email Id</h3>
     </div>
