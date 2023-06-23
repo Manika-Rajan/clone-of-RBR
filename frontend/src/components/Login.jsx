@@ -24,7 +24,7 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
   //const [otp, setOtp] = useState('');
   const [number, setNumber] = useState('');
   const password = Math.random().toString(6) + 'Abc#';
-  
+  //const [number1, setNumber1]=useState('');
   useEffect(() => {
     
   }, []);
@@ -95,7 +95,9 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
     
     //const onSubmit=(event)=>{
       event.preventDefault();
-      UserPool.signUp(number, password,[], null, (err,data)=>{
+      let number1 ="+91"+number;
+      console.log(number1)
+      UserPool.signUp(number1, password,[], null, (err,data)=>{
         if(err){
           console.error(err);
         }

@@ -77,7 +77,7 @@ const Otp = ({setVerify,sendOtp,setLogin}) => {
    <div>
    <button className='login-button' onClick={handleVerificationAndConfirmation}>LOGIN</button>
    <p style={{color:" #0263C7",marginTop:"15px"}}>RESEND OTP</p>
-   <p style={{color:"grey"}}>Entered a Wrong Mobile Number?</p>
+   <p style={{color:"#0263C7"}}><a href='Login.jsx'> Entered a Wrong Mobile Number?</a></p>
    </div>
   </div>
     </div>
