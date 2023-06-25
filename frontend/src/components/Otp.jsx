@@ -50,14 +50,14 @@ const Otp = ({setVerify,sendOtp,setLogin}) => {
       }
 
       console.log('User confirmed successfully.');
-      sendOtp(false)
-      setLogin(false)
-      setVerify(true)
+
 
     } catch (error) {
       console.log('Error:', error);
     }
-   
+      sendOtp(false)
+      setLogin(false)
+      setVerify(true)
   };
   
   return (

@@ -12,7 +12,7 @@ const Contact = () => {
       <div className='phone-div col-md-4 col-sm-6 col-12' style={{textAlign:"center"}}>
       <img src={phone}/>
       <span>Lets's Talk</span>
-      <p><strong>+919014794288</strong></p>
+      <p><strong>+91 901 479 4288</strong></p>
       </div>
       <div className='email-div col-md-4 col-sm-6 col-12' style={{textAlign:"center"}}>
        <img src={email}/>
