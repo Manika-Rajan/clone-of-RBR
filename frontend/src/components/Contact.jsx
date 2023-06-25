@@ -8,18 +8,18 @@ const Contact = () => {
   return (
     <div>
       <Navbar contact/>
-      <div className='info-div'>
-      <div className='phone-div' style={{textAlign:"center"}}>
+      <div className='info-div row'>
+      <div className='phone-div col-md-4 col-sm-6 col-12' style={{textAlign:"center"}}>
       <img src={phone}/>
       <span>Lets's Talk</span>
       <p><strong>+919014794288</strong></p>
       </div>
-      <div className='email-div' style={{textAlign:"center"}}>
+      <div className='email-div col-md-4 col-sm-6 col-12' style={{textAlign:"center"}}>
        <img src={email}/>
        <span>Or Email Us</span>
        <p><strong>support@rajanbusinessIdeas.com</strong></p>
       </div>
-      <div className='location-div' style={{textAlign:"center"}}>
+      <div className='location-div col-md-4 col-sm-12 col-12' style={{textAlign:"center"}}>
        <img src={location}/>
        <span>Visit Us</span>
        <p><strong>Road number 10,Jubilee<br/>
@@ -59,7 +59,7 @@ const Contact = () => {
     <br/>
     <textarea className="contact-input" id="help"  style={{width:"100%",height:"20%"}}/>
   </div>
-        <button className='btn  send-btn ms-auto mb-2' style={{float:"right"}}>Send</button>
+        <button className='btn  send-btn ms-auto ' style={{float:"right",marginBottom:"5%"}}>Send</button>
         </form>
         </div>
     </div>

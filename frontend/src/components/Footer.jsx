@@ -53,7 +53,7 @@ const Footer = () => {
       </div>
       <p>Didn’t find what you are looking for?</p>
       <form>
-      <input placeholder='Please Enter your email address here' className='footer-email'/>&nbsp;&nbsp;&nbsp;
+      <input placeholder='Enter your email address' className='footer-email'/>&nbsp;&nbsp;&nbsp;
       <button className='notify-btn'>Notify Me</button>
       </form>
       </div>

@@ -52,7 +52,7 @@ const ReportsDisplay = () => {
        </div>
        <div className="text">
           <p className='nav-title report-display-title'>Paper Industry In India</p>
-          <p className='report-display-desc' style={{marginTop:"-10px"}}>Candy production is a seasonal business,with the majority of those involved  in market normally <br/>doubling their staffs during the winter months</p>
+          <p className='report-display-desc' style={{marginTop:"-10px",width:"90%"}}>Candy production is a seasonal business,with the majority of those involved  in market normally <br/>doubling their staffs during the winter months</p>
        </div>
       </div>
       <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,7 @@ const ReportsDisplay = () => {
       </div>
     </div>
   </nav>
-  <div className='viewer'>
+  <div className='viewer col-md-11 col-sm-11 col-11'>
   <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
   <Viewer fileUrl={pdfFile}  
   // plugins={[defaultLayoutPluginInstance]}
@@ -81,7 +81,7 @@ const ReportsDisplay = () => {
     
     isOpen={openModel}
     toggle={()=>setOpenModel(!openModel)}
-    size="lg" style={{maxWidth: '650px', width: '100%',marginTop:"15%"}}>
+    size="lg">
 
     <ModalBody>
     {
