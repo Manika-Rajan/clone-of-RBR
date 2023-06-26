@@ -46,6 +46,7 @@ margin-left: -9%;
 .steps{
     width:90%;
     margin:auto;
+    min-height:250px;
     box-sizing: border-box;
 background: #FFFFFF;
 border: 1px solid #0263C7;

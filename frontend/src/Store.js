@@ -7,7 +7,7 @@ const initialState={
 
    
 
-    isLogin:false,
+    isLogin:true,
     name:'',
     phone:'',
     email:'',

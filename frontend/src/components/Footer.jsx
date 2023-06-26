@@ -6,7 +6,7 @@ import linkedin from '../assets/linkedin.png';
 const Footer = () => {
   return (
     <div className='row footer'>
-      <div className='col-md-2 col-sm-6 col-12' style={{margin:"auto"}}>
+      <div className='col-md-2 col-sm-6 col-12' >
       <p className='footer-head'>Get to Know Us</p>
       <ul>
       <li><a>About Us</a></li>
@@ -17,7 +17,7 @@ const Footer = () => {
       <li className='text-primary'><a>RB Ideas Science</a></li>
       </ul>
       </div>
-      <div className='col-md-3 col-sm-6 col-12' style={{margin:"auto"}}>
+      <div className='col-md-3 col-sm-6 col-12' >
       <p className='footer-head'>Make Money with Us</p>
       <ul>
       <li className='text-primary'><a>Sell on our Business Ideas Page</a></li>
@@ -29,7 +29,7 @@ const Footer = () => {
       <li className='text-primary'><a>RB Ideas Pay</a></li>
       </ul>
       </div>
-      <div className='col-md-3 col-sm-6 col-12' style={{margin:"auto"}}>
+      <div className='col-md-3 col-sm-6 col-12' >
       <p className='footer-head'>Let Us Help You</p>
       <ul>
       <li className='text-primary'><a>Covid-19 and RB Ideas
@@ -42,7 +42,7 @@ const Footer = () => {
       <li><a> Help</a></li>
       </ul>
       </div>
-      <div className='col-md-4 col-sm-6 col-12' style={{margin:"auto"}}>
+      <div className='col-md-4 col-sm-6 col-12' >
       <p className='footer-head'>Connect with Us</p>
       <ul><li>Contact us</li></ul>
       <div className='social-media'>

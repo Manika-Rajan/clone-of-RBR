@@ -536,6 +536,7 @@ const Reports = () => {
             <div className="col-md-3 col-sm-11 col-11" style={{margin:"auto"}}>
                 <PriceCard price={price}/>
             </div>
+            <div className="col-md-1 col-sm-1 col-1"></div>
         </div>
         <div className="row">
         <div className="col-md-8 col-sm-12 col-12 mt-4" style={{alignItems:"center"}}>

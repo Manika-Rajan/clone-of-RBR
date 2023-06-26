@@ -51,11 +51,11 @@ It has been observed that every year only 8% of the startups are able to sustain
      <div className='row what-we-do head'>
       <p >What We Do?</p>
      </div>
-     <div className='row'>
+     <div className='row' style={{padding:"5% 9%"}}>
      <div className='col-md-4 col-sm-12 col-12 '>
      <div className='steps mb-4'>
      <div className='step-image'>
-     <img src={step1}/>
+     <img src={step3}/>
      </div>
       <p className='step-head'>Research</p>
       <p className='step-desc'>We research and collect Market Information from both Online and Offline sources.</p>
@@ -73,7 +73,7 @@ It has been observed that every year only 8% of the startups are able to sustain
      <div className='col-md-4 col-sm-12 col-12 '>
      <div className='steps mb-4'>
      <div className='step-image'>
-     <img src={step3}/>
+     <img src={step1}/>
      </div>
       <p className='step-head'>Present</p>
       <p className='step-desc'>The “Get your Report” Tool automatically presents the data in a presentable document for you. </p>
