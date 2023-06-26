@@ -152,8 +152,8 @@ const handleMainSearch=(e)=>{
       <div className="accordion2">
         <div className="accordion-item2">
         <div style={{display:"flex",padding:"10px 32px"}}>
-        <input type='text' placeholder='What are you looking for'className='search-input' style={{border:"1px solid #AAAAAA",borderRadius:"20px",paddingLeft:"20px"}}/>
-        <img src={search} style={{marginLeft:"-10%",marginBottom:"5%"}}></img>
+        <input type='text' placeholder='What are you looking for?' className='search-input text-primary' style={{borderRadius:"20px",paddingLeft:"20px"}}/>
+        <img src={search} style={{marginLeft:"-10%",marginBottom:"6%"}}></img>
         </div>
         </div>
       </div>
@@ -202,17 +202,17 @@ const handleMainSearch=(e)=>{
       {/* country */}
        <div className="accordion1">
         <div className="accordion-item1">
-          <div className="accordion-title1">
+          <div className="accordion-title1"   onClick={()=>{
+            setCountry(!country)
+             setCity(false)
+             setCompetitors(false)
+             setMarket(false)
+             setPainpoints(false)
+             setIndustry(false)
+          }} style={{cursor:"pointer"}}>
             <div> Country</div>
             <div style={{color:"#0263c7",fontWeight:"800"}}
-            onClick={()=>{
-              setCountry(!country)
-               setCity(false)
-               setCompetitors(false)
-               setMarket(false)
-               setPainpoints(false)
-               setIndustry(false)
-            }}
+          
             >{country? <>-</>:<>+</>}</div>
           </div>
           {country&&<div className="accordion-content1">
@@ -237,17 +237,20 @@ const handleMainSearch=(e)=>{
      {/* industry */}
      <div className="accordion1">
         <div className="accordion-item1">
-          <div className="accordion-title1">
+          <div className="accordion-title1"
+          onClick={()=>{
+            setIndustry(!industry)
+            setCountry(false)
+            setCity(false)
+            setCompetitors(false)
+            setMarket(false)
+            setPainpoints(false)
+          }}
+          style={{cursor:"pointer"}}
+          >
             <div >Industry</div>
             <div style={{color:"#0263c7",fontWeight:"800"}}
-            onClick={()=>{
-              setIndustry(!industry)
-              setCountry(false)
-              setCity(false)
-              setCompetitors(false)
-              setMarket(false)
-              setPainpoints(false)
-            }}
+          
             >{industry?<>-</>:<>+</>}</div>
           </div>
           {industry&&<div className="accordion-content1">
@@ -280,9 +283,7 @@ const handleMainSearch=(e)=>{
     {/* city */}
         <div className="accordion1">
       <div className="accordion-item1">
-      <div className="accordion-title1">
-      <div>City(where business will setup)</div>
-      <div style={{color:"#0263c7",fontWeight:"800"}}
+      <div className="accordion-title1"
       onClick={()=>
         {
           setCity(!city)
@@ -293,6 +294,11 @@ const handleMainSearch=(e)=>{
           setIndustry(false)
         }
         }
+        style={{cursor:"pointer"}}
+      >
+      <div>City(where business will setup)</div>
+      <div style={{color:"#0263c7",fontWeight:"800"}}
+     
       >{city?<>-</>:<>+</>}</div>
     </div>
         {city&&          <div className="accordion-content1">
@@ -323,17 +329,20 @@ const handleMainSearch=(e)=>{
 {/* competitors */}
   <div className="accordion1">
         <div className="accordion-item1">
-          <div className="accordion-title1">
+          <div className="accordion-title1"
+          onClick={()=>
+            {setCompetitors(!competitors)
+              setCity(false)
+              setCountry(false)
+              setMarket(false)
+              setPainpoints(false)
+              setIndustry(false)
+            }}
+           style={{cursor:"pointer"}} 
+            >
             <div>List of Competitors</div>
             <div style={{color:"#0263c7",fontWeight:"800"}}
-            onClick={()=>
-              {setCompetitors(!competitors)
-                setCity(false)
-                setCountry(false)
-                setMarket(false)
-                setPainpoints(false)
-                setIndustry(false)
-              }}
+           
             >{competitors?<>-</>:<>+</>}</div>
           </div>
           {competitors&&<div className="accordion-content1">
@@ -362,16 +371,19 @@ const handleMainSearch=(e)=>{
       {/* market */}
       <div className="accordion1">
         <div className="accordion-item1">
-          <div className="accordion-title1">
+          <div className="accordion-title1"
+          onClick={()=>{setMarket(!market)
+            setCity(false)
+            setCountry(false)
+            setCompetitors(false)
+            setPainpoints(false)
+            setIndustry(false)
+          }}
+          style={{cursor:"pointer"}}
+          >
             <div>Market Segment(Age wise)</div>
             <div style={{color:"#0263c7",fontWeight:"800"}}
-            onClick={()=>{setMarket(!market)
-              setCity(false)
-              setCountry(false)
-              setCompetitors(false)
-              setPainpoints(false)
-              setIndustry(false)
-            }}
+            
             >{market?<>-</>:<>+</>}</div>
           </div>
           {market&&          <div className="accordion-content1">
@@ -401,16 +413,19 @@ const handleMainSearch=(e)=>{
         {/* pain points */}
         <div className="accordion1">
         <div className="accordion-item1">
-          <div className="accordion-title1">
+          <div className="accordion-title1"
+          onClick={()=>{setPainpoints(!painpoints)
+            setCity(false)
+            setCountry(false)
+            setCompetitors(false)
+            setMarket(false)
+            setIndustry(false)
+          }}
+          style={{cursor:"pointer"}}
+          >
             <div>Existing industry's Customer Pain Points</div>
             <div style={{color:"#0263c7",fontWeight:"800"}}
-            onClick={()=>{setPainpoints(!painpoints)
-              setCity(false)
-              setCountry(false)
-              setCompetitors(false)
-              setMarket(false)
-              setIndustry(false)
-            }}
+           
             >{painpoints?<>-</>:<>+</>}</div>
           </div>
           {painpoints&&          <div className="accordion-content1">

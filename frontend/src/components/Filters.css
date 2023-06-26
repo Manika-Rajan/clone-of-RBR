@@ -44,10 +44,12 @@ color: #293750;
     .form-check{
       margin-bottom:10px;
     }
-
-    .search-input:focus,hover{
+    .accordion2 input{
+      border:1px solid #AAAAAA;
+     }
+    .search-input:focus,.search-input:hover{
       outline: 0;
       border: none;
-      border-bottom:1px solid black ;
+      border:1px solid #0263c7 ;
     }
    

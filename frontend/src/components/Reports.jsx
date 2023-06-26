@@ -180,6 +180,7 @@ const Reports = () => {
     setSelect_market([])
     setSelect_pain([])
     setPrice(0)
+    window.location.reload()
   }
 
   const calculatePrice=(value)=>{

@@ -7,6 +7,8 @@ import {BrowserRouter,Routes,Route} from 'react-router-dom'
 import ReportsDisplay from './components/ReportsDisplay';
 import Payment from './components/Payment';
 import Footer from './components/Footer'
+import CommingSoon from './components/CommingSoon';
+import Invalid from './components/Invalid';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
         <Route path='/contact' element={<Contact/>}/>
         <Route path='/report-display' element={<ReportsDisplay/>}/>
         <Route path='/payment' element={<Payment/>}/>
+        <Route path='/commingSoon' element={<CommingSoon/>} />
+        <Route path='/not-found' element={<Invalid/>} />
       </Routes>
       <Footer/>
     </div>
