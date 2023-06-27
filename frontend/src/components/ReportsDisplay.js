@@ -107,5 +107,3 @@ const ReportsDisplay = () => {
 }
 
 export default ReportsDisplay
-
-
