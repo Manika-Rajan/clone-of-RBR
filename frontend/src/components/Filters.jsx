@@ -214,7 +214,9 @@ const handleMainSearch=(e)=>{
             <div style={{color:"#0263c7",fontWeight:"800"}}
           
             >{country? <>-</>:<>+</>}</div>
-          </div>
+{/*    <h1>hello</h1> */}
+          
+                  </div>
           {country&&<div className="accordion-content1">
               <form>
               <div class="form-check">
