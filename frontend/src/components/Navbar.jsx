@@ -20,7 +20,7 @@ const Navbar = (props) => {
   return (
     <>
     <div className='header'>
-      <nav className="navbar navbar-expand-lg bg-light">
+      <nav className="navbar navbar-expand-lg bg-light fixed-top">
   <div className="container-fluid">
     <div className="nav-left">
      <div className="logo">

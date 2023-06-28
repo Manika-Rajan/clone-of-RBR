@@ -51,8 +51,8 @@ const ReportsDisplay = () => {
        </Link>
        </div>
        <div className="text">
-          <p className='nav-title report-display-title'>Paper Industry In India</p>
-          <p className='report-display-desc' style={{marginTop:"-10px",width:"90%"}}>Candy production is a seasonal business,with the majority of those involved  in market normally <br/>doubling their staffs during the winter months</p>
+          <p className='nav-title report-display-title' style={{fontSize:"28px"}}>Paper Industry In India</p>
+          <p className='report-display-desc' style={{marginTop:"-10px",width:"70%"}}>Candy production is a seasonal business,with the majority of those involved  in market normally doubling their staffs during the winter months</p>
        </div>
       </div>
       <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,6 +81,7 @@ const ReportsDisplay = () => {
     
     isOpen={openModel}
     toggle={()=>setOpenModel(!openModel)}
+    style={{maxWidth: '650px', width: '100%',marginTop:"15%"}}
     size="lg">
 
     <ModalBody>

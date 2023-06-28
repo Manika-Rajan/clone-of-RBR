@@ -9,6 +9,7 @@ body
 .header{
   background-color: #fff;
   box-shadow: 0px 0px 10px rgb(88, 83, 83);
+  margin-bottom: 100px ;
 }
 .nav-left{
   display: flex;

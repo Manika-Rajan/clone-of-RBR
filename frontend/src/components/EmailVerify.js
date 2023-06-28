@@ -53,7 +53,7 @@ const EmailVerify = ({setVerify,sendOtp,setLogin}) => {
    <button onClick={Signup} className='login-button'
    >Verify</button>
    </div>
-   <i>Note:This is a onetime verification.The report will be delivered to this email.</i>
+   <i className="text-primary">Note:This is a onetime verification.The report will be delivered to this email.</i>
   </div>
     </div>
   )

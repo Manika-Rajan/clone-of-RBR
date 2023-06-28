@@ -22,8 +22,7 @@ const Contact = () => {
       <div className='location-div col-md-4 col-sm-12 col-12' style={{textAlign:"center"}}>
        <img src={location}/>
        <span>Visit Us</span>
-       <p><strong>Road number 10,Jubilee<br/>
-       Hills,Hyderabad,Telangana.</strong></p>
+       <p><strong>Street number 14, Nagarjuna Nagar, Tarnaka, Secunderabad, Telangana</strong></p>
       </div>
       </div>
       <div className='row'>
@@ -34,18 +33,14 @@ const Contact = () => {
       <div className='form-div'>
       <form>
       <div className="mb-3">
-      <div className='row mt-4' style={{display:'flex',flexDirection:"row"}}>
-      <div className='col' style={{marginLeft:"1%",width:"70%"}}>
       <label for="email" className="contact-label">Your Email Address</label>
       <br/>
       <input type="email" className="contact-input" id="email" style={{width:"100%"}}/>
       </div>
-     <div className='col' style={{marginTop:"-3%",width:"30%"}}>
-      <label for="email" className="contact-label">Mobile Number</label>
+     <div className='mb-3' >
+      <label for="phone" className="contact-label">Mobile Number</label>
       <p className='number-info'>(For us to resolve Your issue with fast communication)</p>
-      <input type="email" className="contact-input" id="email"style={{width:"100%",marginTop:"-4%"}}/>
-    </div>
-    </div>
+      <input type="number" className="contact-input" id="phone"style={{width:"100%",marginTop:"-4%"}}/>
     </div>
 
     <div className="mb-3">
@@ -57,9 +52,11 @@ const Contact = () => {
     <div className="mb-3">
     <label for="help" className="contact-label">How can we help?</label>
     <br/>
-    <textarea className="contact-input" id="help"  style={{width:"100%",height:"20%"}}/>
+    <textarea className="contact-input" id="help"  style={{width:"100%"}}/>
   </div>
-        <button className='btn  send-btn ms-auto ' style={{float:"right",marginBottom:"5%"}}>Send</button>
+  <div className='mb-2'>
+        <button className='btn  send-btn ' style={{float:"right"}}>SUBMIT</button>
+        </div>
         </form>
         </div>
     </div>

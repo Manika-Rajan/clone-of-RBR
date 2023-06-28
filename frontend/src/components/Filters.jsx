@@ -218,7 +218,7 @@ const handleMainSearch=(e)=>{
           {country&&<div className="accordion-content1">
               <form>
               <div class="form-check">
-              <input class="form-check-input" type="radio" name="country" id="country"/>
+              <input class="form-check-input" type="radio" name="country" id="country"  checked="checked"/>
               <label class="form-check-label" for="country">
                 India
               </label>
@@ -256,7 +256,7 @@ const handleMainSearch=(e)=>{
           {industry&&<div className="accordion-content1">
           <form>
           <div style={{display:"flex"}}>
-          <input type='text'  value={industryField}placeholder='Search'className='search-input' onChange={handleIndustrySearch} name="industryField" />
+          <input type='text'  value={industryField} placeholder='Search'className='search-input' onChange={handleIndustrySearch} name="industryField" />
           <img src={search} style={{marginLeft:"-6%",marginBottom:"5%"}}></img>
           </div>
           
@@ -266,8 +266,8 @@ const handleMainSearch=(e)=>{
               return(
                  <>
                  <div class="form-check">
-                 <input class={`form-check-input ind-${key}`} type="checkbox" value={ind.name} name={ind.name} id="flexCheckChecked" onChange={handleIndustry}/>
-                 <label class="form-check-label" style={{paddingTop:"3px" ,}} for="flexCheckChecked" >
+                 <input class={`form-check-input ind-${key}`} type="checkbox" value={ind.name} name={ind.name} id={`ind-${key}`} onChange={handleIndustry}/>
+                 <label class="form-check-label ind-${key}" style={{paddingTop:"3px" ,}} for={`ind-${key}`} >
                    {ind.name}
                  </label>
                </div>
@@ -308,12 +308,12 @@ const handleMainSearch=(e)=>{
           <img src={search} style={{marginLeft:"-6%",marginBottom:"5%"}}></img>
           </div>
         {
-          cityList&&cityList.map((ind)=>{
+          cityList&&cityList.map((ind,key)=>{
             return(
                <>
                <div class="form-check">
-               <input class="form-check-input" type="checkbox" value={ind.name} name={ind.name} id="flexCheckChecked" onChange={handleCity}/>
-               <label class="form-check-label" for="flexCheckChecked" style={{paddingTop:"3px"}}>
+               <input class="form-check-input" type="checkbox" value={ind.name} name={ind.name} id={`ind-${key}`} onChange={handleCity}/>
+               <label class="form-check-label" for={`ind-${key}`} style={{paddingTop:"3px"}}>
                  {ind.name}
                </label>
              </div>
@@ -349,12 +349,12 @@ const handleMainSearch=(e)=>{
           <form>
       
           {
-            competitorList&&competitorList.map((ind)=>{
+            competitorList&&competitorList.map((ind,key)=>{
               return(
                  <>
                  <div class="form-check">
-                 <input class="form-check-input" type="checkbox" value={ind.name} name={ind.name} id="flexCheckChecked" onChange={handleCompetitors}/>
-                 <label class="form-check-label" for="flexCheckChecked" style={{paddingTop:"3px"}}>
+                 <input class="form-check-input" type="checkbox" value={ind.name} name={ind.name} id={`ind-${key}`} onChange={handleCompetitors}/>
+                 <label class="form-check-label" for={`ind-${key}`} style={{paddingTop:"3px"}}>
                    {ind.name}
                  </label>
                </div>
@@ -390,12 +390,12 @@ const handleMainSearch=(e)=>{
           <form>
       
           {
-            marketList&&marketList.map((ind)=>{
+            marketList&&marketList.map((ind,key)=>{
               return(
                  <>
                  <div class="form-check">
-                 <input class="form-check-input" type="checkbox" value={ind.name} name={ind.name} id="flexCheckChecked" onChange={handleMarket}/>
-                 <label class="form-check-label" for="flexCheckChecked" style={{paddingTop:"3px"}}>
+                 <input class="form-check-input" type="checkbox" value={ind.name} name={ind.name} id={`ind-${key}`} onChange={handleMarket}/>
+                 <label class="form-check-label" for={`ind-${key}`} style={{paddingTop:"3px"}}>
                    {ind.name}
                  </label>
                </div>
@@ -432,12 +432,12 @@ const handleMainSearch=(e)=>{
           <form>
       
           {
-            painpointsList&&painpointsList.map((ind)=>{
+            painpointsList&&painpointsList.map((ind,key)=>{
               return(
                  <>
                  <div class="form-check">
-                 <input class="form-check-input" type="checkbox" value={ind.name} name={ind.name} id="flexCheckChecked" onChange={handlePain}/>
-                 <label class="form-check-label" for="flexCheckChecked" style={{paddingTop:"3px"}}>
+                 <input class="form-check-input" type="checkbox" value={ind.name} name={ind.name} id={`ind-${key}`} onChange={handlePain}/>
+                 <label class="form-check-label" for={`ind-${key}`} style={{paddingTop:"3px"}}>
                    {ind.name}
                  </label>
                </div>
