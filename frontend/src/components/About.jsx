@@ -12,7 +12,7 @@ import step3 from '../assets/step3.svg';
 import  team1 from '../assets/team1.png';
 import team2 from '../assets/team2.png';
 import team3 from '../assets/team3.png';
-
+import team4 from '../assets/team4.jpg';
 const About = () => {
   return (
     <div>
@@ -114,7 +114,7 @@ It has been observed that every year only 8% of the startups are able to sustain
    </div>
    <div className='team'>
      <div className='team-image'>
-     <img src={team1}></img>
+     <img src={team4} style={{width:"85%",borderRadius:"45%"}}></img>
      </div>
      <div className='team-info'>
      <p><strong>Srusti S Joshi</strong><br/>Backend Developer</p>
