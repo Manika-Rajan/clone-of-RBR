@@ -12,7 +12,7 @@ const CommingSoon = () => {
       <img src={comming}/>
       </div>
       <div>
-      <p className='comming-head'>Comming Soon!</p>
+      <p className='comming-head'>Coming Soon!</p>
       </div>
       <div>
       <p className='text-primary'>We are currently working hard on this page. 
