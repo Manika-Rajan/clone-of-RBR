@@ -6,6 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { StoreProvider } from './Store';
 //import Amplify from 'aws-amplify';
 //import { configure } from 'aws-amplify';
+//checking the sync
 import awsmobile from './aws-exports';
 
 // Configure Amplify
