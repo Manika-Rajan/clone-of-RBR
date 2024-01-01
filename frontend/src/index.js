@@ -9,8 +9,8 @@ import { configure } from 'aws-amplify';
 import awsmobile from './aws-exports';
 
 // Configure Amplify
-//Amplify.configure(awsmobile);
-configure(awsmobile);
+Amplify.configure(awsmobile);
+//configure(awsmobile);
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
