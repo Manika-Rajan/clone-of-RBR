@@ -8,7 +8,7 @@ import { StoreProvider } from './Store';
 //import { configure } from 'aws-amplify';
 import awsmobile from './aws-exports';
 
-// Configure Amplify
+// Configure Amplify.
 //Amplify.configure(awsmobile);
 //configure(awsmobile);
 
