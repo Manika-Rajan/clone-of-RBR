@@ -29,7 +29,7 @@ const Navbar = (props) => {
      </Link>
      </div>
      <div className="text">
-        <p className='nav-title' >Rajan Business Report Services</p>
+        <p className='nav-title' >Raajan Business Report Services</p>
         <p className='text-desc' style={{marginTop:"-20px"}}>A product by Rajan Business Ideas</p>
      </div>
     </div>
