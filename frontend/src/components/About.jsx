@@ -21,7 +21,7 @@ const About = () => {
      <div className='col-md-5 col-sm-12 col-12' style={{marginLeft:"2%"}}>
      <p className='text-primary' style={{fontSize:"16px",fontWeight:"600"}}>At Rajan Business Reports. We help you build your business with ease.</p>
      <p className='about-text'>
-     Rajan Business Reports is an initiative of Rajan Business Ideas 1.
+     Rajan Business Reports is an initiative of Rajan Business Ideas.
      </p>
 <p className='about-text'>
 Rajan Business Reports was launched with a sole objective of helping the entrepreneurs to acquire the relevant data to get their business idea evaluated and find the probability of success in the current market scenario.
