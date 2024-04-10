@@ -27,7 +27,7 @@ const About = () => {
 Rajan Business Reports was launched with a sole objective of helping the entrepreneurs to acquire the relevant data to get their business idea evaluated and find the probability of success in the current market scenario.
 </p>
 <p className='about-text'>
-Its has been observed that every year only 8% of the startups are able to sustain in India, and the remaining startups are shut down after a few months, there are several factors that lead to the failure of these startups. Our expert team at Rajan Business Reports continuously monitors the startup scenario in India and continuously improve the Business Reports that we offer depending on the current business market scenario.
+It has been observed that every year only 8% of the startups are able to sustain in India, and the remaining startups are shut down after a few months, there are several factors that lead to the failure of these startups. Our expert team at Rajan Business Reports continuously monitors the startup scenario in India and continuously improve the Business Reports that we offer depending on the current business market scenario.
      </p>
      </div>
      <div className='col-md-6 col-sm-12 col-12 about-left'>
