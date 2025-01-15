@@ -24,6 +24,7 @@ const ReportsDisplay = () => {
   const [login,setLogin]=useState(true)
   const [otp,sendOtp]=useState(false)
   const [verify,setVerify]=useState(false)
+  const pdfFile = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
 
   const handlePayment=()=>{
     if(isLogin)
@@ -71,7 +72,7 @@ const ReportsDisplay = () => {
   </nav>
   <div className='viewer col-md-11 col-sm-11 col-11'>
   <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-  <Viewer fileUrl= "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf"; //{pdfFile}  
+  <Viewer fileUrl= {pdfFile}  
   // plugins={[defaultLayoutPluginInstance]}
    />
 </Worker>
