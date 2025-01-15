@@ -24,7 +24,7 @@ const ReportsDisplay = () => {
   const [login,setLogin]=useState(true)
   const [otp,sendOtp]=useState(false)
   const [verify,setVerify]=useState(false)
-  //const pdfFile = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
+  const pdfFile = 'https://rbrfinalfiles.s3.amazonaws.com/compressed.tracemonkey-pldi-09.pdf';
 
   const handlePayment=()=>{
     if(isLogin)
