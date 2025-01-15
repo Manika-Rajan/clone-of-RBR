@@ -70,7 +70,7 @@ const ReportsDisplay = () => {
     </div>
   </nav>
   <div className='viewer col-md-11 col-sm-11 col-11'>
-  <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+  <Worker workerUrl="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js">
   <Viewer fileUrl={pdfFile}  
   // plugins={[defaultLayoutPluginInstance]}
    />
