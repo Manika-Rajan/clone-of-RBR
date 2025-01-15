@@ -71,7 +71,7 @@ const ReportsDisplay = () => {
   </nav>
   <div className='viewer col-md-11 col-sm-11 col-11'>
   <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-  <Viewer fileUrl={pdfFile}  
+  <Viewer fileUrl= "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf"; //{pdfFile}  
   // plugins={[defaultLayoutPluginInstance]}
    />
 </Worker>
