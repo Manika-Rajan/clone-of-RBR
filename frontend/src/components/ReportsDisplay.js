@@ -40,9 +40,9 @@ const ReportsDisplay = () => {
 
   // Fetch pre-signed URL from the API Gateway
   useEffect(() => {
-    const fetchPresignedUrl = {
+    const fetchPresignedUrl = async () => {
       try {
-        const response = async () => await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
+        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
