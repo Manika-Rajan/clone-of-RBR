@@ -44,7 +44,9 @@ const ReportsDisplay = () => {
       try {
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({ file_key: 'compressed.tracemonkey-pldi-09.pdf' }), // Replace with your actual S3 file key
         });
         const data = await response.json();
