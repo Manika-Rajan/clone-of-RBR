@@ -99,7 +99,11 @@ const ReportsDisplay = () => {
                 plugins={[defaultLayoutPluginInstance]}
               />
             ) : (
-              {!pdfUrl && <div className="spinner-border" role="status"><span className="visually-hidden">Loading...</span></div>}
+              {!pdfUrl && (
+                <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+              )}
             )}
           </Worker>
         </div>
