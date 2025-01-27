@@ -42,7 +42,7 @@ const ReportsDisplay = () => {
   useEffect(() => {
     const fetchPresignedUrl = {
       try {
-        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
+        const response = async () => await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
