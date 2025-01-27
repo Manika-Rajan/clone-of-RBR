@@ -42,7 +42,7 @@ const ReportsDisplay = () => {
   useEffect(() => {
     const fetchPresignedUrl = async () => {
       try {
-        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
+        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL/options_resource', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ file_key: 'compressed.tracemonkey-pldi-09.pdf' }), // Replace with your actual S3 file key
