@@ -42,23 +42,32 @@ const ReportsDisplay = () => {
   // Fetch presigned URL
   useEffect(() => {
     const fetchPresignedUrl = async () => {
-      setIsLoading(true);
+      setIsLoading(true);  // Show loading spinner
       try {
-        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
+        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', 
+        {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ file_key: 'compressed.tracemonkey-pldi-09.pdf' }), // Update with your file key
-        });
-
-        const data = await response.json();
+        }
+      );
+      
+      // Check if the response is successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+        
+        const data = await response.json();  // Parse JSON response
+        console.log('API Response:', data);  // Log the API response for debugging
 
         if (data.presigned_url) {
           setPdfUrl(data.presigned_url); // Set the fetched presigned URL
         } else {
-          console.error('Error fetching presigned URL:', data.error || 'Unknown error');
+          throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
         }
       } catch (error) {
-        console.error('Error fetching presigned URL:', error);
+        console.error('Error fetching presigned URL:', error.message);
+        setPdfUrl(null); // Clear URL if there's an error
       } finally {
         setIsLoading(false); // Stop loading spinner
       }
