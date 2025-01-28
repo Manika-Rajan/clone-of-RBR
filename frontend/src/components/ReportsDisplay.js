@@ -22,7 +22,11 @@ const ReportsDisplay = () => {
   const [login, setLogin] = useState(true);
   const [otp, sendOtp] = useState(false);
   const [verify, setVerify] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState('');
+  //const [pdfUrl, setPdfUrl] = useState('');
+    // Replace this with the presigned URL you received from Postman
+  const [pdfUrl, setPdfUrl] = useState(
+    "https://rbrfinalfiles.s3.amazonaws.com/compressed.tracemonkey-pldi-09.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=..."
+  );
 
   const handlePayment = () => {
     if (isLogin) {
@@ -38,30 +42,7 @@ const ReportsDisplay = () => {
     cxtDispatch({ type: 'SET_REPORT_STATUS' });
   };
 
-  // Fetch pre-signed URL from the API Gateway
-  useEffect(() => {
-    const fetchPresignedUrl = async () => {
-      try {
-        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ file_key: 'compressed.tracemonkey-pldi-09.pdf' }), // Replace with your actual S3 file key
-        });
-        const data = await response.json();
-        if (data.presigned_url) {
-          setPdfUrl(data.presigned_url);
-        } else {
-          console.error('Failed to fetch pre-signed URL:', data.error || 'Unknown error');
-        }
-      } catch (error) {
-        console.error('Error fetching pre-signed URL:', error);
-      }
-    };
 
-    fetchPresignedUrl();
-  }, []);
 
   return (
     <>
