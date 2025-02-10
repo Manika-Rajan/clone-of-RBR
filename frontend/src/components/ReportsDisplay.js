@@ -17,7 +17,7 @@ import { useLocation } from 'react-router-dom';
 const ReportsDisplay = () => {
   const location = useLocation();
   const fileKey = location.state?.fileKey || ''; // Get file key from navigation state
-
+  console.log("Received fileKey:", fileKey); // Debugging line
   
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
@@ -47,8 +47,13 @@ const ReportsDisplay = () => {
   // Fetch presigned URL
   useEffect(() => {
     const fetchPresignedUrl = async () => {
-      if (!fileKey) return;
+      if (!fileKey) {
+      console.error("No fileKey found. Skipping API request.");
+      return;
+    }
 
+  console.log("Fetching presigned URL for fileKey:", fileKey);
+      
       setIsLoading(true);  // Show loading spinner
       try {
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', 
