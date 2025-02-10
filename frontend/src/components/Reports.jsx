@@ -13,6 +13,7 @@ import vector from '../assets/vector.svg'
 import black from '../assets/black.svg'
 import { Link, useNavigate } from 'react-router-dom'
 import { Store } from '../Store'
+
 const Reports = () => {
   const navigate=useNavigate()
   const {state,dispatch:cxtDispatch}=useContext(Store)
@@ -44,6 +45,41 @@ const Reports = () => {
   const[nogenerate,setNoGenerate]=useState(false)
  const [price,setPrice]=useState(0)
 
+ //******************************************************************************************************************** 
+const generateReport = async () => {
+    try {
+      // Step 1: Trigger Lambda function to generate report
+      const response = await fetch(
+        'https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/RBR_report_create_from_filters_received', // Replace with actual endpoint
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filters: { /* Pass selected filters here */ },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Report generation failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const fileKey = data.file_key; // Get file key of the generated PDF
+
+      if (!fileKey) {
+        throw new Error("File key not returned from API.");
+      }
+
+      // Step 2: Navigate to ReportsDisplay with fileKey as state
+      navigate("/report-display", { state: { fileKey } });
+
+    } catch (error) {
+      console.error('Error generating report:', error.message);
+    }
+  };
+//********************************************************************************************************************
+  
   const updateIndustry=(value,checked)=>{
     console.log(checked,value)
     setNoSearch(false)
@@ -553,8 +589,8 @@ const Reports = () => {
             </>
 :
 <>
-<button className='generate-btn' style={{background:" #0263c7",color:"white"}} >
-<Link to="/report-display"  style={{textDecoration:"none"}}>
+<button className='generate-btn' style={{background:" #0263c7",color:"white"}} onClick={generateReport} >
+//<Link to="/report-display"  style={{textDecoration:"none"}}>
 <div className='' style={{display:"flex"}}>
      <div className='white-img' >
           <img src={vector} alt="" />
@@ -562,7 +598,7 @@ const Reports = () => {
           <div className='' style={{color:"white"}}>&nbsp;&nbsp;GENERATE REPORT</div>
           </div>
 
-          </Link>
+          //</Link>
 
 </button> 
 </>
