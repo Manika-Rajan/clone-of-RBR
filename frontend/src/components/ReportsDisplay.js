@@ -12,8 +12,13 @@ import Otp from './Otp';
 import EmailVerify from './EmailVerify';
 import { Store } from '../Store';
 import { Modal, ModalBody } from "reactstrap";
+import { useLocation } from 'react-router-dom';
 
 const ReportsDisplay = () => {
+  const location = useLocation();
+  const fileKey = location.state?.fileKey || ''; // Get file key from navigation state
+
+  
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useContext(Store);
@@ -42,13 +47,15 @@ const ReportsDisplay = () => {
   // Fetch presigned URL
   useEffect(() => {
     const fetchPresignedUrl = async () => {
+      if (!fileKey) return;
+
       setIsLoading(true);  // Show loading spinner
       try {
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', 
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file_key: 'compressed.tracemonkey-pldi-09.pdf' }), // Update with your file key
+          body: JSON.stringify({ file_key: fileKey }), // Update with your file key
         }
       );
       
@@ -74,7 +81,7 @@ const ReportsDisplay = () => {
     };
 
     fetchPresignedUrl();
-  }, []); // Runs once on component mount
+  }, [fileKey]); // Fetch only when fileKey changes
 
   return (
     <>
