@@ -60,7 +60,7 @@ const ReportsDisplay = () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file_key: compressed.tracemonkey-pldi-09.pdf }), // Update with your file key
+          body: JSON.stringify({ file_key: 'compressed.tracemonkey-pldi-09.pdf' }), // Update with your file key
         }
       );
       
