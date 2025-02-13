@@ -597,7 +597,7 @@ const generateReport = async () => {
 //<Link to="/report-display"  style={{textDecoration:"none"}}>
 <div className='' style={{display:"flex"}}>
      <div className='white-img' >
-          <img src={vector} alt="" />
+          //<img src={vector} alt="" />
           </div>
           <div className='' style={{color:"white"}}>&nbsp;&nbsp;GENERATE REPORT</div>
           </div>
