@@ -65,6 +65,8 @@ const generateReport = async () => {
       }
 
       const data = await response.json();
+      console.log("API Response:", data); // Debugging
+      
       const fileKey = data.file_key; // Get file key of the generated PDF
 
       if (!fileKey) {
