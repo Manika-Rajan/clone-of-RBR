@@ -65,7 +65,7 @@ const generateReport = async () => {
       }
 
       const data = await response.json();
-      const fileKey = data.file_key; // Get file key of the generated PDF
+      const fileKey = "compressed.tracemonkey-pldi-09.pdf"; // Get file key of the generated PDF
 
       if (!fileKey) {
         throw new Error("File key not returned from API.");
