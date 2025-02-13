@@ -594,15 +594,15 @@ const generateReport = async () => {
 :
 <>
 <button className='generate-btn' style={{background:" #0263c7",color:"white"}} onClick={generateReport} >
-//<Link to="/report-display"  style={{textDecoration:"none"}}>
+<Link to="/report-display"  style={{textDecoration:"none"}}>
 <div className='' style={{display:"flex"}}>
      <div className='white-img' >
-          //<img src={vector} alt="" />
+          <img src={vector} alt="" />
           </div>
           <div className='' style={{color:"white"}}>&nbsp;&nbsp;GENERATE REPORT</div>
           </div>
 
-          //</Link>
+          </Link>
 
 </button> 
 </>
