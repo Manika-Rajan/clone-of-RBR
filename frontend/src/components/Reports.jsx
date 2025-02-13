@@ -53,7 +53,9 @@ const generateReport = async () => {
         'https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/RBR_report_create_from_filters_received', // Replace with actual endpoint
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' ,
+                   "Origin": 'https://main.d38sdwl55z3dqy.amplifyapp.com'
+                   },
           body: JSON.stringify({
             filters: { /* Pass selected filters here */ },
           }),
