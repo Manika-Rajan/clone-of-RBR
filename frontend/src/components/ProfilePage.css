@@ -1,0 +1,146 @@
+.about-text{
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 20px;
+text-align: justify;
+letter-spacing: 0.01em;
+color: #293750;
+
+}
+.about-left{
+    padding-top: 1%;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    margin: auto;
+}
+.image-one{
+    width: 265px;
+    height: 160px;
+}
+.image-two{
+    width: 188px;
+    height: 119px;
+    margin-left: 1%;
+ margin-top: 15%;
+}
+.image-three{
+    width: 257px;
+height: 132px;
+ margin-left: 10%;
+ margin-top: 5%;
+}
+.image-four{
+width: 278px;
+height: 170px;
+margin-top: 5%;
+margin-left: -9%;
+}
+.what-we-do{
+     padding:3% 5%;
+}
+.what-we-do-info{
+  padding:2% 10%;
+  grid-gap:60px;
+}
+.steps{
+    width:90%;
+    margin:auto;
+    min-height:250px;
+    box-sizing: border-box;
+background: #FFFFFF;
+border: 1px solid #0263C7;
+box-shadow: 6px 7px 20px rgba(149, 149, 149, 0.25);
+border-radius: 10px;
+text-align: center;
+padding:2% 2%;
+}
+.step-head{
+    font-family: 'Baskerville Old Face';
+font-style: normal;
+font-weight: 400;
+font-size: 25px;
+line-height: 30px;
+letter-spacing: 0.03em;
+
+color: #293750;
+
+}
+.step-image{
+    margin: auto;
+    padding:2%;
+    width: 80px;
+height: 80px;
+border-radius: 100%;
+box-shadow: 3px 4px 15px rgba(157, 157, 157, 0.25);
+}
+.step-desc{
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+    text-align: center;
+    letter-spacing: 0.01em;
+    
+    color: #293750;
+    }
+.step-image img{
+    margin: auto;
+    padding-top: 10%;
+}
+.what-we-do p{
+    font-family: 'Baskerville Old Face';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 36px;
+    line-height: 36px;
+    
+    letter-spacing: 0.03em;
+    text-align: center;
+    color: #293750;
+}
+.line-div{
+    margin:auto;
+    width: 90%;
+border: 1px solid #0263C7;
+margin-top:1%;
+}
+.team-div{
+  padding:1% 8%;
+}
+.team-info{
+    padding-top:1%;
+    text-align:center;
+}
+.team-image{
+    margin: auto;
+    text-align: center;
+}
+.team-image img{
+  width:80%;
+  height:80%;
+}
+@media (max-width: 576px) { 
+    .image-one{
+        width: 165px;
+        height:160px;
+    }
+    .image-two{
+        width: 88px;
+        height: 89px;
+        margin-left: 1%;
+     margin-top: 25%;
+    }
+    .image-three{
+        width: 157px;
+    height: 73;
+     margin-left: 10%;
+     margin-top: 2%;
+    }
+    .image-four{
+    width: 178px;
+    height: 70px;
+    margin-top: 2%;
+    margin-left: -9%;
+    }
+
+   }
