@@ -1,7 +1,6 @@
 import React, { useContext, useState  } from 'react'
 import logo from '../assets/logo.svg'
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
 import Login from './Login'
 import {Modal,ModalBody,ModalHeader} from "reactstrap"
 import Otp from './Otp'
