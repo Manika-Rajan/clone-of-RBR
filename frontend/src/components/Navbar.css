@@ -1,0 +1,118 @@
+/* Navbar container */
+.navbar {
+  background-color: #ffffff;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px 20px;
+}
+
+/* Left section with logo and text */
+.nav-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo img {
+  width: 60px;
+  height: 60px;
+}
+
+.text {
+  margin-left: 10px;
+}
+
+.nav-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.text-desc {
+  font-size: 14px;
+  color: gray;
+  margin: 0;
+}
+
+/* Navbar links */
+.navbar-nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav-item {
+  margin-right: 30px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: black;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  color: #007bff;
+}
+
+/* User Profile Section */
+.user-menu {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  width: 150px;
+  list-style: none;
+  padding: 10px 0;
+  z-index: 1000;
+  display: none;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-item {
+  padding: 10px;
+  text-decoration: none;
+  color: black;
+  display: block;
+  text-align: center;
+}
+
+.dropdown-item:hover {
+  background: #f1f1f1;
+}
+
+.logout-btn {
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  color: red;
+}
+
+.logout-btn:hover {
+  background: #ffcccc;
+}
