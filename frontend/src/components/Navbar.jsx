@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState  } from 'react'
 import logo from '../assets/logo.svg'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
@@ -17,6 +17,17 @@ const Navbar = (props) => {
   const [logout,setLogout]=useState(false)
   const {state,dispatch:cxtDispatch}=useContext(Store)
   const {name,isLogin}=state
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleLogout = () => {
+    cxtDispatch({ type: "LOGOUT" }); // Dispatch logout action
+    setDropdownOpen(false);
+  };
+
   return (
     <>
     <div className='header'>
@@ -43,9 +54,6 @@ const Navbar = (props) => {
           <Link to="/about" className="nav-link" aria-current="page" href="#">About</Link>
           <div className={props.about?"active":""} ></div>
         </li>
-        <li>
-          <Link to="/profile">Profile</Link>
-        </li>
         <li className="nav-item"
         style={{marginRight:"80px"}}>
           <Link to="/" className="nav-link" href="#">Reports</Link>
@@ -58,68 +66,50 @@ const Navbar = (props) => {
     
           <div className={props.contact?"active":""} ></div>
         </li>
-        <li className="nav-item">
-           {
-            isLogin&&name&& <>
-            <div className='' style={{display:"flex",marginTop:"5%"}}>
-            <div className=''>
-            <p className='user-name'>{name}</p>
-            </div>
-             <div className=''>
-             <img src={avatar} style={{cursor:"pointer"}} onClick={()=>setLogout(!logout)}/>
-             </div>
-            
-            </div>
-            {logout&&<div className='logout'>Logout</div>}
-         </>
-           }
-           {
-            isLogin&&!name&&<>
-            <div className='' style={{display:"flex",marginTop:"10%"}}>
-            <div className=''>
-            <p className='user-name'>Hello!</p>
-            </div>
-             <div className=''>
-             <img src={avatar}  style={{cursor:"pointer"}} onClick={()=>setLogout(!logout)}/>
-             </div>
-            </div>
-            {logout&&<div className='logout'>Logout</div>}
-            </>
-           }
-          {
-            !isLogin&&<button className="nav-link login-btn"
-            onClick={()=>setOpenModel(true)}
-            >LOGIN</button>
-          }
-          
+        
+        {/* User Profile Dropdown */}
+        
+                {isLogin ? (
+                  <li className="nav-item dropdown">
+                    <div className="dropdown-toggle user-menu" onClick={toggleDropdown}>
+                      <img src={avatar} className="avatar" alt="User Avatar" />
+                      <span className="user-name">{name || "User"}</span>
+                    </div>
 
-        </li>
+                    {dropdownOpen && (
+                      <ul className="dropdown-menu show">
+                        <li>
+                          <Link to="/profile" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                            My Profile
+                          </Link>
+                        </li>
+                        <li>
+                          <button className="dropdown-item logout-btn" onClick={handleLogout}>
+                            Logout
+                          </button>
+                        </li>
+                      </ul>
+                    )}
+                  </li>
+                ) : (
+                  <li className="nav-item">
+                    <button className="nav-link login-btn" onClick={() => setOpenModel(true)}>LOGIN</button>
+                  </li>
+                )}
       </ul>
     </div>
   </div>
 </nav>
     </div>
    
-    <Modal
-    
-    isOpen={openModel}
-    toggle={()=>setOpenModel(!openModel)}
-    size="lg" style={{maxWidth: '650px', width: '100%',marginTop:"15%"}}>
-
-    <ModalBody>
-    {
-      login&&<Login sendOtp={sendOtp}  setVerify={setVerify} setLogin={setLogin}/>
-    }
-    {
-      otp&&<Otp sendOtp={sendOtp}  setVerify={setVerify} setLogin={setLogin}/>
-    }
-    {
-      verify&&<EmailVerify sendOtp={sendOtp}  setLogin={setLogin}
-      setVerify={setVerify}
-      />
-    }
-    </ModalBody>
-    </Modal>
+      {/* Login Modal */}
+      <Modal isOpen={openModel} toggle={() => setOpenModel(!openModel)} size="lg" style={{ maxWidth: '650px', width: '100%', marginTop: '15%' }}>
+        <ModalBody>
+          {login && <Login sendOtp={sendOtp} setVerify={setVerify} setLogin={setLogin} />}
+          {otp && <Otp sendOtp={sendOtp} setVerify={setVerify} setLogin={setLogin} />}
+          {verify && <EmailVerify sendOtp={sendOtp} setLogin={setLogin} setVerify={setVerify} />}
+        </ModalBody>
+      </Modal>
      
     </>
   )
