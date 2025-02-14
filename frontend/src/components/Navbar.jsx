@@ -43,6 +43,9 @@ const Navbar = (props) => {
           <Link to="/about" className="nav-link" aria-current="page" href="#">About</Link>
           <div className={props.about?"active":""} ></div>
         </li>
+        <li>
+          <Link to="/profile">Profile</Link>
+        </li>
         <li className="nav-item"
         style={{marginRight:"80px"}}>
           <Link to="/" className="nav-link" href="#">Reports</Link>
