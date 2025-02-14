@@ -9,6 +9,7 @@ import Payment from './components/Payment';
 import Footer from './components/Footer'
 import CommingSoon from './components/CommingSoon';
 import Invalid from './components/Invalid';
+import ProfilePage from './components/ProfilePage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path='/payment' element={<Payment/>}/>
         <Route path='/commingSoon' element={<CommingSoon/>} />
         <Route path='/not-found' element={<Invalid/>} />
+        <Route path="/profile" element={<ProfilePage />} /> {/* Added Profile Page Route */}
       </Routes>
       <Footer/>
     </div>
