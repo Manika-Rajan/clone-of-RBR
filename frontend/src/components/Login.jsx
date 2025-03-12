@@ -10,8 +10,8 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
   const [responseMessage, setResponseMessage] = useState('');
   const [error, setError] = useState('');
 
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
+  const handleSendOtp = async (event) => {
+    event.preventDefault();
     setError('');
     setResponseMessage('');
     setOtpInput('');
@@ -90,7 +90,7 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
                 placeholder="Enter Your 10 digit Mobile Number"
                 style={{ textAlign: 'center' }}
                 value={number}
-                onChange={(e) => setNumber(e.target.value)}
+                onChange={(event) => setNumber(event.target.value)}
                 maxLength={10}
               />
             </div>
@@ -103,12 +103,10 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
         </form>
         {responseMessage && !responseMessage.includes('verified') && (
           <div>
-            <div className="input-group mb-3" style={{ width: '70%', margin: '20px auto' }}>
+            <div className="otp-fields">
               <input
                 type="text"
-                className="form-control"
                 placeholder="Enter 6-digit OTP"
-                style={{ textAlign: 'center' }}
                 value={otpInput}
                 onChange={(e) => setOtpInput(e.target.value)}
                 maxLength={6}
