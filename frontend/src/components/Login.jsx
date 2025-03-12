@@ -78,7 +78,7 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
         <form onSubmit={handleSendOtp}>
           <div className="login-phone-input" style={{ width: '90%', textAlign: 'center', margin: 'auto' }}>
             <div className="input-group mb-3" style={{ width: '20%', display: 'inline-block', marginRight: '10px' }}>
-              <select className="form-select" aria-label="Default select example">
+              <select className="form-select" aria-label="Default select example" style={{ width: '100%' }}>
                 <option selected>+91</option>
                 <option value="2">+11</option>
               </select>
@@ -88,7 +88,7 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
                 type="text"
                 className="form-control"
                 placeholder="Enter Your 10 digit Mobile Number"
-                style={{ textAlign: 'center' }}
+                style={{ width: '100%', textAlign: 'center' }} // Explicitly set full width
                 value={number}
                 onChange={(e) => setNumber(e.target.value)}
                 maxLength={10}
@@ -108,7 +108,7 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
                 type="text"
                 className="form-control"
                 placeholder="Enter 6-digit OTP"
-                style={{ textAlign: 'center' }}
+                style={{ width: '100%', textAlign: 'center' }} // Explicitly set full width
                 value={otpInput}
                 onChange={(e) => setOtpInput(e.target.value)}
                 maxLength={6}
