@@ -34,21 +34,31 @@ function App() {
   return (
     <BrowserRouter>
       <div className="App">
-        <Navbar />
+        {/* Navbar on all pages except ReportsDisplay */}
+        <Routes>
+          <Route path="/report-display" element={null} /> {/* No Navbar */}
+          <Route path="*" element={<Navbar />} /> {/* Navbar everywhere else */}
+        </Routes>
+
+        {/* Login overlay */}
         {login || otpSent ? (
           <Login
             sendOtp={setOtpSent}
             setLogin={setLogin}
             setVerify={setVerify}
-            onClose={handleLoginClose} // Optional: Add a close button in Login
+            onClose={handleLoginClose}
           />
         ) : null}
+
         <Routes>
           {/* Public Routes - Accessible without login */}
           <Route path="/" element={<Reports onBuyNow={handleBuyNow} verify={verify} />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/report-display" element={<ReportsDisplay onBuyNow={handleBuyNow} verify={verify} />} />
+          <Route
+            path="/report-display"
+            element={<ReportsDisplay onBuyNow={handleBuyNow} verify={verify} />}
+          />
           <Route path="/commingSoon" element={<CommingSoon />} />
           <Route path="/not-found" element={<Invalid />} />
 
