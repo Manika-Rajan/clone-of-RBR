@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import './Login.css';
 import { Store } from '../Store';
 
-const Login = ({ sendOtp, setLogin, setVerify }) => {
+const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { totalPrice, name, phone, email, status } = state;
   const [number, setNumber] = useState('');
@@ -53,7 +53,7 @@ const Login = ({ sendOtp, setLogin, setVerify }) => {
         setResponseMessage(body.message);
         setLogin(false);
         sendOtp(false);
-        setVerify(true); // Move to next step (e.g., dashboard)
+        setVerify(true);
       } else {
         setError(`Error: ${body.error || 'Invalid OTP'}`);
       }
@@ -66,6 +66,9 @@ const Login = ({ sendOtp, setLogin, setVerify }) => {
   return (
     <div className="login-popup-container">
       <div className="login-popup">
+        <button onClick={onClose} style={{ float: 'right', border: 'none', background: 'none', fontSize: '20px' }}>
+          ×
+        </button>
         <div className="login-title">
           <h3>Please Enter Your Mobile Number</h3>
         </div>
@@ -73,21 +76,21 @@ const Login = ({ sendOtp, setLogin, setVerify }) => {
           <p>We will send you a <strong>One Time Password</strong></p>
         </div>
         <form onSubmit={handleSendOtp}>
-          <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
-            <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%', display: 'inline-block' }}>
+          <div className="login-phone-input" style={{ width: '90%', textAlign: 'center', margin: 'auto' }}>
+            <div className="input-group mb-3" style={{ width: '20%', display: 'inline-block', marginRight: '10px' }}>
               <select className="form-select" aria-label="Default select example">
                 <option selected>+91</option>
                 <option value="2">+11</option>
               </select>
             </div>
-            <div className="input-group mb-3" style={{ display: 'inline-block', width: '70%' }}>
+            <div className="input-group mb-3" style={{ width: '75%', display: 'inline-block' }}>
               <input
                 type="text"
                 className="form-control"
                 placeholder="Enter Your 10 digit Mobile Number"
                 style={{ textAlign: 'center' }}
                 value={number}
-                onChange={(event) => setNumber(event.target.value)}
+                onChange={(e) => setNumber(e.target.value)}
                 maxLength={10}
               />
             </div>
@@ -100,7 +103,7 @@ const Login = ({ sendOtp, setLogin, setVerify }) => {
         </form>
         {responseMessage && !responseMessage.includes('verified') && (
           <div>
-            <div className="input-group mb-3" style={{ width: '70%', margin: '20px auto' }}>
+            <div className="input-group mb-3" style={{ width: '50%', margin: '20px auto' }}>
               <input
                 type="text"
                 className="form-control"
