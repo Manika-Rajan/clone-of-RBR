@@ -9,27 +9,19 @@
   justify-content: center;
   align-items: center;
 }
+
 .login-popup {
   background: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: 400px; /* Adjust popup width if needed */
+  width: 400px; /* Adjust if your original was different */
 }
+
 .login-phone-input {
-  width: 90%;
+  width: 70%;
   text-align: center;
   margin: 0 auto;
-}
-/* Override Bootstrap defaults */
-.login-phone-input .form-select {
-  width: 100% !important; /* Force full width within container */
-}
-.login-phone-input .form-control {
-  width: 100% !important; /* Force full width within container */
-}
-.input-group.mb-3 .form-control {
-  width: 100% !important; /* Ensure OTP input scales */
 }
 
 .login-button {
@@ -45,6 +37,16 @@
 
 .login-button:hover {
   background-color: #0056b3;
+}
+/* Override Bootstrap defaults */
+.login-phone-input .form-select {
+  width: 100% !important; /* Force full width within container */
+}
+.login-phone-input .form-control {
+  width: 100% !important; /* Force full width within container */
+}
+.input-group.mb-3 .form-control {
+  width: 100% !important; /* Ensure OTP input scales */
 }
 .login-title{
     font-family: 'Baskerville Old Face';
