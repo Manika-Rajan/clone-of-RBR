@@ -38,16 +38,6 @@
 .login-button:hover {
   background-color: #0056b3;
 }
-/* Override Bootstrap defaults */
-.login-phone-input .form-select {
-  width: 100% !important; /* Force full width within container */
-}
-.login-phone-input .form-control {
-  width: 100% !important; /* Force full width within container */
-}
-.input-group.mb-3 .form-control {
-  width: 100% !important; /* Ensure OTP input scales */
-}
 .login-title{
     font-family: 'Baskerville Old Face';
 font-style: normal;
