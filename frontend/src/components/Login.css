@@ -1,11 +1,50 @@
-/* .login-popup-container{
-    height: 100vh;
-} */
-.login-popup{
-    margin: auto;
-    /* margin-top: 50%; */
-    /* transform: translate(-50%,-50%); */
-    text-align: center;
+.login-popup-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.login-popup {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 400px; /* Adjust popup width if needed */
+}
+.login-phone-input {
+  width: 90%;
+  text-align: center;
+  margin: 0 auto;
+}
+/* Override Bootstrap defaults */
+.login-phone-input .form-select {
+  width: 100% !important; /* Force full width within container */
+}
+.login-phone-input .form-control {
+  width: 100% !important; /* Force full width within container */
+}
+.input-group.mb-3 .form-control {
+  width: 100% !important; /* Ensure OTP input scales */
+}
+
+.login-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.login-button:hover {
+  background-color: #0056b3;
 }
 .login-title{
     font-family: 'Baskerville Old Face';
@@ -31,22 +70,6 @@ letter-spacing: 0.03em;
 
 color: #293750;
 
-}
-.login-button{
-    background: #0263C7;
-box-shadow: 4px 4px 15px rgba(78, 78, 78, 0.25);
-border-radius: 9px;
-padding: 8px 16px;
-gap: 10px;
-width: 114px;
-height: 38px;
-border: none;
-color: white;
-text-align: center;
-}
-.login-phone-input{
-    display: flex;
-    justify-content: space-between;
 }
 .otp-fields{
   display: flex;
