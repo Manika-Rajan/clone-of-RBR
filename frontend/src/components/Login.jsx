@@ -76,19 +76,19 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
           <p>We will send you a <strong>One Time Password</strong></p>
         </div>
         <form onSubmit={handleSendOtp}>
-          <div className="login-phone-input" style={{ width: '90%', textAlign: 'center', margin: 'auto' }}>
-            <div className="input-group mb-3" style={{ width: '20%', display: 'inline-block', marginRight: '10px' }}>
-              <select className="form-select" aria-label="Default select example" style={{ width: '100%' }}>
+          <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
+            <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%' }}>
+              <select className="form-select" aria-label="Default select example">
                 <option selected>+91</option>
                 <option value="2">+11</option>
               </select>
             </div>
-            <div className="input-group mb-3" style={{ width: '75%', display: 'inline-block' }}>
+            <div className="input-group mb-3">
               <input
                 type="text"
                 className="form-control"
                 placeholder="Enter Your 10 digit Mobile Number"
-                style={{ width: '100%', textAlign: 'center' }} // Explicitly set full width
+                style={{ textAlign: 'center' }}
                 value={number}
                 onChange={(e) => setNumber(e.target.value)}
                 maxLength={10}
@@ -103,12 +103,12 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
         </form>
         {responseMessage && !responseMessage.includes('verified') && (
           <div>
-            <div className="input-group mb-3" style={{ width: '50%', margin: '20px auto' }}>
+            <div className="input-group mb-3" style={{ width: '70%', margin: '20px auto' }}>
               <input
                 type="text"
                 className="form-control"
                 placeholder="Enter 6-digit OTP"
-                style={{ width: '100%', textAlign: 'center' }} // Explicitly set full width
+                style={{ textAlign: 'center' }}
                 value={otpInput}
                 onChange={(e) => setOtpInput(e.target.value)}
                 maxLength={6}
