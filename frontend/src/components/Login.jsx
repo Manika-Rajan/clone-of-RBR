@@ -26,9 +26,78 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
   const [number, setNumber] = useState('');
   const password = Math.random().toString(6) + 'Abc#';
   //const [number1, setNumber1]=useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [responseMessage, setResponseMessage] = useState('');
+  const [error, setError] = useState('');
+  const [otpSent, setOtpSent] = useState(false); // Toggle between send and verify steps
+  
   useEffect(() => {
     
   }, []);
+
+const Signup = async (event) => {
+    event.preventDefault();
+    console.log('Signup triggered, otpSent:', otpSent);
+
+    if (!otpSent) {
+      // Step 1: Send OTP
+      setError('');
+      setResponseMessage('');
+      setOtpInput('');
+
+      const phoneNumber = `+91${number}`;
+      console.log('Sending OTP to:', phoneNumber);
+      try {
+        const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone_number: phoneNumber }),
+        });
+        const data = await response.json();
+        console.log('Send OTP response:', data);
+        if (response.ok) {
+          setResponseMessage('OTP sent! Enter it below:');
+          cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
+          setOtpSent(true);
+          setLogin(false);
+          sendOtp(true);
+          setVerify(false);
+        } else {
+          setError(`Error: ${data.error || data.message || 'Unknown error'}`);
+        }
+      } catch (err) {
+        console.error('Send OTP error:', err);
+        setError('Failed to connect to server');
+      }
+    } else {
+      // Step 2: Verify OTP
+      setError('');
+      setResponseMessage('');
+      const phoneNumber = `+91${number}`;
+      console.log('Verifying OTP for:', phoneNumber, 'with OTP:', otpInput);
+      try {
+        const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone_number: phoneNumber, otp: otpInput }),
+        });
+        const data = await response.json();
+        console.log('Verify OTP response:', data);
+        const body = JSON.parse(data.body);
+        if (data.statusCode === 200) {
+          setResponseMessage(body.message);
+          setLogin(false);
+          sendOtp(false);
+          setVerify(true);
+        } else {
+          setError(`Error: ${body.error || 'Invalid OTP'}`);
+        }
+      } catch (err) {
+        console.error('Verify OTP error:', err);
+        setError('Failed to verify OTP');
+      }
+    }
+  };  
   //const signIn = () => {
     //console.log("signin");
     //console.log(VERIFYNUMBER);
@@ -92,23 +161,23 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
         //console.log(NOTSIGNIN);
       //});
  // };
-  const Signup = (event)=>{
+  //const Signup = (event)=>{
     
     //const onSubmit=(event)=>{
-      event.preventDefault();
-      let number1 ="+91"+number;
-      console.log(number1)
-       cxtDispatch({type:'SET_PHONE',payload:number1})
-      UserPool.signUp(number1, password,[], null, (err,data)=>{
-        if(err){
-          console.error(err);
-        }
-        console.log(data);
-        setLogin(false)
-        sendOtp(true)
-        setVerify(false)
-        
-      })
+      //event.preventDefault();
+      //let number1 ="+91"+number;
+      //console.log(number1)
+      // cxtDispatch({type:'SET_PHONE',payload:number1})
+      //UserPool.signUp(number1, password,[], null, (err,data)=>{
+      //  if(err){
+      //   console.error(err);
+      //  }
+       // console.log(data);
+        //setLogin(false)
+        //sendOtp(true)
+        //setVerify(false)
+        //
+     // })
    // }
     //console.log(number);
     //const result = await Auth.signUp({
@@ -122,7 +191,7 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
 
     
     
-  };
+ // };
   
   
   return (
@@ -144,14 +213,27 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
 
      </div>
      <div class="input-group mb-3">
-     <input type="text" class="form-control" placeholder="Enter Your 10 digit Mobile Number" style={{textAlign:"center"}} value={number} onChange={(event)=>setNumber(event.target.value)}/>
+     <input type="text" class="form-control" placeholder="Enter Your 10 digit Mobile Number" style={{textAlign:"center"}} value={number} onChange={(event)=>setNumber(event.target.value)} maxLength={10}/>
    </div>
      </div>
      <div>
      <button type="submit" className='login-button'
       onClick={Signup}
-     >SEND OTP</button>
+     >{otpSent ? 'VERIFY OTP' : 'SEND OTP'}</button>
      </div>
+      {otpSent && (
+          <div className="otp-fields">
+            <input
+              type="text"
+              placeholder="Enter 6-digit OTP"
+              value={otpInput}
+              onChange={(e) => setOtpInput(e.target.value)}
+              maxLength={6}
+            />
+          </div>
+      )}
+        {responseMessage && <p style={{ color: 'green', textAlign: 'center' }}>{responseMessage}</p>}
+        {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
      </div>
     </div>
   )
