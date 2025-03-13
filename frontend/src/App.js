@@ -9,11 +9,46 @@ import Payment from './components/Payment';
 import Footer from './components/Footer'
 import CommingSoon from './components/CommingSoon';
 import Invalid from './components/Invalid';
+import Login from './components/Login';
+import { useState } from 'react';
 
 function App() {
+  const [login, setLogin] = useState(false); // Login form hidden by default
+  const [otpSent, setOtpSent] = useState(false); // OTP input hidden by default
+  const [verify, setVerify] = useState(false); // User not verified by default
+
+  // Trigger login when "Buy Now" is clicked
+  const handleBuyNow = () => {
+    if (!verify) {
+      setLogin(true); // Show login if not verified
+    }
+  };
+
+  // Reset login states after closing
+  const handleLoginClose = () => {
+    setLogin(false);
+    setOtpSent(false);
+  };  
+  
   return (
     <BrowserRouter>
     <div className="App">
+        {/* Navbar on all pages except /report-display */}
+        <Routes>
+          <Route path="/report-display" element={null} />
+          <Route path="*" element={<Navbar />} />
+        </Routes>
+
+        {/* Login overlay */}
+        {login || otpSent ? (
+          <Login
+            sendOtp={setOtpSent}
+            setLogin={setLogin}
+            setVerify={setVerify}
+            onClose={handleLoginClose}
+          />
+        ) : null}
+
          <Routes>
         <Route path="/about" element={<About/>} />
         <Route path="/" element={<Reports/>}/>
