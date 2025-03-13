@@ -36,7 +36,8 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
   }, []);
 
 const Signup = async (event) => {
-    event.preventDefault(); // Prevent default form behavior if wrapped in a form later
+    event.preventDefault();
+    console.log('Signup triggered, otpSent:', otpSent);
 
     if (!otpSent) {
       // Step 1: Send OTP
@@ -45,6 +46,7 @@ const Signup = async (event) => {
       setOtpInput('');
 
       const phoneNumber = `+91${number}`;
+      console.log('Sending OTP to:', phoneNumber);
       try {
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
           method: 'POST',
@@ -52,10 +54,11 @@ const Signup = async (event) => {
           body: JSON.stringify({ phone_number: phoneNumber }),
         });
         const data = await response.json();
+        console.log('Send OTP response:', data);
         if (response.ok) {
           setResponseMessage('OTP sent! Enter it below:');
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
-          setOtpSent(true); // Switch to OTP input mode
+          setOtpSent(true);
           setLogin(false);
           sendOtp(true);
           setVerify(false);
@@ -63,19 +66,23 @@ const Signup = async (event) => {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
       } catch (err) {
+        console.error('Send OTP error:', err);
         setError('Failed to connect to server');
       }
     } else {
       // Step 2: Verify OTP
       setError('');
       setResponseMessage('');
+      const phoneNumber = `+91${number}`;
+      console.log('Verifying OTP for:', phoneNumber, 'with OTP:', otpInput);
       try {
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone_number: `+91${number}`, otp: otpInput }),
+          body: JSON.stringify({ phone_number: phoneNumber, otp: otpInput }),
         });
         const data = await response.json();
+        console.log('Verify OTP response:', data);
         const body = JSON.parse(data.body);
         if (data.statusCode === 200) {
           setResponseMessage(body.message);
@@ -86,12 +93,11 @@ const Signup = async (event) => {
           setError(`Error: ${body.error || 'Invalid OTP'}`);
         }
       } catch (err) {
-        console.error('Verify OTP Error:', err);
+        console.error('Verify OTP error:', err);
         setError('Failed to verify OTP');
       }
     }
   };  
-  
   //const signIn = () => {
     //console.log("signin");
     //console.log(VERIFYNUMBER);
