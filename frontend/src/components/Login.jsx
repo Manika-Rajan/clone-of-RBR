@@ -7,12 +7,6 @@ import { Store } from '../Store'
 import awsconfig from '../aws-exports.js';
 Amplify.configure(awsconfig);
 
-//const NOTSIGNIN="You are not logged in";
-//const SIGNEDIN="You have logged in successfully";
-//const SIGNEDOUT="You have logged out successfully";
-//const WAITINGFOROTP="Enter OTP number";
-//const VERIFYNUMBER="Verifying number (Country Code +XX needed)";
-
 const Login = ({sendOtp,setLogin, setVerify}) => {
   setLogin(true)
   sendOtp(false)
@@ -20,12 +14,8 @@ const Login = ({sendOtp,setLogin, setVerify}) => {
   const {state,dispatch:cxtDispatch}=useContext(Store)
   const {totalPrice,name,phone,email,status}=state  
 
-  //const [user, setUser] = useState(null);
-  //const [session, setSession] = useState(null);
-  //const [otp, setOtp] = useState('');
   const [number, setNumber] = useState('');
   const password = Math.random().toString(6) + 'Abc#';
-  //const [number1, setNumber1]=useState('');
   const [otpInput, setOtpInput] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
   const [error, setError] = useState('');
@@ -98,100 +88,6 @@ const Signup = async (event) => {
       }
     }
   };  
-  //const signIn = () => {
-    //console.log("signin");
-    //console.log(VERIFYNUMBER);
-    //Auth.signIn(number)
-      //.then((result) =>  {
-        //console.log('verifying');
-        //setSession(result);
-        //console.log(result)
-        //console.log(WAITINGFOROTP);
-        //sendOtp(true)
-      //}).then(()=>verifyOtp())
-      //.catch((e) => {
-        //if (e.code === 'UsernameExistsException') {
-          //console.log(WAITINGFOROTP);
-          
-          //signIn();
-        //} else {
-          //console.log(e.code);
-          //console.error(e);
-        //}
-     // });
-  //};
-  
-  //const signOut=() => {
-    //if (user){
-      //Auth.signOut();
-      //setUser(null);
-      
-     // console.log(NOTSIGNIN);
-   // }
-  //};
- // const verifyOtp = (result) => {
-  //  console.log('otp verify')
-    //setSession(result)
-  //  console.log(otp)
-    //console.log(session)
-    //Auth.sendCustomChallengeAnswer(session, otp)
-      //.then((user) => {
-        
-        //setUser(user);
-        //console.log(SIGNEDIN);
-        //setSession(null);
-     // }).then(()=>verifyAuth())
-      //.catch((err) => {
-        
-        //console.log(err.message);
-        
-        //console.log(err);
-    //  });
- // };
-  //const verifyAuth=() => {
-   /// console.log('auth')
-   // Auth.currentAuthenticatedUser()
-      //.then((user) => {
-       // setUser(user);
-        //onsole.log(SIGNEDIN);
-        //setSession(null);
-     // })
-     // .catch((err) => {
-       // console.error(err);
-        //console.log(NOTSIGNIN);
-      //});
- // };
-  //const Signup = (event)=>{
-    
-    //const onSubmit=(event)=>{
-      //event.preventDefault();
-      //let number1 ="+91"+number;
-      //console.log(number1)
-      // cxtDispatch({type:'SET_PHONE',payload:number1})
-      //UserPool.signUp(number1, password,[], null, (err,data)=>{
-      //  if(err){
-      //   console.error(err);
-      //  }
-       // console.log(data);
-        //setLogin(false)
-        //sendOtp(true)
-        //setVerify(false)
-        //
-     // })
-   // }
-    //console.log(number);
-    //const result = await Auth.signUp({
-      
-      //username: number,
-      //password,
-      //attributes: {
-       // phone_number: number,
-     // },
-    //}).then(() => signIn());
-
-    
-    
- // };
   
   
   return (
