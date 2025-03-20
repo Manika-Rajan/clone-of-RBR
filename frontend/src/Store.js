@@ -4,10 +4,7 @@ import { createContext, useReducer } from "react";
 export const Store=createContext();
 
 const initialState={
-
-   
-
-    isLogin:false,
+    isLoggedIn:false,
     name:'',
     phone:'',
     email:'',
@@ -23,9 +20,9 @@ const reducer=(state,action)=>{
         case 'USER_LOGIN':
           return { ...state, isLoggedIn: true };
         case 'SET_NAME':
-            return { ...state, userName: action.payload };
+            return { ...state, name: action.payload };
         case 'SET_PHONE':
-                return { ...state, userPhone: action.payload };
+                return { ...state, phone: action.payload };
         case 'SET_EMAIL':
                 return  {...state,email:action.payload}
         case 'SET_REPORT_STATUS':
@@ -35,7 +32,7 @@ const reducer=(state,action)=>{
           case 'LOGOUT':
             return {
                 ...state,
-                isLogin: false,
+                isLoggedIn: false,
                 name: '',
                 phone: '',
                 email: '',
