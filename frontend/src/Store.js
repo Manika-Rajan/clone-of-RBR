@@ -21,11 +21,11 @@ const reducer=(state,action)=>{
         case 'SET_PRICE':
             return{ ...state, totalPrice:action.payload }
         case 'USER_LOGIN':
-          return  {...state,isLogin:action.payload}
+          return { ...state, isLoggedIn: true };
         case 'SET_NAME':
-            return  {...state,name:action.payload}
+            return { ...state, userName: action.payload };
         case 'SET_PHONE':
-                return  {...state,phone:action.payload}
+                return { ...state, userPhone: action.payload };
         case 'SET_EMAIL':
                 return  {...state,email:action.payload}
         case 'SET_REPORT_STATUS':
