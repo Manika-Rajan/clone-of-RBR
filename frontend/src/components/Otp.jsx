@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { Store } from '../Store'; // adjust the path if needed
 import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
 import React, { useState } from 'react';
 import { CognitoIdentityProvider } from 'aws-sdk';
@@ -11,6 +13,7 @@ import './Login'
 
 const Otp = ({setVerify,sendOtp,setLogin}) => {
   const [otp, setOtp] = useState('');
+  const { dispatch } = useContext(Store); // ✅ Get dispatch from Store
  
   const userData = {
     Username: 'phone_number',
@@ -18,6 +21,7 @@ const Otp = ({setVerify,sendOtp,setLogin}) => {
   }
 
   const cognitoClient = new CognitoUser(userData);
+  const { dispatch } = useContext(Store);
   const handleVerificationAndConfirmation = async () => {
     try {
       const verifyAttributeParams = {
@@ -35,6 +39,7 @@ const Otp = ({setVerify,sendOtp,setLogin}) => {
       }
 
       console.log('OTP verification succeeded.');
+
       const confirmSignUpParams = {
         ClientId: '1glle7bvkfkrqt77p19jpqelss', // Replace with your Cognito client ID
         Username: 'phone_number', // Replace with the user's username
@@ -51,13 +56,18 @@ const Otp = ({setVerify,sendOtp,setLogin}) => {
 
       console.log('User confirmed successfully.');
 
+            // ✅ Update global login state
+      dispatch({ type: 'USER_LOGIN', payload: true });
+      dispatch({ type: 'SET_NAME', payload: 'User' });
+      
+      sendOtp(false)
+      setLogin(false)
+      setVerify(true)
 
     } catch (error) {
       console.log('Error:', error);
     }
-      sendOtp(false)
-      setLogin(false)
-      setVerify(true)
+
   };
   
   return (
