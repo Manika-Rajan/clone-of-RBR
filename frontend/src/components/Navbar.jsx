@@ -7,6 +7,8 @@ import Otp from './Otp'
 import EmailVerify from './EmailVerify'
 import { Store } from '../Store'
 import avatar from '../assets/avatar.svg'
+import { useNavigate } from 'react-router-dom';
+
 const Navbar = (props) => {
 
   const [openModel,setOpenModel]=useState(false)
@@ -17,14 +19,16 @@ const Navbar = (props) => {
   const {state,dispatch:cxtDispatch}=useContext(Store)
   const {name,isLogin}=state
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
   const handleLogout = () => {
-    cxtDispatch({ type: "LOGOUT" }); // Dispatch logout action
+    cxtDispatch({ type: "LOGOUT" }); // Clear user state
     setDropdownOpen(false);
+    navigate('/'); // Redirect to homepage
   };
 
   return (
