@@ -17,7 +17,7 @@ const Navbar = (props) => {
   const [verify,setVerify]=useState(false)
   const [logout,setLogout]=useState(false)
   const {state,dispatch:cxtDispatch}=useContext(Store)
-  const {name,isLogin}=state
+  const {name,isLoggedIn}=state
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -72,7 +72,7 @@ const Navbar = (props) => {
         
         {/* User Profile Dropdown */}
         
-                {isLogin ? (
+                {isLoggedIn ? (
                   <li className="nav-item dropdown">
                     <div className="dropdown-toggle user-menu" onClick={toggleDropdown}>
                       <img src={avatar} className="avatar" alt="User Avatar" />
@@ -82,10 +82,12 @@ const Navbar = (props) => {
                     {dropdownOpen && (
                       <ul className="dropdown-menu show">
                         <li>
+                          <button className="profile-button">My Profile</button>
                           <Link to="/profile" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
                             My Profile
                           </Link>
                         </li>
+                        <button className="login-button">Login</button>
                         <li>
                           <button className="dropdown-item logout-btn" onClick={handleLogout}>
                             Logout
