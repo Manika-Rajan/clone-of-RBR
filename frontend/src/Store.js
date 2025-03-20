@@ -31,7 +31,17 @@ const reducer=(state,action)=>{
         case 'SET_REPORT_STATUS':
                     return  {...state,status:!(state.status)}
            
-       
+
+          case 'LOGOUT':
+            return {
+                ...state,
+                isLogin: false,
+                name: '',
+                phone: '',
+                email: '',
+                totalPrice: 0,
+                status: false,
+            };
         
         default:
             return state
