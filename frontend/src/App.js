@@ -11,8 +11,12 @@ import CommingSoon from './components/CommingSoon';
 import Invalid from './components/Invalid';
 import Login from './components/Login';
 import { useState } from 'react';
+import { useContext } from 'react';
+import { Store } from './Store';
+
 
 function App() {
+  const { state } = useContext(Store);
 const [login, setLogin] = useState(false); // Login form hidden by default
   const [otpSent, setOtpSent] = useState(false); // OTP input hidden by default
   const [verify, setVerify] = useState(false); // User not verified by default
@@ -36,10 +40,10 @@ const [login, setLogin] = useState(false); // Login form hidden by default
     <BrowserRouter>
     <div className="App">
         {/* Navbar on all pages except /report-display */}
-        <Routes>
-          <Route path="/report-display" element={null} />
-          <Route path="*" element={<Navbar />} />
-        </Routes>
+        {window.location.pathname !== "/report-display" && (
+          <Navbar key={state.isLoggedIn ? "loggedIn" : "loggedOut"} />
+        )}
+
 
         {/* Login overlay with outside-click-to-close */}
         {login || otpSent ? (
