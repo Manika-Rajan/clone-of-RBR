@@ -38,6 +38,7 @@ const Navbar = (props) => {
   };
 
   const resetModal = () => {
+    console.log("🔄 Resetting modal...");
     setLogin(true)
     sendOtp(false)
     setVerify(false)
