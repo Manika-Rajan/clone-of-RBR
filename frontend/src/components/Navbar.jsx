@@ -8,6 +8,7 @@ import EmailVerify from './EmailVerify'
 import { Store } from '../Store'
 import avatar from '../assets/avatar.svg'
 import { useNavigate } from 'react-router-dom';
+import React, { useContext, useState, useEffect } from 'react';
 
 const Navbar = (props) => {
 
