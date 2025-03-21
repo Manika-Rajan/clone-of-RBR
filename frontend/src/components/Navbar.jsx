@@ -19,6 +19,11 @@ const Navbar = (props) => {
   const {state,dispatch:cxtDispatch}=useContext(Store);
   const { name, isLoggedIn } = state;
   console.log("Navbar - isLoggedIn:", isLoggedIn);
+
+  useEffect(() => {
+  console.log("Navbar rerendered - isLoggedIn:", isLoggedIn);
+                  }, [isLoggedIn]);
+  
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
