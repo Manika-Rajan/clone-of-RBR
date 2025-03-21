@@ -99,7 +99,7 @@ const Login = ({ onClose }) => {
     <div className="login-popup-container">
       <div className="login-popup">
         <div className="login-title">
-          <h3>{otpSent ? 'Enter OTP' : 'Please Enter Your Mobile Number'}</h3>
+          <h3>{otpSent ? 'Please Enter OTP to Login' : 'Please Enter Your Mobile Number'}</h3>
         </div>
         <div className="login-paragraph">
           {!otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
