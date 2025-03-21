@@ -37,6 +37,12 @@ const Navbar = (props) => {
     navigate('/'); // Redirect to homepage
   };
 
+  const resetModal = () => {
+    setLogin(true)
+    sendOtp(false)
+    setVerify(false)
+  }
+
   return (
     <>
     <div className='header'>
@@ -104,7 +110,10 @@ const Navbar = (props) => {
                   </li>
                 ) : (
                   <li className="nav-item">
-                    <button className="nav-link login-btn" onClick={() => setOpenModel(true)}>LOGIN</button>
+                    <button className="nav-link login-btn" onClick={() => {
+                          resetModal();
+                          setOpenModel(true);
+                          }}>LOGIN</button>
                   </li>
                 )}
       </ul>
@@ -114,14 +123,20 @@ const Navbar = (props) => {
     </div>
    
       {/* Login Modal */}
-      <Modal isOpen={openModel} toggle={() => setOpenModel(!openModel)} size="lg" style={{ maxWidth: '650px', width: '100%', marginTop: '15%' }}>
+      <Modal isOpen={openModel} toggle={() => {
+                        setOpenModel(!openModel);
+                        resetModal();
+                        }} size="lg" style={{ maxWidth: '650px', width: '100%', marginTop: '15%' }}>
         <ModalBody>
           {login && (
               <Login
                 sendOtp={sendOtp}
                 setVerify={setVerify}
                 setLogin={setLogin}
-                onClose={() => setOpenModel(false)} // ✅ this closes the modal
+                onClose={() => {
+                      setOpenModel(false);
+                      resetModal();
+                      }} // ✅ this closes the modal
               />
             )}
           {otp && <Otp sendOtp={sendOtp} setVerify={setVerify} setLogin={setLogin} />}
