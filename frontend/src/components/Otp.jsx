@@ -21,6 +21,9 @@ const Otp = ({ setVerify, sendOtp, setLogin, phone }) => {
       console.log('🟢 OTP verification response:', data);
 
       if (response.ok) {
+        const parsedBody = JSON.parse(data.body); // extract message if needed
+        alert('✅ Login successful!');
+        
         // ✅ OTP verified — update global state
         dispatch({ type: 'USER_LOGIN', payload: true });
         dispatch({ type: 'SET_PHONE', payload: phone });
@@ -30,6 +33,9 @@ const Otp = ({ setVerify, sendOtp, setLogin, phone }) => {
         setLogin(false);
         setVerify(false);
         sendOtp(false);
+
+        // 🚀 Redirect to homepage
+        window.location.href = '/';
       } else {
         alert(data.error || 'OTP verification failed');
       }
