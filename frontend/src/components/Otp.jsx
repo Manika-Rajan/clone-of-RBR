@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Store } from '../Store';
 
-const Otp = ({ setVerify, sendOtp, setLogin, phone }) => {
+const Otp = ({ setVerify, sendOtp, setLogin, phone, setOpenModel }) => {
   const [otp, setOtp] = useState('');
   const { state, dispatch } = useContext(Store);
   const phoneNumber = state.phone;
@@ -28,6 +28,9 @@ const Otp = ({ setVerify, sendOtp, setLogin, phone }) => {
         dispatch({ type: 'USER_LOGIN', payload: true });
         dispatch({ type: 'SET_PHONE', payload: phone });
         dispatch({ type: 'SET_NAME', payload: phone }); // Optional placeholder for now
+
+        // ✅ Close modal
+        setOpenModel(false);
 
         // Hide OTP modal and update UI
         setLogin(false);
