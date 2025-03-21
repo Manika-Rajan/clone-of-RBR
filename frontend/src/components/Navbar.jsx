@@ -16,8 +16,8 @@ const Navbar = (props) => {
   const [otp,sendOtp]=useState(false)
   const [verify,setVerify]=useState(false)
   const [logout,setLogout]=useState(false)
-  const {state,dispatch:cxtDispatch}=useContext(Store)
-  const {name,isLoggedIn}=state
+  const {state,dispatch:cxtDispatch}=useContext(Store);
+  const { name, isLoggedIn } = state;
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
