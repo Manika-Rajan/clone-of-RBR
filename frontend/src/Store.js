@@ -18,8 +18,11 @@ const reducer=(state,action)=>{
         case 'SET_PRICE':
             return{ ...state, totalPrice:action.payload }
         case 'USER_LOGIN':
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("name", action.payload?.name || '');
             return { ...state, isLoggedIn: true, name: action.payload?.name || '' };
         case 'SET_NAME':
+            localStorage.setItem("name", action.payload);
             return { ...state, name: action.payload };
         case 'SET_PHONE':
                 return { ...state, phone: action.payload };
@@ -30,6 +33,8 @@ const reducer=(state,action)=>{
            
 
           case 'LOGOUT':
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("name");
             return {
                 ...state,
                 isLoggedIn: false,
