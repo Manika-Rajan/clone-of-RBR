@@ -1,4 +1,4 @@
-import React, { useContext, useState  } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import logo from '../assets/logo.svg'
 import { Link } from 'react-router-dom'
 import Login from './Login'
@@ -8,7 +8,6 @@ import EmailVerify from './EmailVerify'
 import { Store } from '../Store'
 import avatar from '../assets/avatar.svg'
 import { useNavigate } from 'react-router-dom';
-import React, { useContext, useState, useEffect } from 'react';
 
 const Navbar = (props) => {
 
