@@ -78,6 +78,7 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
         });
         const data = await response.json();
         console.log('Verify OTP response:', data);
+        console.log("Raw body from server:", data.body);
         const body = JSON.parse(data.body);
         if (data.statusCode === 200) {
           setResponseMessage(body.message);
@@ -88,6 +89,7 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
           setLogin(false);
           sendOtp(false);
           setVerify(true);
+          console.log("✅ onClose() called");
           onClose(); // Close the popup after successful verification
         } else {
           setError(`Error: ${body.error || 'Invalid OTP'}`);
