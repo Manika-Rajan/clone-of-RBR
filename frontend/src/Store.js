@@ -4,8 +4,8 @@ import { createContext, useReducer } from "react";
 export const Store=createContext();
 
 const initialState={
-    isLoggedIn:false,
-    name:'',
+    isLoggedIn: localStorage.getItem("isLoggedIn") === "true",
+    name: localStorage.getItem("name") || "",
     phone:'',
     email:'',
     totalPrice:0,   
