@@ -83,6 +83,7 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
           setResponseMessage(body.message);
           cxtDispatch({ type: 'SET_VERIFY', payload: true }); // Optional: Update context if needed
           cxtDispatch({ type: 'USER_LOGIN' }); // ✅ Mark user as logged in
+          console.log("Login successful, dispatching USER_LOGIN...");
           cxtDispatch({ type: 'SET_NAME', payload: 'User' });     // ✅ Set display name in navbar
           setLogin(false);
           sendOtp(false);
