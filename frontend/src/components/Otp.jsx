@@ -6,10 +6,9 @@ const Otp = ({ setVerify, sendOtp, setLogin, phone, setOpenModel }) => {
   const { state, dispatch } = useContext(Store);
   const phoneNumber = state.phone;
 
-
   const handleVerification = async () => {
-      console.log('🔵 Login button clicked');
-      console.log('🔵 phone_number:', phoneNumber, 'otp:', otp);
+    console.log('🔵 Login button clicked');
+    console.log('🔵 phone_number:', phoneNumber, 'otp:', otp);
     try {
       const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp', {
         method: 'POST',
@@ -23,22 +22,17 @@ const Otp = ({ setVerify, sendOtp, setLogin, phone, setOpenModel }) => {
       if (response.ok) {
         const parsedBody = JSON.parse(data.body); // extract message if needed
         alert('✅ Login successful!');
-        
+
         // ✅ OTP verified — update global state
         dispatch({ type: 'USER_LOGIN', payload: true });
         dispatch({ type: 'SET_PHONE', payload: phone });
-        dispatch({ type: 'SET_NAME', payload: phone }); // Optional placeholder for now
+        dispatch({ type: 'SET_NAME', payload: phone }); // Optional placeholder
 
-        // ✅ Close modal
+        // ✅ Update UI and close modal
         setOpenModel(false);
-
-        // Hide OTP modal and update UI
         setLogin(false);
-        setVerify(false);
+        setVerify(true);    // Keep this true, used only for UI now
         sendOtp(false);
-
-        // 🚀 Redirect to homepage
-        window.location.href = '/';
       } else {
         alert(data.error || 'OTP verification failed');
       }
@@ -55,13 +49,22 @@ const Otp = ({ setVerify, sendOtp, setLogin, phone, setOpenModel }) => {
       <div className='login-paragraph'>
         <p>OTP has been sent to {phone}</p>
         <div className="otp-fields">
-          <input className='otp-input' type="text" value={otp} onChange={(e) => setOtp(e.target.value)} />
+          <input
+            className='otp-input'
+            type="text"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            maxLength={6}
+            placeholder="Enter 6-digit OTP"
+          />
         </div>
       </div>
       <div>
         <button className='login-button' onClick={handleVerification}>LOGIN</button>
         <p style={{ color: '#0263C7', marginTop: '15px' }}>RESEND OTP</p>
-        <p style={{ color: '#0263C7' }}><a href='Login.jsx'>Entered a Wrong Mobile Number?</a></p>
+        <p style={{ color: '#0263C7' }}>
+          <a href='Login.jsx'>Entered a Wrong Mobile Number?</a>
+        </p>
       </div>
     </div>
   );
