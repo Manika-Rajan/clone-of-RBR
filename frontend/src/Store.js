@@ -18,7 +18,7 @@ const reducer=(state,action)=>{
         case 'SET_PRICE':
             return{ ...state, totalPrice:action.payload }
         case 'USER_LOGIN':
-          return { ...state, isLoggedIn: true };
+            return { ...state, isLoggedIn: true, name: action.payload?.name || '' };
         case 'SET_NAME':
             return { ...state, name: action.payload };
         case 'SET_PHONE':
