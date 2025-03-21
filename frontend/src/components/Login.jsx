@@ -82,9 +82,9 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
         if (data.statusCode === 200) {
           setResponseMessage(body.message);
           cxtDispatch({ type: 'SET_VERIFY', payload: true }); // Optional: Update context if needed
-          cxtDispatch({ type: 'USER_LOGIN' }); // ✅ Mark user as logged in
+          cxtDispatch({ type: 'USER_LOGIN', payload: { name: phoneNumber } }); // ✅ Mark user as logged in
           console.log("Login successful, dispatching USER_LOGIN...");
-          cxtDispatch({ type: 'SET_NAME', payload: 'User' });     // ✅ Set display name in navbar
+          cxtDispatch({ type: 'SET_NAME', payload: phoneNumber });     // ✅ Set display name in navbar
           setLogin(false);
           sendOtp(false);
           setVerify(true);
