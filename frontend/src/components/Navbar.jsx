@@ -110,7 +110,14 @@ const Navbar = (props) => {
       {/* Login Modal */}
       <Modal isOpen={openModel} toggle={() => setOpenModel(!openModel)} size="lg" style={{ maxWidth: '650px', width: '100%', marginTop: '15%' }}>
         <ModalBody>
-          {login && <Login sendOtp={sendOtp} setVerify={setVerify} setLogin={setLogin} />}
+          {login && (
+              <Login
+                sendOtp={sendOtp}
+                setVerify={setVerify}
+                setLogin={setLogin}
+                onClose={() => setOpenModel(false)} // ✅ this closes the modal
+              />
+            )}
           {otp && <Otp sendOtp={sendOtp} setVerify={setVerify} setLogin={setLogin} />}
           {verify && <EmailVerify sendOtp={sendOtp} setLogin={setLogin} setVerify={setVerify} />}
         </ModalBody>
