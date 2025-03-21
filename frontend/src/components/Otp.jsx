@@ -3,16 +3,18 @@ import { Store } from '../Store';
 
 const Otp = ({ setVerify, sendOtp, setLogin, phone }) => {
   const [otp, setOtp] = useState('');
-  const { dispatch } = useContext(Store);
+  const { state, dispatch } = useContext(Store);
+  const phoneNumber = state.phone;
+
 
   const handleVerification = async () => {
       console.log('🔵 Login button clicked');
-      console.log('🔵 Phone:', phone, 'OTP:', otp);
+      console.log('🔵 phone_number:', phoneNumber, 'otp:', otp);
     try {
       const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: phone, otp }),
+        body: JSON.stringify({ phone_number: phoneNumber, otp }),
       });
 
       const data = await response.json();
