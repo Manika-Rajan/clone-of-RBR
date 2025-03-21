@@ -82,7 +82,7 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
         if (data.statusCode === 200) {
           setResponseMessage(body.message);
           cxtDispatch({ type: 'SET_VERIFY', payload: true }); // Optional: Update context if needed
-          cxtDispatch({ type: 'SET_LOGGED_IN', payload: true }); // ✅ Mark user as logged in
+          cxtDispatch({ type: 'USER_LOGIN' }); // ✅ Mark user as logged in
           cxtDispatch({ type: 'SET_NAME', payload: 'User' });     // ✅ Set display name in navbar
           setLogin(false);
           sendOtp(false);
