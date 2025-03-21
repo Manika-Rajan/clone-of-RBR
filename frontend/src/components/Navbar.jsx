@@ -87,7 +87,7 @@ const Navbar = (props) => {
                             My Profile
                           </Link>
                         </li>
-                        <button className="login-button">Login</button>
+                        {/* <button className="login-button">Login</button> */}
                         <li>
                           <button className="dropdown-item logout-btn" onClick={handleLogout}>
                             Logout
