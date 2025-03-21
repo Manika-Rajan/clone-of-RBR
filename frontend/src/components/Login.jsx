@@ -7,7 +7,7 @@ import { Store } from '../Store';
 import awsconfig from '../aws-exports.js';
 Amplify.configure(awsconfig);
 
-const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
+const Login = ({ onClose }) => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { totalPrice, name, phone, email, status } = state;
 
@@ -50,9 +50,6 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
           setResponseMessage('OTP sent! Enter it below:');
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           setOtpSent(true);
-          setLogin(false); // Hide phone input
-          sendOtp(true);   // Show OTP input
-          setVerify(false);
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
@@ -86,9 +83,6 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
           cxtDispatch({ type: 'USER_LOGIN', payload: { name: phoneNumber } }); // ✅ Mark user as logged in
           console.log("Login successful, dispatching USER_LOGIN...");
           cxtDispatch({ type: 'SET_NAME', payload: phoneNumber });     // ✅ Set display name in navbar
-          setLogin(false);
-          sendOtp(false);
-          setVerify(true);
           console.log("✅ onClose() called");
           onClose(); // Close the popup after successful verification
         } else {
@@ -105,11 +99,13 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
     <div className="login-popup-container">
       <div className="login-popup">
         <div className="login-title">
-          <h3>Please Enter Your Mobile Number</h3>
+          <h3>{otpSent ? 'Enter OTP' : 'Please Enter Your Mobile Number'}</h3>
         </div>
         <div className="login-paragraph">
-          <p>We will send you a <strong>One Time Password</strong></p>
+          {!otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
         </div>
+        
+        {!otpSent && (
         <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
           <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%' }}>
             <select className="form-select" aria-label="Default select example">
@@ -129,22 +125,27 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
             />
           </div>
         </div>
-        <div>
-          <button type="submit" className="login-button" onClick={Signup}>
-            {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
-          </button>
-        </div>
+      )}
+
         {otpSent && (
-          <div className="otp-fields">
+            <div className="otp-fields">
             <input
               type="text"
               placeholder="Enter 6-digit OTP"
               value={otpInput}
               onChange={(e) => setOtpInput(e.target.value)}
               maxLength={6}
+              style={{ textAlign: 'center', width: '60%' }}
             />
           </div>
         )}
+        
+        <div>
+          <button type="submit" className="login-button" onClick={Signup}>
+            {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
+          </button>
+        </div>
+        
         {responseMessage && <p style={{ color: 'green', textAlign: 'center' }}>{responseMessage}</p>}
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       </div>
