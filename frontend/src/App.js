@@ -4,6 +4,7 @@ import Contact from './components/Contact';
 import Navbar from './components/Navbar';
 import Reports from './components/Reports';
 import {BrowserRouter,Routes,Route} from 'react-router-dom'
+import ProfilePage from './components/ProfilePage';
 import ReportsDisplay from './components/ReportsDisplay';
 import Payment from './components/Payment';
 import Footer from './components/Footer'
@@ -60,6 +61,7 @@ const [login, setLogin] = useState(false); // Login form hidden by default
         <Route path='/payment' element={<Payment/>}/>
         <Route path='/commingSoon' element={<CommingSoon/>} />
         <Route path='/not-found' element={<Invalid/>} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Routes>
       <Footer/>
     </div>
