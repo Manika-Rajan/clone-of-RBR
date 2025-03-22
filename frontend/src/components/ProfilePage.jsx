@@ -69,7 +69,7 @@ const ProfilePage = () => {
         <div className="user-info">
             <img src={state.photoUrl || '/default-profile.png'} alt="Profile" className="profile-photo" />
             <div>
-              <h2>{state.name || userId}</h2>
+              <h2>{state.name ||  'Profile'}</h2>
               <p><strong>Phone:</strong> {state.phone || 'Not Available'}</p>
               <p><strong>Email:</strong> {state.email || 'Not Available'}</p>
             </div>
