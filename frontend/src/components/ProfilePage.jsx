@@ -63,7 +63,15 @@ const ProfilePage = () => {
     <div>
       <Navbar profile />
       <div className='profile-container'>
-        <h2>Welcome, {userId}</h2>
+        <div className="user-info">
+            <img src={state.photoUrl || '/default-profile.png'} alt="Profile" className="profile-photo" />
+            <div>
+              <h2>{state.name || userId}</h2>
+              <p><strong>Phone:</strong> {state.phone || 'Not Available'}</p>
+              <p><strong>Email:</strong> {state.email || 'Not Available'}</p>
+            </div>
+          </div>
+
         <h3>Purchased Reports</h3>
         <ul>
           {reports.length === 0 ? (
