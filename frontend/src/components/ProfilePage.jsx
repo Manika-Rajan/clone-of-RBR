@@ -7,13 +7,17 @@ import PDFViewer from './PDFViewer';
 
 const ProfilePage = () => {
   const { state } = useContext(Store);
-  const { isLogin, userId } = state;
+  const { isLoggedIn, userId } = state;
+  console.log("ProfilePage - isLogin:", isLogin);
+  console.log("ProfilePage - userId:", userId);
+  console.log("ProfilePage - state:", state);
+
   const [reports, setReports] = useState([]);
   const [selectedUrl, setSelectedUrl] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLogin) {
+    if (!isLoggedIn) {
       navigate('/login'); // Redirect to login if not logged in
       return;
     }
