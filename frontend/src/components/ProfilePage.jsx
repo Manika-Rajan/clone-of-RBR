@@ -8,7 +8,7 @@ import PDFViewer from './PDFViewer';
 const ProfilePage = () => {
   const { state } = useContext(Store);
   const { isLoggedIn, userId } = state;
-  console.log("ProfilePage - isLogin:", isLogin);
+  console.log("ProfilePage - isLoggedIn:", isLoggedIn);
   console.log("ProfilePage - userId:", userId);
   console.log("ProfilePage - state:", state);
 
@@ -41,7 +41,7 @@ const ProfilePage = () => {
     };
 
     fetchReports();
-  }, [isLogin, userId, navigate]);
+  }, [isLoggedIn, userId, navigate]);
 
   // Function to fetch presigned URL and open the report
   const viewReport = async (fileKey) => {
