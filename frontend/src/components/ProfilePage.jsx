@@ -6,23 +6,24 @@ import { useNavigate } from 'react-router-dom';
 import PDFViewer from './PDFViewer';
 
 const ProfilePage = () => {
-  const { state } = useContext(Store);
+  const { state, dispatch } = useContext(Store);
   const { isLoggedIn, userId } = state;
-  console.log("ProfilePage - isLoggedIn:", isLoggedIn);
-  console.log("ProfilePage - userId:", userId);
-  console.log("ProfilePage - state:", state);
+  const navigate = useNavigate();
 
   const [reports, setReports] = useState([]);
   const [selectedUrl, setSelectedUrl] = useState(null);
-  const navigate = useNavigate();
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
 
   useEffect(() => {
     if (!isLoggedIn) {
-      navigate('/login'); // Redirect to login if not logged in
+      navigate('/login');
       return;
     }
 
-    // Fetch purchased reports from backend (DynamoDB via Lambda)
     const fetchReports = async () => {
       try {
         const response = await fetch('https://your-api-gateway-url/fetchPurchasedReports', {
@@ -32,7 +33,6 @@ const ProfilePage = () => {
         });
 
         if (!response.ok) throw new Error('Failed to fetch reports');
-        
         const data = await response.json();
         setReports(data.reports || []);
       } catch (error) {
@@ -43,7 +43,6 @@ const ProfilePage = () => {
     fetchReports();
   }, [isLoggedIn, userId, navigate]);
 
-  // Function to fetch presigned URL and open the report
   const viewReport = async (fileKey) => {
     try {
       const response = await fetch('https://your-api-gateway-url/getPresignedUrl', {
@@ -53,12 +52,30 @@ const ProfilePage = () => {
       });
 
       if (!response.ok) throw new Error('Failed to fetch URL');
-      
       const data = await response.json();
-      const presignedUrl = data.presigned_url;
-      setSelectedUrl(presignedUrl); // open in custom viewer instead of new tab
+      setSelectedUrl(data.presigned_url);
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
+    }
+  };
+
+  const updateName = () => {
+    dispatch({ type: 'SET_NAME', payload: nameInput });
+    setShowNameModal(false);
+  };
+
+  const updateEmail = () => {
+    dispatch({ type: 'SET_EMAIL', payload: emailInput });
+    setShowEmailModal(false);
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // You can upload this file to S3 here
+      const localUrl = URL.createObjectURL(file);
+      dispatch({ type: 'SET_PHOTO', payload: localUrl });
+      setPhotoFile(localUrl);
     }
   };
 
@@ -67,13 +84,28 @@ const ProfilePage = () => {
       <Navbar profile />
       <div className='profile-container'>
         <div className="user-info">
-            <img src={state.photoUrl || '/default-profile.png'} alt="Profile" className="profile-photo" />
+          {state.photoUrl || photoFile ? (
+            <img src={state.photoUrl || photoFile} alt="Profile" className="profile-photo" />
+          ) : (
             <div>
-              <h2>{state.name ||  'Profile'}</h2>
-              <p><strong>Phone:</strong> {state.phone || 'Not Available'}</p>
-              <p><strong>Email:</strong> {state.email || 'Not Available'}</p>
+              <label className="upload-photo-label">
+                <input type="file" accept="image/*" onChange={handlePhotoUpload} hidden />
+                <button>Upload Photo</button>
+              </label>
             </div>
+          )}
+          <div>
+            <h2>
+              {state.name || (
+                <span className="update-link" onClick={() => setShowNameModal(true)}>Update Name</span>
+              )}
+            </h2>
+            <p><strong>Phone:</strong> {state.phone || 'Not Available'}</p>
+            <p><strong>Email:</strong> {state.email ? state.email : (
+              <span className="update-link" onClick={() => setShowEmailModal(true)}>Update Email</span>
+            )}</p>
           </div>
+        </div>
 
         <h3>Purchased Reports</h3>
         <ul>
@@ -90,9 +122,33 @@ const ProfilePage = () => {
           )}
         </ul>
       </div>
-          {selectedUrl && (
-            <PDFViewer fileUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />
-          )}
+
+      {selectedUrl && (
+        <PDFViewer fileUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />
+      )}
+
+      {/* Modals */}
+      {showNameModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Enter Your Name</h3>
+            <input value={nameInput} onChange={(e) => setNameInput(e.target.value)} />
+            <button onClick={updateName}>Update</button>
+            <button onClick={() => setShowNameModal(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {showEmailModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Enter Your Email</h3>
+            <input type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
+            <button onClick={updateEmail}>Update</button>
+            <button onClick={() => setShowEmailModal(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
