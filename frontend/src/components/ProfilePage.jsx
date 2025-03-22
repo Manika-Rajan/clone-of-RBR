@@ -64,7 +64,6 @@ const ProfilePage = () => {
 
   return (
     <div>
-      <h1 style={{ color: 'red' }}>Hello from ProfilePage</h1>
       <Navbar profile />
       <div className='profile-container'>
         <div className="user-info">
