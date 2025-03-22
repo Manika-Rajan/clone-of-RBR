@@ -1,20 +1,22 @@
 import React from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import './PDFViewer.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-const PDFViewer = ({ fileUrl, onClose }) => {
+const PDFViewer = ({ fileUrl }) => {
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+
   return (
-    <div className="pdf-modal" onContextMenu={(e) => e.preventDefault()}>
-      <div className="pdf-overlay" />
-      <div className="pdf-content">
-        <button className="close-btn" onClick={onClose}>×</button>
-        <Document file={fileUrl}>
-          <Page pageNumber={1} />
-          {/* Add logic to paginate if needed */}
-        </Document>
-      </div>
+    <div style={{ height: '90vh', width: '100%' }}>
+      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+        <Viewer
+          fileUrl={fileUrl}
+          plugins={[defaultLayoutPluginInstance]}
+        />
+      </Worker>
     </div>
   );
 };
