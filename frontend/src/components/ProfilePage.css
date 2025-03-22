@@ -119,6 +119,20 @@ margin-top:1%;
   width:80%;
   height:80%;
 }
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-photo {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+    
 @media (max-width: 576px) { 
     .image-one{
         width: 165px;
