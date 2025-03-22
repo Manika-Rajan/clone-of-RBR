@@ -3,11 +3,13 @@ import Navbar from './Navbar';
 import './ProfilePage.css';
 import { Store } from '../Store';
 import { useNavigate } from 'react-router-dom';
+import PDFViewer from './PDFViewer';
 
 const ProfilePage = () => {
   const { state } = useContext(Store);
   const { isLogin, userId } = state;
   const [reports, setReports] = useState([]);
+  const [selectedUrl, setSelectedUrl] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,10 +52,7 @@ const ProfilePage = () => {
       
       const data = await response.json();
       const presignedUrl = data.presigned_url;
-
-      if (presignedUrl) {
-        window.open(presignedUrl, '_blank');
-      }
+      setSelectedUrl(presignedUrl); // open in custom viewer instead of new tab
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
     }
@@ -87,6 +86,9 @@ const ProfilePage = () => {
           )}
         </ul>
       </div>
+          {selectedUrl && (
+            <PDFViewer fileUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />
+          )}
     </div>
   );
 };
