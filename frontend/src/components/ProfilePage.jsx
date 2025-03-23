@@ -28,7 +28,7 @@ const ProfilePage = () => {
 
     const fetchReports = async () => {
       try {
-        const response = await fetch('https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${userId}', {
+        const response = await fetch('https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${userId}');
         const data = await response.json();
         setReports(data.reports);
       } catch (error) {
