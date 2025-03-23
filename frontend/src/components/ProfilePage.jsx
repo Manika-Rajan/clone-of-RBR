@@ -17,6 +17,8 @@ const ProfilePage = () => {
   const [nameInput, setNameInput] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [photoFile, setPhotoFile] = useState(null);
+  const [photoUrl, setPhotoUrl] = useState(state.photoUrl || null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -69,34 +71,84 @@ const ProfilePage = () => {
     setShowEmailModal(false);
   };
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // You can upload this file to S3 here
-      const localUrl = URL.createObjectURL(file);
-      dispatch({ type: 'SET_PHOTO', payload: localUrl });
-      setPhotoFile(localUrl);
+    if (!file) return;
+
+    try {
+      const response = await fetch('https://your-api-gateway-url/getPresignedPhotoUploadUrl', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, file_name: file.name }),
+      });
+
+      if (!response.ok) throw new Error('Failed to get upload URL');
+      const data = await response.json();
+      const uploadUrl = data.upload_url;
+      const fileKey = data.file_key;
+
+      await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+
+      const publicUrl = `https://your-s3-bucket-name.s3.amazonaws.com/${fileKey}`;
+      setPhotoUrl(publicUrl);
+      dispatch({ type: 'SET_PHOTO', payload: publicUrl });
+    } catch (err) {
+      console.error('Photo upload failed:', err);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      const profileData = {
+        user_id: userId,
+        name: state.name,
+        email: state.email,
+        phone: state.phone,
+        photo_url: photoUrl,
+        reports,
+      };
+
+      const response = await fetch('https://your-api-gateway-url/saveUserProfile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData),
+      });
+
+      if (!response.ok) throw new Error('Failed to save profile');
+      alert('Profile saved successfully!');
+    } catch (error) {
+      console.error('Save profile error:', error);
+      alert('Failed to save profile.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
     <div>
       <Navbar profile />
-      <div className='profile-container'>
+      <div className="profile-container">
         <div className="user-info">
-         {(state.photoUrl || photoFile) ? (
-              <img src={state.photoUrl || photoFile} alt="Profile" className="profile-photo" />
-            ) : (
-              <label className="upload-photo-label">
-                <input type="file" accept="image/*" onChange={handlePhotoUpload} hidden />
-                <button>Upload Photo</button>
-              </label>
-            )}
+          {photoUrl ? (
+            <img src={photoUrl} alt="Profile" className="profile-photo" />
+          ) : (
+            <label className="upload-photo-label">
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} hidden />
+              <button>Upload Photo</button>
+            </label>
+          )}
 
           <div>
             <h2>
               {state.name || (
-                <span className="update-link" onClick={() => setShowNameModal(true)}>Update Name</span>
+                <span className="update-link" onClick={() => setShowNameModal(true)}>
+                  Update Name
+                </span>
               )}
             </h2>
             <p><strong>Phone:</strong> {state.phone || 'Not Available'}</p>
@@ -105,6 +157,10 @@ const ProfilePage = () => {
             )}</p>
           </div>
         </div>
+
+        <button className="save-button" onClick={handleSaveProfile} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save Profile'}
+        </button>
 
         <h3>Purchased Reports</h3>
         <ul>
