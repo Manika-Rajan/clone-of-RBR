@@ -25,8 +25,15 @@ const ProfilePage = () => {
       return;
     }
 
+    // Wait for userId before making API call
+    if (!userId) {
+      console.warn('User ID not available yet. Skipping report fetch.');
+      return;
+    }
+
     const fetchReports = async () => {
       try {
+        console.log('Fetching reports for user_id:', userId);
         const response = await fetch(`https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${userId}`);
         if (!response.ok) throw new Error('Failed to fetch reports');
         const data = await response.json();
@@ -97,18 +104,24 @@ const ProfilePage = () => {
   };
 
   const handleSaveProfile = async () => {
+    if (!userId) {
+      alert('User ID is missing. Cannot save profile.');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const profileData = {
         user_id: userId,
-        name: state.name,
-        email: state.email,
-        phone: state.phone,
-        photo_url: photoUrl,
+        name: state.name || '',
+        email: state.email || '',
+        phone: state.phone || '',
+        photo_url: photoUrl || '',
         reports,
       };
 
       console.log('Sending profile data:', profileData);
+
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
