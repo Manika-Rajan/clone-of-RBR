@@ -28,19 +28,12 @@ const ProfilePage = () => {
 
     const fetchReports = async () => {
       try {
-        const response = await fetch('https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${userId}');
-        const data = await response.json();
-        setReports(data.reports);
-      } catch (error) {
-        console.error("Error fetching reports:", error);
-      }
-    };
-
+        const response = await fetch(`https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${userId}`);
         if (!response.ok) throw new Error('Failed to fetch reports');
         const data = await response.json();
         setReports(data.reports || []);
       } catch (error) {
-        console.error('Error fetching reports:', error);
+        console.error("Error fetching reports:", error);
       }
     };
 
@@ -78,7 +71,6 @@ const ProfilePage = () => {
     if (!file) return;
 
     try {
-      console.log('Uploading photo for user:', userId);
       const response = await fetch('https://6kslo2oose.execute-api.ap-south-1.amazonaws.com/getPresignedPhotoUploadUrl-RBRmain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,7 +108,6 @@ const ProfilePage = () => {
         reports,
       };
 
-      console.log('Sending profile data:', profileData);
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
