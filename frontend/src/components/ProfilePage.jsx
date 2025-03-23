@@ -16,7 +16,6 @@ const ProfilePage = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [emailInput, setEmailInput] = useState('');
-  const [photoFile, setPhotoFile] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(state.photoUrl || null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -33,7 +32,7 @@ const ProfilePage = () => {
         const data = await response.json();
         setReports(data.reports || []);
       } catch (error) {
-        console.error("Error fetching reports:", error);
+        console.error('Error fetching reports:', error);
       }
     };
 
@@ -42,7 +41,7 @@ const ProfilePage = () => {
 
   const viewReport = async (fileKey) => {
     try {
-      const response = await fetch('https://your-api-gateway-url/getPresignedUrl', {
+      const response = await fetch('https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/getPresignedUrl-RBRmain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file_key: fileKey }),
@@ -71,6 +70,7 @@ const ProfilePage = () => {
     if (!file) return;
 
     try {
+      console.log('Uploading photo for user:', userId);
       const response = await fetch('https://6kslo2oose.execute-api.ap-south-1.amazonaws.com/getPresignedPhotoUploadUrl-RBRmain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -108,6 +108,7 @@ const ProfilePage = () => {
         reports,
       };
 
+      console.log('Sending profile data:', profileData);
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
