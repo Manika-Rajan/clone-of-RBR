@@ -76,7 +76,7 @@ const ProfilePage = () => {
     if (!file) return;
 
     try {
-      console.log('Sending profile data:', profileData);
+      console.log('Uploading photo for user:', userId);
       const response = await fetch('https://6kslo2oose.execute-api.ap-south-1.amazonaws.com/getPresignedPhotoUploadUrl-RBRmain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,6 +114,7 @@ const ProfilePage = () => {
         reports,
       };
 
+      console.log('Sending profile data:', profileData);
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
