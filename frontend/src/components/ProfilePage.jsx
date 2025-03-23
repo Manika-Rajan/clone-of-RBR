@@ -76,6 +76,7 @@ const ProfilePage = () => {
     if (!file) return;
 
     try {
+      console.log('Sending profile data:', profileData);
       const response = await fetch('https://6kslo2oose.execute-api.ap-south-1.amazonaws.com/getPresignedPhotoUploadUrl-RBRmain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
