@@ -76,7 +76,7 @@ const ProfilePage = () => {
     if (!file) return;
 
     try {
-      const response = await fetch('https://your-api-gateway-url/getPresignedPhotoUploadUrl', {
+      const response = await fetch('https://6kslo2oose.execute-api.ap-south-1.amazonaws.com/getPresignedPhotoUploadUrl-RBRmain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: userId, file_name: file.name }),
@@ -93,7 +93,7 @@ const ProfilePage = () => {
         body: file,
       });
 
-      const publicUrl = `https://your-s3-bucket-name.s3.amazonaws.com/${fileKey}`;
+      const publicUrl = `https://rbrmain-userpictures.s3.amazonaws.com/${fileKey}`;
       setPhotoUrl(publicUrl);
       dispatch({ type: 'SET_PHOTO', payload: publicUrl });
     } catch (err) {
@@ -113,7 +113,7 @@ const ProfilePage = () => {
         reports,
       };
 
-      const response = await fetch('https://your-api-gateway-url/saveUserProfile', {
+      const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profileData),
