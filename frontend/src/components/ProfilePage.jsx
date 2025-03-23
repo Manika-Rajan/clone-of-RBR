@@ -84,16 +84,15 @@ const ProfilePage = () => {
       <Navbar profile />
       <div className='profile-container'>
         <div className="user-info">
-          {state.photoUrl || photoFile ? (
-            <img src={state.photoUrl || photoFile} alt="Profile" className="profile-photo" />
-          ) : (
-            <div>
+         {(state.photoUrl || photoFile) ? (
+              <img src={state.photoUrl || photoFile} alt="Profile" className="profile-photo" />
+            ) : (
               <label className="upload-photo-label">
                 <input type="file" accept="image/*" onChange={handlePhotoUpload} hidden />
                 <button>Upload Photo</button>
               </label>
-            </div>
-          )}
+            )}
+
           <div>
             <h2>
               {state.name || (
