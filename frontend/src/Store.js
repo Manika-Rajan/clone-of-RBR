@@ -6,6 +6,7 @@ export const Store=createContext();
 const initialState={
     isLoggedIn: localStorage.getItem("isLoggedIn") === "true",
     name: localStorage.getItem("name") || "",
+    userId: localStorage.getItem("userId") || "",
     phone:'',
     email:'',
     totalPrice:0,   
@@ -20,7 +21,18 @@ const reducer=(state,action)=>{
         case 'USER_LOGIN':
             localStorage.setItem("isLoggedIn", "true");
             localStorage.setItem("name", action.payload?.name || '');
-            return { ...state, isLoggedIn: true, name: action.payload?.name || '' };
+              if (action.payload?.userId) {
+                    localStorage.setItem("userId", action.payload.userId); // 👈 Optional addition
+                  }
+                  return {
+                    ...state,
+                    isLoggedIn: true,
+                    name: action.payload?.name || '',
+                    userId: action.payload?.userId || state.userId, // 👈 Ensure consistency
+                  };
+        case 'SET_USER_ID':
+              localStorage.setItem("userId", action.payload);
+              return { ...state, userId: action.payload };
         case 'SET_NAME':
             localStorage.setItem("name", action.payload);
             return { ...state, name: action.payload };
@@ -35,10 +47,12 @@ const reducer=(state,action)=>{
           case 'LOGOUT':
             localStorage.removeItem("isLoggedIn");
             localStorage.removeItem("name");
+            localStorage.removeItem("userId");
             return {
                 ...state,
                 isLoggedIn: false,
                 name: '',
+                userId: '',
                 phone: '',
                 email: '',
                 totalPrice: 0,
