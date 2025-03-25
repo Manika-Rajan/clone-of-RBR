@@ -27,30 +27,30 @@ const ProfilePage = () => {
       return;
     }
 
-    if (!userId) {
-      console.warn('User ID not available yet. Trying to fetch from localStorage.');
-      const storedUserId = localStorage.getItem('userId');
-      if (storedUserId) {
-        dispatch({ type: 'SET_USER_ID', payload: storedUserId });
-      } else {
-        console.warn('User ID still missing. Skipping report fetch.');
-        return;
-      }
-    }
+    
+  const storedUserId = userId || localStorage.getItem('userId');
+  if (!storedUserId) {
+    console.warn('User ID missing. Skipping report fetch.');
+    return;
+  }
+
+  dispatch({ type: 'SET_USER_ID', payload: storedUserId });
 
     const fetchReports = async () => {
-      try {
-        const response = await fetch(`https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${userId}`);
-        if (!response.ok) throw new Error('Failed to fetch reports');
-        const data = await response.json();
-        setReports(data.reports || []);
-      } catch (error) {
-        console.error('Error fetching reports:', error);
-      }
-    };
+    try {
+      const response = await fetch(
+        `https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${storedUserId}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch reports');
+      const data = await response.json();
+      setReports(data.reports || []);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+    }
+  };
 
     fetchReports();
-  }, [isLoggedIn, userId, navigate, state, dispatch]);
+  }, [isLoggedIn, userId, navigate, dispatch]);
 
   const fetchPresignedUrl = async (fileKey) => {
     try {
