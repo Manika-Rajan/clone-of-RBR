@@ -30,12 +30,18 @@ const ProfilePage = () => {
     let storedUserId = userId || localStorage.getItem('userId');
 
     if (!storedUserId) {
-      console.warn('User ID missing. Skipping report fetch.');
-      return;
+    console.warn('User ID missing. Redirecting to login...');
+    alert('Session expired. Please log in again.');
+    navigate('/login');
+    return;
     }
 
-    // Ensure Redux store has the user ID
-    dispatch({ type: 'SET_USER_ID', payload: storedUserId });
+    console.log("Retrieved userId:", storedUserId);
+    
+    // Store user ID in Redux if missing
+    if (!userId) {
+      dispatch({ type: 'SET_USER_ID', payload: storedUserId });
+    }
 
     // Store user ID locally for persistence
     localStorage.setItem('userId', storedUserId);
