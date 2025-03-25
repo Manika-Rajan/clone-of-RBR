@@ -55,24 +55,39 @@ const ProfilePage = () => {
   };
 
   const saveProfile = async () => {
+    if (!userId) {
+      alert('User ID is missing. Unable to save profile.');
+      return;
+    }
+
+    const profileData = {
+      user_id: userId,
+      name: nameInput,
+      email: emailInput,
+      phone: state.phone || '',
+      photo_url: photoUrl || ''
+    };
+
+    console.log('Sending profile data:', profileData);
+
     setIsSaving(true);
     try {
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          name: nameInput,
-          email: emailInput,
-          phone: state.phone,
-          photo_url: photoUrl
-        })
+        body: JSON.stringify(profileData)
       });
-      if (!response.ok) throw new Error('Failed to save profile');
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+        throw new Error('Failed to save profile: ' + errorText);
+      }
+
       alert('Profile saved successfully');
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('Failed to save profile');
+      alert('Failed to save profile. Check console for details.');
     } finally {
       setIsSaving(false);
     }
