@@ -14,8 +14,8 @@ const ProfilePage = () => {
   const [selectedUrl, setSelectedUrl] = useState(null);
   const [showNameModal, setShowNameModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [nameInput, setNameInput] = useState('');
-  const [emailInput, setEmailInput] = useState('');
+  const [nameInput, setNameInput] = useState(state.name || '');
+  const [emailInput, setEmailInput] = useState(state.email || '');
   const [photoUrl, setPhotoUrl] = useState(state.photoUrl || null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -28,11 +28,11 @@ const ProfilePage = () => {
     const fetchOrGenerateUserId = async () => {
       if (!userId) {
         try {
-          const response = await fetch('https://your-api-url.com/generateUserId-RBRmain', {
+          const response = await fetch('https://your-api-url/generateUserId-RBRmain', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
           });
-          if (!response.ok) throw new Error('Failed to generate user ID');
+          if (!response.ok) throw new Error('Failed to fetch user ID');
           const data = await response.json();
           dispatch({ type: 'SET_USER_ID', payload: data.user_id });
         } catch (error) {
@@ -42,11 +42,10 @@ const ProfilePage = () => {
     };
 
     fetchOrGenerateUserId();
-  }, [isLoggedIn, userId, dispatch, navigate]);
+  }, [isLoggedIn, userId, navigate, dispatch]);
 
   useEffect(() => {
     if (!userId) return;
-
     const fetchReports = async () => {
       try {
         const response = await fetch(`https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${userId}`);
@@ -57,7 +56,6 @@ const ProfilePage = () => {
         console.error('Error fetching reports:', error);
       }
     };
-
     fetchReports();
   }, [userId]);
 
@@ -66,7 +64,6 @@ const ProfilePage = () => {
       alert('User ID is missing. Cannot save profile.');
       return;
     }
-
     setIsSaving(true);
     try {
       const profileData = {
@@ -77,13 +74,11 @@ const ProfilePage = () => {
         photo_url: photoUrl || '',
         reports,
       };
-
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profileData),
       });
-
       if (!response.ok) throw new Error('Failed to save profile');
       alert('Profile saved successfully!');
     } catch (error) {
@@ -98,10 +93,30 @@ const ProfilePage = () => {
     <div>
       <Navbar profile />
       <div className="profile-container">
-        <button className="save-button" onClick={handleSaveProfile} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save Profile'}
-        </button>
+        <div className="user-info">
+          {photoUrl ? (
+            <img src={photoUrl} alt="Profile" className="profile-photo" />
+          ) : (
+            <label className="upload-photo-label">
+              <input type="file" accept="image/*" hidden />
+              <button>Upload Photo</button>
+            </label>
+          )}
+          <div>
+            <h2>{state.name || <span onClick={() => setShowNameModal(true)}>Update Name</span>}</h2>
+            <p><strong>Phone:</strong> {state.phone || 'Not Available'}</p>
+            <p><strong>Email:</strong> {state.email || <span onClick={() => setShowEmailModal(true)}>Update Email</span>}</p>
+          </div>
+        </div>
+        <button className="save-button" onClick={handleSaveProfile} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Profile'}</button>
+        <h3>Purchased Reports</h3>
+        <ul>
+          {reports.length === 0 ? <p>No purchased reports</p> : reports.map(report => (
+            <li key={report.file_key}><button>{report.file_key} (Version: {report.report_version})</button></li>
+          ))}
+        </ul>
       </div>
+      {selectedUrl && <PDFViewer fileUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
     </div>
   );
 };
