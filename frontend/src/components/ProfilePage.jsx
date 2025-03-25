@@ -54,6 +54,30 @@ const ProfilePage = () => {
     setShowEmailModal(false);
   };
 
+  const saveProfile = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          name: nameInput,
+          email: emailInput,
+          phone: state.phone,
+          photo_url: photoUrl
+        })
+      });
+      if (!response.ok) throw new Error('Failed to save profile');
+      alert('Profile saved successfully');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Failed to save profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div>
       <Navbar profile />
@@ -83,7 +107,7 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        <button className="save-button" onClick={() => {}} disabled={isSaving}>
+        <button className="save-button" onClick={saveProfile} disabled={isSaving}>
           {isSaving ? 'Saving...' : 'Save Profile'}
         </button>
 
