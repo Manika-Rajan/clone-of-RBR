@@ -27,27 +27,31 @@ const ProfilePage = () => {
       return;
     }
 
-    
-  const storedUserId = userId || localStorage.getItem('userId');
-  if (!storedUserId) {
-    console.warn('User ID missing. Skipping report fetch.');
-    return;
-  }
+    let storedUserId = userId || localStorage.getItem('userId');
 
-  dispatch({ type: 'SET_USER_ID', payload: storedUserId });
+    if (!storedUserId) {
+      console.warn('User ID missing. Skipping report fetch.');
+      return;
+    }
+
+    // Ensure Redux store has the user ID
+    dispatch({ type: 'SET_USER_ID', payload: storedUserId });
+
+    // Store user ID locally for persistence
+    localStorage.setItem('userId', storedUserId);
 
     const fetchReports = async () => {
-    try {
-      const response = await fetch(
-        `https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${storedUserId}`
-      );
-      if (!response.ok) throw new Error('Failed to fetch reports');
-      const data = await response.json();
-      setReports(data.reports || []);
-    } catch (error) {
-      console.error('Error fetching reports:', error);
-    }
-  };
+      try {
+        const response = await fetch(
+          `https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${storedUserId}`
+        );
+        if (!response.ok) throw new Error('Failed to fetch reports');
+        const data = await response.json();
+        setReports(data.reports || []);
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+      }
+    };
 
     fetchReports();
   }, [isLoggedIn, userId, navigate, dispatch]);
