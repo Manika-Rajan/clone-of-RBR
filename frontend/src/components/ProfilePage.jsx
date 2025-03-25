@@ -20,14 +20,22 @@ const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    console.log("ProfilePage mounted. State:", state);
+
     if (!isLoggedIn) {
       navigate('/login');
       return;
     }
 
     if (!userId) {
-      console.warn('User ID not available yet. Skipping report fetch.');
-      return;
+      console.warn('User ID not available yet. Trying to fetch from localStorage.');
+      const storedUserId = localStorage.getItem('userId');
+      if (storedUserId) {
+        dispatch({ type: 'SET_USER_ID', payload: storedUserId });
+      } else {
+        console.warn('User ID still missing. Skipping report fetch.');
+        return;
+      }
     }
 
     const fetchReports = async () => {
@@ -42,7 +50,19 @@ const ProfilePage = () => {
     };
 
     fetchReports();
-  }, [isLoggedIn, userId, navigate]);
+  }, [isLoggedIn, userId, navigate, state, dispatch]);
+
+  const fetchPresignedUrl = async (fileKey) => {
+    try {
+      const response = await fetch(`https://api.example.com/getPresignedUrl?file_key=${fileKey}`);
+      if (!response.ok) throw new Error('Failed to get presigned URL');
+      const data = await response.json();
+      setSelectedUrl(data.presigned_url);
+    } catch (error) {
+      console.error('Error fetching presigned URL:', error);
+      alert('Failed to open the report.');
+    }
+  };
 
   const updateName = () => {
     dispatch({ type: 'SET_NAME', payload: nameInput });
@@ -55,6 +75,7 @@ const ProfilePage = () => {
   };
 
   const saveProfile = async () => {
+    console.log("Current userId:", userId);
     if (!userId) {
       alert('User ID is missing. Unable to save profile.');
       return;
@@ -133,7 +154,7 @@ const ProfilePage = () => {
           ) : (
             reports.map((report) => (
               <li key={report.file_key}>
-                <button onClick={() => {}}>
+                <button onClick={() => fetchPresignedUrl(report.file_key)}>
                   {report.file_key} (Version: {report.report_version})
                 </button>
               </li>
@@ -141,6 +162,8 @@ const ProfilePage = () => {
           )}
         </ul>
       </div>
+
+      {selectedUrl && <PDFViewer pdfUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
 
       {showNameModal && (
         <div className="modal">
