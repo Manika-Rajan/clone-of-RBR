@@ -30,21 +30,8 @@ const ProfilePage = () => {
     let storedUserId = userId || localStorage.getItem('userId');
 
     if (!storedUserId || storedUserId === '') {
-    console.warn('User ID missing. Checking again in 1 second...');
-    // Delay checking userId again to allow Redux to update
-    setTimeout(() => {
-      const retryUserId = localStorage.getItem('userId');
-      if (retryUserId && retryUserId !== '') {
-        console.log("✅ Retried userId:", retryUserId);
-        dispatch({ type: 'SET_USER_ID', payload: retryUserId });
-      } else {
-        console.error('❌ Still no userId. Redirecting to login...');
-        alert('Session expired. Please log in again.');
-        navigate('/login');
-      }
-    }, 1000);
-
-    return;
+    console.warn('🚨 User ID missing. Profile data cannot be loaded.');
+    return;   // Stop further execution, but DO NOT redirect or show pop-ups
     }
 
     console.log("Retrieved userId:", storedUserId);
@@ -54,7 +41,7 @@ const ProfilePage = () => {
       dispatch({ type: 'SET_USER_ID', payload: storedUserId });
     }
 
-    // Store user ID locally for persistence
+    // Ensure userId is stored in localStorage
     localStorage.setItem('userId', storedUserId);
 
     const fetchReports = async () => {
