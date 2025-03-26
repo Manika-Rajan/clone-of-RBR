@@ -29,17 +29,28 @@ const ProfilePage = () => {
 
     let storedUserId = userId || localStorage.getItem('userId');
 
-    if (!storedUserId) {
-    console.warn('User ID missing. Redirecting to login...');
-    alert('Session expired. Please log in again.');
-    navigate('/login');
+    if (!storedUserId || storedUserId === '') {
+    console.warn('User ID missing. Checking again in 1 second...');
+    // Delay checking userId again to allow Redux to update
+    setTimeout(() => {
+      const retryUserId = localStorage.getItem('userId');
+      if (retryUserId && retryUserId !== '') {
+        console.log("✅ Retried userId:", retryUserId);
+        dispatch({ type: 'SET_USER_ID', payload: retryUserId });
+      } else {
+        console.error('❌ Still no userId. Redirecting to login...');
+        alert('Session expired. Please log in again.');
+        navigate('/login');
+      }
+    }, 1000);
+
     return;
     }
 
     console.log("Retrieved userId:", storedUserId);
     
     // Store user ID in Redux if missing
-    if (!userId) {
+    if (!userId || userId === '') {
       dispatch({ type: 'SET_USER_ID', payload: storedUserId });
     }
 
