@@ -25,6 +25,8 @@ const ReportsDisplay = () => {
   console.log("ReportsDisplay - isLogin:", isLogin); // Debug
 
   const [openModel, setOpenModel] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Added back
+  const [pdfUrl, setPdfUrl] = useState(''); // Added back
 
   const handlePayment = () => {
     console.log("handlePayment - isLogin:", isLogin); // Debug
@@ -47,7 +49,7 @@ const ReportsDisplay = () => {
         return;
       }
       console.log("Fetching presigned URL for fileKey:", fileKey);
-      setIsLoading(true);
+      setIsLoading(true); // Now defined
       try {
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
@@ -60,15 +62,15 @@ const ReportsDisplay = () => {
         const data = await response.json();
         console.log('API Response:', data);
         if (data.presigned_url) {
-          setPdfUrl(data.presigned_url);
+          setPdfUrl(data.presigned_url); // Now defined
         } else {
           throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
         }
       } catch (error) {
         console.error('Error fetching presigned URL:', error.message);
-        setPdfUrl(null);
+        setPdfUrl(null); // Now defined
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Now defined
       }
     };
     fetchPresignedUrl();
@@ -106,11 +108,11 @@ const ReportsDisplay = () => {
         </nav>
         <div className='viewer col-md-11 col-sm-11 col-11'>
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-            {isLoading ? (
+            {isLoading ? ( // Now defined
               <div className="spinner-border" role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
-            ) : pdfUrl ? (
+            ) : pdfUrl ? ( // Now defined
               <Viewer fileUrl={pdfUrl} plugins={[defaultLayoutPluginInstance]} />
             ) : (
               <div className="spinner-border" role="status">
@@ -127,7 +129,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => setOpenModel(false)} /> {/* Simplified to just Login */}
+          <Login onClose={() => setOpenModel(false)} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
