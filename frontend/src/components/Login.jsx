@@ -7,7 +7,7 @@ import { Store } from '../Store';
 import awsconfig from '../aws-exports.js';
 Amplify.configure(awsconfig);
 
-const Login = ({ onClose }) => { // Simplified props, removed unused sendOtp, setLogin, setVerify
+const Login = ({ onClose }) => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { totalPrice, name, phone, email, status } = state;
 
@@ -25,7 +25,6 @@ const Login = ({ onClose }) => { // Simplified props, removed unused sendOtp, se
     console.log('Signup triggered, otpSent:', otpSent);
 
     if (!otpSent) {
-      // Step 1: Send OTP
       if (number.length !== 10 || !/^\d+$/.test(number)) {
         setError('Please enter a valid 10-digit mobile number');
         return;
@@ -56,7 +55,6 @@ const Login = ({ onClose }) => { // Simplified props, removed unused sendOtp, se
         setError('Failed to connect to server');
       }
     } else {
-      // Step 2: Verify OTP
       if (otpInput.length !== 6 || !/^\d+$/.test(otpInput)) {
         setError('Please enter a valid 6-digit OTP');
         return;
@@ -76,9 +74,10 @@ const Login = ({ onClose }) => { // Simplified props, removed unused sendOtp, se
         const body = JSON.parse(data.body);
         if (data.statusCode === 200) {
           setResponseMessage(body.message);
-          cxtDispatch({ type: 'USER_LOGIN', payload: true }); // Set isLogin to true
-          cxtDispatch({ type: 'SET_NAME', payload: phoneNumber }); // Optional: set name
-          onClose(); // Close the popup
+          cxtDispatch({ type: 'USER_LOGIN', payload: true });
+          cxtDispatch({ type: 'SET_NAME', payload: phoneNumber });
+          console.log('Login successful, isLogin set to true');
+          onClose();
         } else {
           setError(`Error: ${body.error || 'Invalid OTP'}`);
         }
