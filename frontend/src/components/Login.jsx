@@ -7,20 +7,18 @@ import { Store } from '../Store';
 import awsconfig from '../aws-exports.js';
 Amplify.configure(awsconfig);
 
-const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
+const Login = ({ onClose }) => { // Simplified props, removed unused sendOtp, setLogin, setVerify
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { totalPrice, name, phone, email, status } = state;
 
   const [number, setNumber] = useState('');
-  const password = Math.random().toString(6) + 'Abc#'; // Unused, but kept for compatibility
+  const password = Math.random().toString(6) + 'Abc#'; // Unused, kept for compatibility
   const [otpInput, setOtpInput] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
   const [error, setError] = useState('');
-  const [otpSent, setOtpSent] = useState(false); // Toggle between send and verify steps
+  const [otpSent, setOtpSent] = useState(false);
 
-  useEffect(() => {
-    // Empty for now, but kept in case you need initialization logic later
-  }, []);
+  useEffect(() => {}, []);
 
   const Signup = async (event) => {
     event.preventDefault();
@@ -50,9 +48,6 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
           setResponseMessage('OTP sent! Enter it below:');
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           setOtpSent(true);
-          setLogin(false); // Hide phone input
-          sendOtp(true);   // Show OTP input
-          setVerify(false);
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
@@ -83,7 +78,7 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
           setResponseMessage(body.message);
           cxtDispatch({ type: 'USER_LOGIN', payload: true }); // Set isLogin to true
           cxtDispatch({ type: 'SET_NAME', payload: phoneNumber }); // Optional: set name
-          onClose(); // Close the popup after successful verification
+          onClose(); // Close the popup
         } else {
           setError(`Error: ${body.error || 'Invalid OTP'}`);
         }
@@ -98,36 +93,32 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
     <div className="login-popup-container">
       <div className="login-popup">
         <div className="login-title">
-          <h3>Please Enter Your Mobile Number</h3>
+          <h3>{otpSent ? 'Enter OTP to Login' : 'Please Enter Your Mobile Number'}</h3>
         </div>
         <div className="login-paragraph">
-          <p>We will send you a <strong>One Time Password</strong></p>
+          {!otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
         </div>
-        <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
-          <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%' }}>
-            <select className="form-select" aria-label="Default select example">
-              <option selected>+91</option>
-              <option value="2">+11</option>
-            </select>
+        {!otpSent ? (
+          <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
+            <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%' }}>
+              <select className="form-select" aria-label="Default select example">
+                <option selected>+91</option>
+                <option value="2">+11</option>
+              </select>
+            </div>
+            <div className="input-group mb-3">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter Your 10 digit Mobile Number"
+                style={{ textAlign: 'center' }}
+                value={number}
+                onChange={(event) => setNumber(event.target.value)}
+                maxLength={10}
+              />
+            </div>
           </div>
-          <div className="input-group mb-3">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Enter Your 10 digit Mobile Number"
-              style={{ textAlign: 'center' }}
-              value={number}
-              onChange={(event) => setNumber(event.target.value)}
-              maxLength={10}
-            />
-          </div>
-        </div>
-        <div>
-          <button type="submit" className="login-button" onClick={Signup}>
-            {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
-          </button>
-        </div>
-        {otpSent && (
+        ) : (
           <div className="otp-fields">
             <input
               type="text"
@@ -138,6 +129,11 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
             />
           </div>
         )}
+        <div>
+          <button type="submit" className="login-button" onClick={Signup}>
+            {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
+          </button>
+        </div>
         {responseMessage && <p style={{ color: 'green', textAlign: 'center' }}>{responseMessage}</p>}
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       </div>
