@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react'
 import logo from '../assets/logo.svg'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Login from './Login'
 import {Modal,ModalBody,ModalHeader} from "reactstrap"
 import Otp from './Otp'
@@ -26,6 +26,10 @@ const Navbar = (props) => {
   
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation(); // Get current route
+
+  // Check if current route is /report-display
+  const hideNavbar = location.pathname === "/report-display";
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
@@ -43,7 +47,12 @@ const Navbar = (props) => {
     sendOtp(false)
     setVerify(false)
   }
-
+  
+  // If on /report-display, don't render the navbar
+  if (hideNavbar) {
+    return null; // Returning null prevents rendering
+  }
+  
   return (
     <>
     <div className='header'>
