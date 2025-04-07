@@ -7,41 +7,39 @@ import PDFViewer from './PDFViewer';
 
 const ProfilePage = () => {
   const { state, dispatch } = useContext(Store);
-  const { isLogIn, userId } = state;
+  const { isLogin, userId, name, phone, email } = state; // Changed to isLogin
   const navigate = useNavigate();
 
   const [reports, setReports] = useState([]);
   const [selectedUrl, setSelectedUrl] = useState(null);
   const [showNameModal, setShowNameModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [nameInput, setNameInput] = useState(state.name || '');
-  const [emailInput, setEmailInput] = useState(state.email || '');
+  const [nameInput, setNameInput] = useState(name || '');
+  const [emailInput, setEmailInput] = useState(email || '');
   const [photoUrl, setPhotoUrl] = useState(state.photoUrl || null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     console.log("ProfilePage mounted. State:", state);
 
-    if (!isLogIn) {
-      navigate('/login');
+    if (!isLogin) {
+      navigate('/'); // Redirect to home if not logged in
       return;
     }
 
     let storedUserId = userId || localStorage.getItem('userId');
 
     if (!storedUserId || storedUserId === '') {
-    console.warn('🚨 User ID missing. Profile data cannot be loaded.');
-    return;   // Stop further execution, but DO NOT redirect or show pop-ups
+      console.warn('🚨 User ID missing. Profile data cannot be loaded.');
+      return;
     }
 
     console.log("Retrieved userId:", storedUserId);
-    
-    // Store user ID in Redux if missing
+
     if (!userId || userId === '') {
       dispatch({ type: 'SET_USER_ID', payload: storedUserId });
     }
 
-    // Ensure userId is stored in localStorage
     localStorage.setItem('userId', storedUserId);
 
     const fetchReports = async () => {
@@ -51,6 +49,7 @@ const ProfilePage = () => {
         );
         if (!response.ok) throw new Error('Failed to fetch reports');
         const data = await response.json();
+        console.log('Fetched reports:', data); // Debug
         setReports(data.reports || []);
       } catch (error) {
         console.error('Error fetching reports:', error);
@@ -58,13 +57,21 @@ const ProfilePage = () => {
     };
 
     fetchReports();
-  }, [isLogIn, userId, navigate, dispatch]);
+  }, [isLogin, userId, navigate, dispatch, name, phone, email]);
 
   const fetchPresignedUrl = async (fileKey) => {
     try {
-      const response = await fetch(`https://api.example.com/getPresignedUrl?file_key=${fileKey}`);
+      const response = await fetch(
+        `https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL`, // Updated to match ReportsDisplay
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_key: fileKey }),
+        }
+      );
       if (!response.ok) throw new Error('Failed to get presigned URL');
       const data = await response.json();
+      console.log('Presigned URL response:', data); // Debug
       setSelectedUrl(data.presigned_url);
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
@@ -93,7 +100,7 @@ const ProfilePage = () => {
       user_id: userId,
       name: nameInput,
       email: emailInput,
-      phone: state.phone || '',
+      phone: phone || '',
       photo_url: photoUrl || ''
     };
 
@@ -138,14 +145,14 @@ const ProfilePage = () => {
 
           <div>
             <h2>
-              {state.name || (
+              {name || (
                 <span className="update-link" onClick={() => setShowNameModal(true)}>
                   Update Name
                 </span>
               )}
             </h2>
-            <p><strong>Phone:</strong> {state.phone || 'Not Available'}</p>
-            <p><strong>Email:</strong> {state.email ? state.email : (
+            <p><strong>Phone:</strong> {phone || 'Not Available'}</p>
+            <p><strong>Email:</strong> {email ? email : (
               <span className="update-link" onClick={() => setShowEmailModal(true)}>Update Email</span>
             )}</p>
           </div>
@@ -156,19 +163,19 @@ const ProfilePage = () => {
         </button>
 
         <h3>Purchased Reports</h3>
-        <ul>
-          {reports.length === 0 ? (
-            <p>No purchased reports</p>
-          ) : (
-            reports.map((report) => (
+        {reports.length === 0 ? (
+          <p>No purchased reports found.</p>
+        ) : (
+          <ul>
+            {reports.map((report) => (
               <li key={report.file_key}>
                 <button onClick={() => fetchPresignedUrl(report.file_key)}>
-                  {report.file_key} (Version: {report.report_version})
+                  {report.file_key} (Version: {report.report_version || 'N/A'})
                 </button>
               </li>
-            ))
-          )}
-        </ul>
+            ))}
+          </ul>
+        )}
       </div>
 
       {selectedUrl && <PDFViewer pdfUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
