@@ -7,7 +7,7 @@ import PDFViewer from './PDFViewer';
 
 const ProfilePage = () => {
   const { state, dispatch } = useContext(Store);
-  const { isLoggedIn, userId } = state;
+  const { isLogIn, userId } = state;
   const navigate = useNavigate();
 
   const [reports, setReports] = useState([]);
@@ -22,7 +22,7 @@ const ProfilePage = () => {
   useEffect(() => {
     console.log("ProfilePage mounted. State:", state);
 
-    if (!isLoggedIn) {
+    if (!isLogIn) {
       navigate('/login');
       return;
     }
@@ -58,7 +58,7 @@ const ProfilePage = () => {
     };
 
     fetchReports();
-  }, [isLoggedIn, userId, navigate, dispatch]);
+  }, [isLogIn, userId, navigate, dispatch]);
 
   const fetchPresignedUrl = async (fileKey) => {
     try {
