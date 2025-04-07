@@ -12,7 +12,7 @@ const Navbar = (props) => {
   const [otp, sendOtp] = useState(false);
   const [verify, setVerify] = useState(false);
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { name, isLogin } = state; // Changed to isLogin
+  const { name, isLogin } = state;
   console.log("Navbar - isLogin:", isLogin);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -131,7 +131,7 @@ const Navbar = (props) => {
               }}
             />
           )}
-          {verify && <EmailVerify sendOtp={sendOtp} setLogin={setLogin} setVerify={setVerify} />}
+          {/* Removed EmailVerify since it’s not needed */}
         </ModalBody>
       </Modal>
     </>
