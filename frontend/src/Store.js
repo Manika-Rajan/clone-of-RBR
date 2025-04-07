@@ -4,6 +4,7 @@ export const Store = createContext();
 
 const initialState = {
   isLogin: localStorage.getItem("isLogin") === "true" || false,
+  userId: localStorage.getItem("userId") || '', // Added userId
   name: '',
   phone: '',
   email: '',
@@ -16,8 +17,12 @@ const reducer = (state, action) => {
     case 'SET_PRICE':
       return { ...state, totalPrice: action.payload };
     case 'USER_LOGIN':
-      localStorage.setItem("isLogin", action.payload);
-      return { ...state, isLogin: action.payload };
+      localStorage.setItem("isLogin", action.payload.isLogin);
+      if (action.payload.userId) localStorage.setItem("userId", action.payload.userId); // Persist userId
+      return { ...state, isLogin: action.payload.isLogin, userId: action.payload.userId || state.userId };
+    case 'SET_USER_ID': // Added
+      localStorage.setItem("userId", action.payload);
+      return { ...state, userId: action.payload };
     case 'SET_NAME':
       return { ...state, name: action.payload };
     case 'SET_PHONE':
@@ -26,9 +31,10 @@ const reducer = (state, action) => {
       return { ...state, email: action.payload };
     case 'SET_REPORT_STATUS':
       return { ...state, status: !state.status };
-    case 'LOGOUT': // Added
+    case 'LOGOUT':
       localStorage.setItem("isLogin", "false");
-      return { ...state, isLogin: false, name: '', phone: '', email: '' };
+      localStorage.removeItem("userId"); // Clear userId on logout
+      return { ...state, isLogin: false, userId: '', name: '', phone: '', email: '' };
     default:
       return state;
   }
