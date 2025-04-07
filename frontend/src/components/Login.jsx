@@ -81,10 +81,8 @@ const Login = ({ sendOtp, setLogin, setVerify, onClose }) => {
         const body = JSON.parse(data.body);
         if (data.statusCode === 200) {
           setResponseMessage(body.message);
-          cxtDispatch({ type: 'SET_VERIFY', payload: true });
-          setLogin(false);
-          sendOtp(false);
-          setVerify(true);
+          cxtDispatch({ type: 'USER_LOGIN', payload: true }); // Set isLogin to true
+          cxtDispatch({ type: 'SET_NAME', payload: phoneNumber }); // Optional: set name
           onClose(); // Close the popup after successful verification
         } else {
           setError(`Error: ${body.error || 'Invalid OTP'}`);
