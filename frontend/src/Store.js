@@ -4,7 +4,7 @@ import { createContext, useReducer } from "react";
 export const Store=createContext();
 
 const initialState={
-    isLoggedIn: localStorage.getItem("isLoggedIn") === "true",
+    isLoggedIn: localStorage.getItem("isLogin") === "true",
     name: localStorage.getItem("name") || "",
     userId: localStorage.getItem("userId") || "",
     phone:'',
@@ -19,14 +19,14 @@ const reducer=(state,action)=>{
         case 'SET_PRICE':
             return{ ...state, totalPrice:action.payload }
         case 'USER_LOGIN':
-            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("isLogin", "true");
             localStorage.setItem("name", action.payload?.name || '');
               if (action.payload?.userId) {
                     localStorage.setItem("userId", action.payload.userId); // 👈 Optional addition
                   }
                   return {
                     ...state,
-                    isLoggedIn: true,
+                    isLogin: true,
                     name: action.payload?.name || '',
                     userId: action.payload?.userId || state.userId, // 👈 Ensure consistency
                   };
@@ -45,12 +45,12 @@ const reducer=(state,action)=>{
            
 
           case 'LOGOUT':
-            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("isLogin");
             localStorage.removeItem("name");
             localStorage.removeItem("userId");
             return {
                 ...state,
-                isLoggedIn: false,
+                isLogin: false,
                 name: '',
                 userId: '',
                 phone: '',
