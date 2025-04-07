@@ -7,7 +7,7 @@ const initialState={
 
    
 
-    isLogin:false,
+    isLogin:localStorage.getItem("isLogin") === "true" || false,
     name:'',
     phone:'',
     email:'',
@@ -21,6 +21,7 @@ const reducer=(state,action)=>{
         case 'SET_PRICE':
             return{ ...state, totalPrice:action.payload }
         case 'USER_LOGIN':
+          localStorage.setItem("isLogin", action.payload);
           return  {...state,isLogin:action.payload}
         case 'SET_NAME':
             return  {...state,name:action.payload}
