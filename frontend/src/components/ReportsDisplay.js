@@ -8,34 +8,30 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import Login from './Login';
-import Otp from './Otp';
-import EmailVerify from './EmailVerify';
 import { Store } from '../Store';
 import { Modal, ModalBody } from "reactstrap";
 import { useLocation } from 'react-router-dom';
 
 const ReportsDisplay = () => {
   const location = useLocation();
-  const fileKey = location.state?.fileKey || ''; // Get file key from navigation state
-  console.log("Received fileKey:", fileKey); // Debugging line
-  
+  const fileKey = location.state?.fileKey || '';
+  console.log("Received fileKey:", fileKey);
+
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { isLogin, name, status, email } = state;
+
+  console.log("ReportsDisplay - isLogin:", isLogin); // Debug
+
   const [openModel, setOpenModel] = useState(false);
-  const [login, setLogin] = useState(true);
-  const [otp, sendOtp] = useState(false);
-  const [verify, setVerify] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // To show a loading spinner while fetching
 
   const handlePayment = () => {
+    console.log("handlePayment - isLogin:", isLogin); // Debug
     if (isLogin) {
       navigate("/payment");
     } else {
       setOpenModel(true);
-      setLogin(true);
     }
   };
 
@@ -44,49 +40,39 @@ const ReportsDisplay = () => {
     cxtDispatch({ type: 'SET_REPORT_STATUS' });
   };
 
-  // Fetch presigned URL
   useEffect(() => {
     const fetchPresignedUrl = async () => {
       if (!fileKey) {
-      console.error("No fileKey found. Skipping API request.");
-      return;
-    }
-
-  console.log("Fetching presigned URL for fileKey:", fileKey);
-      
-      setIsLoading(true);  // Show loading spinner
+        console.error("No fileKey found. Skipping API request.");
+        return;
+      }
+      console.log("Fetching presigned URL for fileKey:", fileKey);
+      setIsLoading(true);
       try {
-        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', 
-        {
+        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file_key: fileKey }), // Update with your file key
+          body: JSON.stringify({ file_key: fileKey }),
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      );
-      
-      // Check if the response is successful
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-        
-        const data = await response.json();  // Parse JSON response
-        console.log('API Response:', data);  // Log the API response for debugging
-
+        const data = await response.json();
+        console.log('API Response:', data);
         if (data.presigned_url) {
-          setPdfUrl(data.presigned_url); // Set the fetched presigned URL
+          setPdfUrl(data.presigned_url);
         } else {
           throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
         }
       } catch (error) {
         console.error('Error fetching presigned URL:', error.message);
-        setPdfUrl(null); // Clear URL if there's an error
+        setPdfUrl(null);
       } finally {
-        setIsLoading(false); // Stop loading spinner
+        setIsLoading(false);
       }
     };
-
     fetchPresignedUrl();
-  }, [fileKey]); // Fetch only when fileKey changes
+  }, [fileKey]);
 
   return (
     <>
@@ -120,19 +106,16 @@ const ReportsDisplay = () => {
         </nav>
         <div className='viewer col-md-11 col-sm-11 col-11'>
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-            {isLoading ? ( // Show spinner while fetching URL
+            {isLoading ? (
               <div className="spinner-border" role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
-            ) : pdfUrl ? ( // Show Viewer when URL is ready
-              <Viewer
-                fileUrl={pdfUrl} // Use the dynamically fetched URL
-                plugins={[defaultLayoutPluginInstance]}
-              />
+            ) : pdfUrl ? (
+              <Viewer fileUrl={pdfUrl} plugins={[defaultLayoutPluginInstance]} />
             ) : (
-                <div className="spinner-border" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                </div>
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
             )}
           </Worker>
         </div>
@@ -141,11 +124,10 @@ const ReportsDisplay = () => {
         isOpen={openModel}
         toggle={() => setOpenModel(!openModel)}
         style={{ maxWidth: '650px', width: '100%', marginTop: "15%" }}
-        size="lg">
+        size="lg"
+      >
         <ModalBody>
-          {login && <Login sendOtp={sendOtp} setVerify={setVerify} setLogin={setLogin} />}
-          {otp && <Otp sendOtp={sendOtp} setVerify={setVerify} setLogin={setVerify} />}
-          {verify && <EmailVerify sendOtp={sendOtp} setLogin={setLogin} />}
+          <Login onClose={() => setOpenModel(false)} /> {/* Simplified to just Login */}
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
