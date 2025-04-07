@@ -12,7 +12,7 @@ const Login = ({ onClose }) => {
   const { totalPrice, name, phone, email, status } = state;
 
   const [number, setNumber] = useState('');
-  const password = Math.random().toString(6) + 'Abc#'; // Unused, kept for compatibility
+  const password = Math.random().toString(6) + 'Abc#';
   const [otpInput, setOtpInput] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
   const [error, setError] = useState('');
@@ -74,9 +74,14 @@ const Login = ({ onClose }) => {
         const body = JSON.parse(data.body);
         if (data.statusCode === 200) {
           setResponseMessage(body.message);
-          cxtDispatch({ type: 'USER_LOGIN', payload: true });
+          // Assuming the API returns a userId; adjust if it’s different
+          const userId = body.user_id || phoneNumber; // Fallback to phone if no user_id
+          cxtDispatch({ 
+            type: 'USER_LOGIN', 
+            payload: { isLogin: true, userId } 
+          });
           cxtDispatch({ type: 'SET_NAME', payload: phoneNumber });
-          console.log('Login successful, isLogin set to true');
+          console.log('Login successful, isLogin set to true, userId:', userId);
           onClose();
         } else {
           setError(`Error: ${body.error || 'Invalid OTP'}`);
