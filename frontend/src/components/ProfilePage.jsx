@@ -8,6 +8,8 @@ import PDFViewer from './PDFViewer';
 const ProfilePage = () => {
   const { state, dispatch } = useContext(Store);
   const { isLogin, userId, name, phone, email } = state; // Changed to isLogin
+  const [purchasedReports, setPurchasedReports] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const [reports, setReports] = useState([]);
@@ -57,6 +59,25 @@ const ProfilePage = () => {
     };
 
     fetchReports();
+
+    const fetchPurchasedReports = async () => {
+      if (!userId) return;
+      setLoading(true);
+      try {
+        const response = await fetch('YOUR_BACKEND_GET_REPORTS_ENDPOINT', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+        const data = await response.json();
+        setPurchasedReports(data.reports || []);
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPurchasedReports();
   }, [isLogin, userId, navigate, dispatch, name, phone, email]);
 
   const fetchPresignedUrl = async (fileKey) => {
@@ -163,7 +184,19 @@ const ProfilePage = () => {
         </button>
 
         <h3>Purchased Reports</h3>
-        {reports.length === 0 ? (
+        {loading ? (
+                <p>Loading...</p>
+              ) : purchasedReports.length > 0 ? (
+                <ul>
+                  {purchasedReports.map((report) => (
+                    <li key={report.paymentId}>
+                      <a href={report.reportUrl} target="_blank" rel="noopener noreferrer">
+                        {report.fileName} ({new Date(report.purchasedAt).toLocaleDateString()})
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
           <p>No purchased reports found.</p>
         ) : (
           <ul>
