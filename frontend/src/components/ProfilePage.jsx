@@ -19,6 +19,8 @@ const ProfilePage = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [nameInput, setNameInput] = useState(name || '');
   const [emailInput, setEmailInput] = useState(email || '');
+  const [photoUrl, setPhotoUrl] = useState(null); // Added photoUrl state
+  const [photoUploading, setPhotoUploading] = useState(false); // Added photoUploading state
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ const ProfilePage = () => {
 
     const storedUserId = userId || localStorage.getItem('userId');
     if (!storedUserId) {
-      console.warn('User ID missing. Profile data cannot be loaded.');
+      console.warn('User ID missing.');
       setLoading(false);
       setError('User ID not found. Please log in again.');
       return;
@@ -61,6 +63,25 @@ const ProfilePage = () => {
     };
 
     fetchPurchasedReports();
+
+    // Optionally fetch existing photo URL (if stored in DynamoDB)
+    const fetchProfilePhoto = async () => {
+      try {
+        const response = await fetch(
+          'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: storedUserId }),
+          }
+        );
+        const data = await response.json();
+        if (data.photo_url) setPhotoUrl(data.photo_url);
+      } catch (err) {
+        console.error('Error fetching profile photo:', err);
+      }
+    };
+    fetchProfilePhoto();
   }, [isLogin, userId, navigate, dispatch]);
 
   const fetchPresignedUrl = async (fileKey) => {
@@ -75,11 +96,46 @@ const ProfilePage = () => {
       );
       if (!response.ok) throw new Error('Failed to get presigned URL');
       const data = await response.json();
-      console.log('Presigned URL response:', data);
       setSelectedUrl(data.presigned_url);
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
       alert('Failed to open the report.');
+    }
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setPhotoUploading(true);
+    try {
+      // Step 1: Get presigned URL from Lambda
+      const response = await fetch(
+        'https://your-api-id.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        }
+      );
+      if (!response.ok) throw new Error('Failed to get presigned URL');
+      const { presignedUrl, photoUrl } = await response.json();
+
+      // Step 2: Upload photo to S3 using presigned URL
+      await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': 'image/jpeg' },
+      });
+
+      // Step 3: Update local state
+      setPhotoUrl(photoUrl);
+      alert('Photo uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      alert('Failed to upload photo.');
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -95,7 +151,7 @@ const ProfilePage = () => {
 
   const saveProfile = async () => {
     if (!userId) {
-      alert('User ID is missing. Unable to save profile.');
+      alert('User ID is missing.');
       return;
     }
 
@@ -104,9 +160,8 @@ const ProfilePage = () => {
       name: nameInput,
       email: emailInput,
       phone: phone || '',
+      photo_url: photoUrl || '',
     };
-
-    console.log('Sending profile data:', profileData);
 
     setIsSaving(true);
     try {
@@ -118,7 +173,6 @@ const ProfilePage = () => {
           body: JSON.stringify(profileData),
         }
       );
-
       if (!response.ok) throw new Error('Failed to save profile');
       alert('Profile saved successfully');
     } catch (error) {
@@ -128,52 +182,28 @@ const ProfilePage = () => {
       setIsSaving(false);
     }
   };
-  
-const handlePhotoUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
 
-  setPhotoUploading(true);
-  try {
-    // Step 1: Get presigned URL from Lambda
-    const response = await fetch(
-      'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      }
-    );
-    if (!response.ok) throw new Error('Failed to get presigned URL');
-    const { presignedUrl, photoUrl } = await response.json();
-
-    // Step 2: Upload photo to S3 using presigned URL
-    await fetch(presignedUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': 'image/jpeg' },
-    });
-
-    // Step 3: Update local state
-    setPhotoUrl(photoUrl);
-    alert('Photo uploaded successfully!');
-  } catch (error) {
-    console.error('Error uploading photo:', error);
-    alert('Failed to upload photo.');
-  } finally {
-    setPhotoUploading(false);
-  }
-};
-  
-    return (
+  return (
     <div>
       <Navbar profile />
       <div className="profile-container">
         <div className="user-info">
-          <label className="upload-photo-label">
-            <input type="file" accept="image/*" onChange={(e) => console.log('Photo upload TBD')} hidden />
-            <button>Upload Photo</button>
-          </label>
+          {photoUrl ? (
+            <img src={photoUrl} alt="Profile" className="profile-photo" />
+          ) : (
+            <label className="upload-photo-label">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                hidden
+                disabled={photoUploading}
+              />
+              <button disabled={photoUploading}>
+                {photoUploading ? 'Uploading...' : 'Upload Photo'}
+              </button>
+            </label>
+          )}
 
           <div>
             <h2>
