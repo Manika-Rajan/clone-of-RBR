@@ -103,41 +103,60 @@ const ProfilePage = () => {
     }
   };
 
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+const handlePhotoUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) {
+    console.log('No file selected');
+    return;
+  }
 
-    setPhotoUploading(true);
-    try {
-      // Step 1: Get presigned URL from Lambda
-      const response = await fetch(
-        'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId }),
-        }
-      );
-      if (!response.ok) throw new Error('Failed to get presigned URL');
-      const { presignedUrl, photoUrl } = await response.json();
+  console.log('File selected:', file.name, file.type, file.size);
 
-      // Step 2: Upload photo to S3 using presigned URL
-      await fetch(presignedUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': 'image/jpeg' },
-      });
-
-      // Step 3: Update local state
-      setPhotoUrl(photoUrl);
-      alert('Photo uploaded successfully!');
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      alert('Failed to upload photo.');
-    } finally {
-      setPhotoUploading(false);
+  setPhotoUploading(true);
+  try {
+    // Step 1: Get presigned URL from Lambda
+    console.log('Fetching presigned URL for userId:', userId);
+    const response = await fetch(
+      'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      }
+    );
+    console.log('Presigned URL response status:', response.status);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
     }
-  };
+    const { presignedUrl, photoUrl } = await response.json();
+    console.log('Presigned URL received:', presignedUrl);
+    console.log('Photo URL:', photoUrl);
+
+    // Step 2: Upload photo to S3 using presigned URL
+    console.log('Uploading file to S3...');
+    const uploadResponse = await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': 'image/jpeg' },
+    });
+    console.log('S3 upload response status:', uploadResponse.status);
+    if (!uploadResponse.ok) {
+      const uploadErrorText = await uploadResponse.text();
+      throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
+    }
+
+    // Step 3: Update local state
+    setPhotoUrl(photoUrl);
+    console.log('Photo upload successful, photoUrl set:', photoUrl);
+    alert('Photo uploaded successfully!');
+  } catch (error) {
+    console.error('Error uploading photo:', error.message);
+    alert(`Failed to upload photo: ${error.message}`);
+  } finally {
+    setPhotoUploading(false);
+  }
+};
 
   const updateName = () => {
     dispatch({ type: 'SET_NAME', payload: nameInput });
