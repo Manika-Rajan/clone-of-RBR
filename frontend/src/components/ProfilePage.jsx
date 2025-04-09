@@ -191,18 +191,25 @@ const ProfilePage = () => {
           {photoUrl ? (
             <img src={photoUrl} alt="Profile" className="profile-photo" />
           ) : (
-            <label className="upload-photo-label">
+            <div className="upload-photo-container">
               <input
                 type="file"
                 accept="image/*"
                 onChange={handlePhotoUpload}
-                hidden
+                id="photo-upload-input"
+                style={{ display: 'none' }} // Replaced hidden with CSS
                 disabled={photoUploading}
               />
-              <button disabled={photoUploading}>
-                {photoUploading ? 'Uploading...' : 'Upload Photo'}
-              </button>
-            </label>
+              <label htmlFor="photo-upload-input" className="upload-photo-label">
+                <button
+                  type="button" // Prevent form submission
+                  disabled={photoUploading}
+                  onClick={() => document.getElementById('photo-upload-input').click()} // Explicitly trigger input
+                >
+                  {photoUploading ? 'Uploading...' : 'Upload Photo'}
+                </button>
+              </label>
+            </div>
           )}
 
           <div>
