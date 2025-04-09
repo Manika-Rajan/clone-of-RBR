@@ -111,7 +111,7 @@ const ProfilePage = () => {
     try {
       // Step 1: Get presigned URL from Lambda
       const response = await fetch(
-        'https://your-api-id.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
+        'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
