@@ -156,11 +156,16 @@ margin-top:1%;
   border-radius: 10px;
 }
 
+.upload-photo-container {
+  margin: 10px 0;
+}
+
 .upload-photo-label button {
-  background-color: #007bff;
+  padding: 8px 16px;
+  background-color: #0263c7; /* Match your app's theme */
   color: white;
   border: none;
-  padding: 8px 12px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
