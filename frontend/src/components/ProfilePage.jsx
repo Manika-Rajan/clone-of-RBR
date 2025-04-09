@@ -128,8 +128,44 @@ const ProfilePage = () => {
       setIsSaving(false);
     }
   };
+  
+const handlePhotoUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-  return (
+  setPhotoUploading(true);
+  try {
+    // Step 1: Get presigned URL from Lambda
+    const response = await fetch(
+      'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      }
+    );
+    if (!response.ok) throw new Error('Failed to get presigned URL');
+    const { presignedUrl, photoUrl } = await response.json();
+
+    // Step 2: Upload photo to S3 using presigned URL
+    await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': 'image/jpeg' },
+    });
+
+    // Step 3: Update local state
+    setPhotoUrl(photoUrl);
+    alert('Photo uploaded successfully!');
+  } catch (error) {
+    console.error('Error uploading photo:', error);
+    alert('Failed to upload photo.');
+  } finally {
+    setPhotoUploading(false);
+  }
+};
+  
+    return (
     <div>
       <Navbar profile />
       <div className="profile-container">
