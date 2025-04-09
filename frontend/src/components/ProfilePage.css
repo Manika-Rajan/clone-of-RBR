@@ -169,6 +169,10 @@ margin-top:1%;
   cursor: pointer;
 }
 
+.upload-photo-label button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
     
 @media (max-width: 576px) { 
     .image-one{
