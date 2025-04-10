@@ -207,14 +207,15 @@ const ProfilePage = () => {
             <img src={photoUrl} alt="Profile" className="profile-photo" />
           ) : (
             <div className="upload-photo-container">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                id="photo-upload-input"
-                style={{ display: 'none' }}
-                disabled={photoUploading}
-              />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              id="photo-upload-input"
+              name="photoUpload" // Added
+              style={{ display: 'none' }}
+              disabled={photoUploading}
+            />
               <label htmlFor="photo-upload-input" className="upload-photo-label">
                 <button
                   type="button"
