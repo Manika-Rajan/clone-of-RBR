@@ -110,6 +110,12 @@ const ProfilePage = () => {
     }
 
     console.log('File selected:', file.name, file.type, file.size);
+    console.log('Current userId:', userId);
+    if (!userId) {
+      console.error('userId is undefined');
+      alert('Failed to upload photo: userId is undefined');
+      return;
+    }
 
     setPhotoUploading(true);
     try {
@@ -122,7 +128,10 @@ const ProfilePage = () => {
           body: JSON.stringify({ userId }),
         }
       );
-      console.log('Presigned URL response status:', response.status);
+      console.log('Presigned URL response:', response ? response.status : 'No response');
+      if (!response) {
+        throw new Error('No response from server');
+      }
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
@@ -135,9 +144,12 @@ const ProfilePage = () => {
       const uploadResponse = await fetch(presignedUrl, {
         method: 'PUT',
         body: file,
-        headers: { 'Content-Type': file.type }, // Dynamic Content-Type
+        headers: { 'Content-Type': file.type },
       });
-      console.log('S3 upload response status:', uploadResponse.status);
+      console.log('S3 upload response:', uploadResponse ? uploadResponse.status : 'No response');
+      if (!uploadResponse) {
+        throw new Error('No response from S3');
+      }
       if (!uploadResponse.ok) {
         const uploadErrorText = await uploadResponse.text();
         throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
@@ -207,15 +219,15 @@ const ProfilePage = () => {
             <img src={photoUrl} alt="Profile" className="profile-photo" />
           ) : (
             <div className="upload-photo-container">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoUpload}
-              id="photo-upload-input"
-              name="photoUpload" // Added
-              style={{ display: 'none' }}
-              disabled={photoUploading}
-            />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                id="photo-upload-input"
+                name="photoUpload"
+                style={{ display: 'none' }}
+                disabled={photoUploading}
+              />
               <label htmlFor="photo-upload-input" className="upload-photo-label">
                 <button
                   type="button"
