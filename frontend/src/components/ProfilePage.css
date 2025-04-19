@@ -1,16 +1,16 @@
 /* ProfilePage.css */
 .profile-page {
   min-height: 100vh;
-  background-color: #f4f7fa; /* Light background for visibility */
-  padding-top: 70px; /* Reduced to 70px to tightly match Navbar height (~60px logo + 20px padding) */
+  background-color: #f4f7fa;
+  padding-top: 65px; /* Reduced to 65px to tightly match Navbar height */
 }
 
 .profile-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  margin-top: 0; /* Ensure no extra top margin */
-  padding-top: 0; /* Remove any top padding */
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .profile-card {
@@ -19,7 +19,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 24px;
   margin-bottom: 24px;
-  margin-top: 0; /* Ensure no extra top margin */
+  margin-top: 0;
 }
 
 .user-info {
