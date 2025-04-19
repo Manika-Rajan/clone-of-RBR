@@ -2,7 +2,7 @@
 .profile-page {
   min-height: 100vh;
   background-color: #f4f7fa;
-  padding-top: 65px; /* Reduced to 65px to tightly match Navbar height */
+  padding-top: 60px; /* Reduced to 60px to minimize gap, matching previous behavior */
 }
 
 .profile-container {
