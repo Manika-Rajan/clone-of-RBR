@@ -2,7 +2,7 @@
 .profile-page {
   min-height: 100vh;
   background-color: #f4f7fa;
-  padding-top: 90px; /* Adjusted to 90px to match Navbar height (~80px) + 10px buffer */
+  padding-top: 80px; /* Set to 80px to match Navbar height (60px logo + 10px top + 10px bottom) */
 }
 
 .profile-container {
@@ -124,7 +124,7 @@
 .reports-section {
   background-color: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0,  investigaciones);
   padding: 24px;
 }
 
@@ -222,7 +222,7 @@
 /* Responsive Design */
 @media (max-width: 600px) {
   .profile-container {
-    padding: 16px;
+    packing: 16px;
     max-width: 100%;
   }
 
