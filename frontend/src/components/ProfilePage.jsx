@@ -211,81 +211,90 @@ const ProfilePage = () => {
   };
 
   return (
-    <div>
+    <div className="profile-page">
       <Navbar profile />
       <div className="profile-container">
-        <div className="user-info">
-          {photoUrl ? (
-            <img src={photoUrl} alt="Profile" className="profile-photo" />
-          ) : (
-            <div className="upload-photo-container">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                id="photo-upload-input"
-                name="photoUpload"
-                style={{ display: 'none' }}
-                disabled={photoUploading}
-              />
-              <label htmlFor="photo-upload-input" className="upload-photo-label">
-                <button
-                  type="button"
-                  disabled={photoUploading}
-                  onClick={() => document.getElementById('photo-upload-input').click()}
-                >
-                  {photoUploading ? 'Uploading...' : 'Upload Photo'}
-                </button>
-              </label>
+        <div className="profile-card">
+          <div className="user-info">
+            <div className="photo-section">
+              {photoUrl ? (
+                <img src={photoUrl} alt="Profile" className="profile-photo" />
+              ) : (
+                <div className="upload-photo-container">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    id="photo-upload-input"
+                    name="photoUpload"
+                    className="photo-input"
+                    disabled={photoUploading}
+                  />
+                  <label htmlFor="photo-upload-input" className="upload-photo-label">
+                    <button
+                      type="button"
+                      disabled={photoUploading}
+                      className="upload-button"
+                    >
+                      {photoUploading ? 'Uploading...' : 'Upload Photo'}
+                    </button>
+                  </label>
+                </div>
+              )}
             </div>
-          )}
-
-          <div>
-            <h2>
-              {name || (
-                <span className="update-link" onClick={() => setShowNameModal(true)}>
-                  Update Name
-                </span>
-              )}
-            </h2>
-            <p><strong>Phone:</strong> {phone || 'Not Available'}</p>
-            <p>
-              <strong>Email:</strong>{' '}
-              {email || (
-                <span className="update-link" onClick={() => setShowEmailModal(true)}>
-                  Update Email
-                </span>
-              )}
-            </p>
+            <div className="info-section">
+              <h2 className="user-name">
+                {name || (
+                  <span className="update-link" onClick={() => setShowNameModal(true)}>
+                    Update Name
+                  </span>
+                )}
+              </h2>
+              <p className="user-detail">
+                <strong>Phone:</strong> {phone || 'Not Available'}
+              </p>
+              <p className="user-detail">
+                <strong>Email:</strong>{' '}
+                {email || (
+                  <span className="update-link" onClick={() => setShowEmailModal(true)}>
+                    Update Email
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
+          <button className="save-button" onClick={saveProfile} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Profile'}
+          </button>
         </div>
 
-        <button className="save-button" onClick={saveProfile} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save Profile'}
-        </button>
-
-        <h3>Purchased Reports</h3>
-        {loading ? (
-          <p>Loading...</p>
-        ) : error ? (
-          <p className="error">{error}</p>
-        ) : purchasedReports.length > 0 ? (
-          <ul>
-            {purchasedReports.map((report) => (
-              <li key={report.file_key}>
-                <button onClick={() => fetchPresignedUrl(report.file_key)}>
-                  {report.file_key.split('/').pop()} (Version: {report.report_version || 'N/A'})
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No purchased reports found.</p>
-        )}
+        <div className="reports-section">
+          <h3 className="section-title">Purchased Reports</h3>
+          {loading ? (
+            <div className="loading-spinner">Loading...</div>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : purchasedReports.length > 0 ? (
+            <div className="reports-list">
+              {purchasedReports.map((report) => (
+                <div key={report.file_key} className="report-card">
+                  <button
+                    onClick={() => fetchPresignedUrl(report.file_key)}
+                    className="report-button"
+                  >
+                    {report.file_key.split('/').pop()} (Version: {report.report_version || 'N/A'})
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="no-reports">No purchased reports found.</p>
+          )}
+        </div>
 
         {selectedUrl && <PDFViewer pdfUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
 
-        <Modal isOpen={showNameModal} toggle={() => setShowNameModal(false)}>
+        <Modal isOpen={showNameModal} toggle={() => setShowNameModal(false)} className="profile-modal">
           <ModalHeader toggle={() => setShowNameModal(false)}>Update Name</ModalHeader>
           <ModalBody>
             <input
@@ -294,16 +303,18 @@ const ProfilePage = () => {
               className="form-control"
               placeholder="Enter your name"
             />
-            <button className="btn btn-primary mt-2" onClick={updateName}>
-              Update
-            </button>
-            <button className="btn btn-secondary mt-2 ml-2" onClick={() => setShowNameModal(false)}>
-              Cancel
-            </button>
+            <div className="modal-buttons">
+              <button className="btn btn-primary" onClick={updateName}>
+                Update
+              </button>
+              <button className="btn btn-secondary" onClick={() => setShowNameModal(false)}>
+                Cancel
+              </button>
+            </div>
           </ModalBody>
         </Modal>
 
-        <Modal isOpen={showEmailModal} toggle={() => setShowEmailModal(false)}>
+        <Modal isOpen={showEmailModal} toggle={() => setShowEmailModal(false)} className="profile-modal">
           <ModalHeader toggle={() => setShowEmailModal(false)}>Update Email</ModalHeader>
           <ModalBody>
             <input
@@ -313,12 +324,14 @@ const ProfilePage = () => {
               className="form-control"
               placeholder="Enter your email"
             />
-            <button className="btn btn-primary mt-2" onClick={updateEmail}>
-              Update
-            </button>
-            <button className="btn btn-secondary mt-2 ml-2" onClick={() => setShowEmailModal(false)}>
-              Cancel
-            </button>
+            <div className="modal-buttons">
+              <button className="btn btn-primary" onClick={updateEmail}>
+                Update
+              </button>
+              <button className="btn btn-secondary" onClick={() => setShowEmailModal(false)}>
+                Cancel
+              </button>
+            </div>
           </ModalBody>
         </Modal>
       </div>
