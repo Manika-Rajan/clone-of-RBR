@@ -2,11 +2,11 @@
 .profile-page {
   min-height: 100vh;
   background-color: #f4f7fa;
-  padding-top: 80px; /* Adjust for Navbar height */
+  padding-top: 60px; /* Reduced from 80px to minimize empty space */
 }
 
 .profile-container {
-  max-width: 800px;
+  max-width: 1200px; /* Increased from 800px to 1200px (150% wider) */
   margin: 0 auto;
   padding: 20px;
 }
@@ -222,6 +222,7 @@
 @media (max-width: 600px) {
   .profile-container {
     padding: 16px;
+    max-width: 100%; /* Prevent overflow on small screens */
   }
 
   .user-info {
