@@ -8,7 +8,6 @@
 .profile-page .header {
   margin: 0 !important; /* Neutralize header spacing */
   padding: 0 !important;
-  border-bottom: 2px solid red; /* Temporary for debugging */
 }
 
 .profile-container {
@@ -17,7 +16,6 @@
   padding: 20px;
   margin-top: 0;
   padding-top: 0;
-  border-top: 2px solid blue; /* Temporary for debugging */
 }
 
 .profile-card {
