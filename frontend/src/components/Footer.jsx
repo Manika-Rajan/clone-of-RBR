@@ -70,13 +70,21 @@ const Footer = () => {
     <u><p>©
     2023 Rajan Business Ideas Pvt. Ltd.</p></u>
     </div>
-    <div  className='col-md-2 col-sm-2 col-4'>
-    <p>Terms & Conditions
-    </p>
-    </div >
-    <div  className='col-md-2 col-sm-4 col-4'>
-    <p>Privacy Policy</p>
+    <div className="col-md-2 col-sm-4 col-6">
+    <Link to="/terms" onClick={() => window.scrollTo(0, 0)}>
+    Terms & Conditions
+    </Link>
     </div>
+    <div className="col-md-2 col-sm-4 col-12">
+          <Link to="/refund-policy" style={{ color: 'white' }} onClick={() => window.scrollTo(0, 0)}>
+            Refund Policy
+          </Link>
+        </div>
+        <div className="col-md-3 col-sm-4 col-12">
+          <Link to="/privacy-policy" style={{ color: 'white' }} onClick={() => window.scrollTo(0, 0)}>
+            Privacy Policy
+          </Link>
+        </div>
     </div>
     </div>
   )
