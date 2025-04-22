@@ -1,6 +1,7 @@
 import './App.css';
 import About from './components/About';
 import Contact from './components/Contact';
+import TermsAndConditions from './components/TermsAndConditions';
 import Navbar from './components/Navbar';
 import Reports from './components/Reports';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -10,6 +11,8 @@ import Payment from './components/Payment';
 import Footer from './components/Footer';
 import CommingSoon from './components/CommingSoon';
 import Invalid from './components/Invalid';
+import RefundPolicy from './components/RefundPolicy'; 
+import PrivacyPolicy from './components/PrivacyPolicy'; 
 
 function App() {
   return (
@@ -26,6 +29,9 @@ function App() {
           <Route path='/commingSoon' element={<CommingSoon />} />
           <Route path='/not-found' element={<Invalid />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
         <Footer />
       </div>
