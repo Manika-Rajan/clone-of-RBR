@@ -2,7 +2,13 @@
 .profile-page {
   min-height: 100vh;
   background-color: #f4f7fa;
-  padding-top: 60px; /* Reduced to 60px to minimize gap, matching previous behavior */
+  padding-top: 58px; /* Reduced to 58px to tightly match Navbar height (~60px logo) */
+}
+
+.profile-page .header {
+  margin: 0 !important; /* Neutralize header spacing */
+  padding: 0 !important;
+  border-bottom: 2px solid red; /* Temporary for debugging */
 }
 
 .profile-container {
@@ -11,6 +17,7 @@
   padding: 20px;
   margin-top: 0;
   padding-top: 0;
+  border-top: 2px solid blue; /* Temporary for debugging */
 }
 
 .profile-card {
