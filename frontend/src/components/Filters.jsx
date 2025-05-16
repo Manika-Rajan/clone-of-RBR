@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import './Filters.css'
-import './Reports.css'
+// import './Reports.css'
 import search from '../assets/search.svg'
 import close from '../assets/close.svg'
 const Filters = ({updateIndustry,updateMarket,updateCity,updateCompetitors,updatePain,country,setCountry,
