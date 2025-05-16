@@ -268,7 +268,9 @@ const handleSubmitFilters = () => {
         <div className="accordion-item1">
           <div className="accordion-title1"
           onClick={()=>{
-            setIndustry(!industry)
+            console.log('Industry accordion clicked, current industry:', industry);
+            setIndustry(!industry);
+            console.log('Industry set to:', !industry);
             setCountry(false)
             setCity(false)
             setCompetitors(false)
