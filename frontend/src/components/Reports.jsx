@@ -508,7 +508,83 @@ const Reports = () => {
                   )}
                 </div>
               </div>
-                {/*Similar block for competitor */}
+                {/*Similar block for Market */}
+                <div className="one-filter">
+                <div
+                  className="heading"
+                  onClick={() => {
+                    setMarket(!market);
+                    setCity(false);
+                    setCountry(false);
+                    setCompetitors(false);
+                    setPainpoints(false);
+                    setIndustry(false);
+                  }}
+                  style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
+                >
+                  Market Segment   
+                  {select_market.length ? (
+                    <span className="text-primary">({select_market.length})</span>
+                  ) : (
+                    <span className="text-muted">({select_market.length})</span>
+                  )}
+                </div>
+                <div className="all-select-filters">
+                  {expandMarket
+                    ? select_market &&
+                      select_market.map((value, index) => (
+                        <div key={index}>
+                          <div className="filter-button">
+                            <div>{value}</div>
+                            <div
+                              onClick={() => removeMarket(value)}
+                              style={{
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                paddingTop: '4px',
+                                height: '16px',
+                                width: '16px',
+                                marginLeft: '8px'
+                              }}
+                            >
+                              X
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    : select_market &&
+                      select_market.slice(0, 2).map((value, index) => (
+                        <div key={index}>
+                          <div className="filter-button">
+                            <div>{value}</div>
+                            <div
+                              onClick={() => removeMarket(value)}
+                              style={{
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                paddingTop: '4px',
+                                height: '16px',
+                                width: '16px',
+                                marginLeft: '8px'
+                              }}
+                            >
+                              X
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  {select_market.length > 2 && (
+                    <p
+                      className="text-primary"
+                      style={{ textAlign: 'left', cursor: 'pointer' }}
+                      onClick={() => setExpandMarket(!expandMarket)}
+                    >
+                      <u>+{select_market.length - 2} more</u>
+                    </p>
+                  )}
+                </div>
+              </div>
+                {/*Similar block for Painpoints */}
                 {/* Add similar blocks for competitors, market, pain points */}
               </div>
             </div>
