@@ -585,6 +585,81 @@ const Reports = () => {
                 </div>
               </div>
                 {/*Similar block for Painpoints */}
+                <div className="one-filter">
+                <div
+                  className="heading"
+                  onClick={() => {
+                    setPainpoints(!painpoints);
+                    setCity(false);
+                    setCountry(false);
+                    setCompetitors(false);
+                    setMarket(false);
+                    setIndustry(false);
+                  }}
+                  style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
+                >
+                  Pain Points   
+                  {select_pain.length ? (
+                    <span className="text-primary">({select_pain.length})</span>
+                  ) : (
+                    <span className="text-muted">({select_pain.length})</span>
+                  )}
+                </div>
+                <div className="all-select-filters">
+                  {expandPain
+                    ? select_pain &&
+                      select_pain.map((value, index) => (
+                        <div key={index}>
+                          <div className="filter-button">
+                            <div>{value}</div>
+                            <div
+                              onClick={() => removePain(value)}
+                              style={{
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                paddingTop: '4px',
+                                height: '16px',
+                                width: '16px',
+                                marginLeft: '8px'
+                              }}
+                            >
+                              X
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    : select_pain &&
+                      select_pain.slice(0, 2).map((value, index) => (
+                        <div key={index}>
+                          <div className="filter-button">
+                            <div>{value}</div>
+                            <div
+                              onClick={() => removePain(value)}
+                              style={{
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                paddingTop: '4px',
+                                height: '16px',
+                                width: '16px',
+                                marginLeft: '8px'
+                              }}
+                            >
+                              X
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  {select_pain.length > 2 && (
+                    <p
+                      className="text-primary"
+                      style={{ textAlign: 'left', cursor: 'pointer' }}
+                      onClick={() => setExpandPain(!expandPain)}
+                    >
+                      <u>+{select_pain.length - 2} more</u>
+                    </p>
+                  )}
+                </div>
+              </div>
                 {/* Add similar blocks for competitors, market, pain points */}
               </div>
             </div>
