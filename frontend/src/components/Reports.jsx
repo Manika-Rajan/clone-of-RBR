@@ -358,7 +358,7 @@ const Reports = () => {
                     )}
                   </div>
                 </div>
-                {/* Repeat similar blocks for city, competitors, market, pain points */}
+
                 <div className="one-filter">
                   <div
                     className="heading"
@@ -432,6 +432,83 @@ const Reports = () => {
                     )}
                   </div>
                 </div>
+                {/*Similar block for competitor */}
+                <div className="one-filter">
+                <div
+                  className="heading"
+                  onClick={() => {
+                    setCompetitors(!competitors);
+                    setCity(false);
+                    setCountry(false);
+                    setMarket(false);
+                    setPainpoints(false);
+                    setIndustry(false);
+                  }}
+                  style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
+                >
+                  List of Competitors   
+                  {select_competitors.length ? (
+                    <span className="text-primary">({select_competitors.length})</span>
+                  ) : (
+                    <span className="text-muted">({select_competitors.length})</span>
+                  )}
+                </div>
+                <div className="all-select-filters">
+                  {expandCompetitors
+                    ? select_competitors &&
+                      select_competitors.map((value, index) => (
+                        <div key={index}>
+                          <div className="filter-button">
+                            <div>{value}</div>
+                            <div
+                              onClick={() => removeCompetitors(value)}
+                              style={{
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                paddingTop: '4px',
+                                height: '16px',
+                                width: '16px',
+                                marginLeft: '8px'
+                              }}
+                            >
+                              X
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    : select_competitors &&
+                      select_competitors.slice(0, 2).map((value, index) => (
+                        <div key={index}>
+                          <div className="filter-button">
+                            <div>{value}</div>
+                            <div
+                              onClick={() => removeCompetitors(value)}
+                              style={{
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                paddingTop: '4px',
+                                height: '16px',
+                                width: '16px',
+                                marginLeft: '8px'
+                              }}
+                            >
+                              X
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  {select_competitors.length > 2 && (
+                    <p
+                      className="text-primary"
+                      style={{ textAlign: 'left', cursor: 'pointer' }}
+                      onClick={() => setExpandCompetitors(!expandCompetitors)}
+                    >
+                      <u>+{select_competitors.length - 2} more</u>
+                    </p>
+                  )}
+                </div>
+              </div>
+                {/*Similar block for competitor */}
                 {/* Add similar blocks for competitors, market, pain points */}
               </div>
             </div>
