@@ -205,7 +205,7 @@ const Reports = () => {
   },[select_industry,select_city,select_competitors,select_market,select_pain,price,expandCity,expandCompetitors,expandIndustry,expandPain])
   return (
     <>
-    <Navbar reports/>
+    {/* <Navbar reports/> */}
     {popup&&<div className="nav-popup row">
     <div className="col-md-11 col-sm-10 col-10">
     <p className='container'>Use the Promo code "<strong>RBideas 25</strong>"to get an instant 25% discount during the purchase.Valid till 31st August 2023 
