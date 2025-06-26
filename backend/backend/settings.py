@@ -33,10 +33,12 @@ SECRET_KEY = 'django-insecure-fy#o=^#vr)d+d6p87l%*i%zup5=5ctv8e4l9z#6sswm5xp=wxi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['13.126.68.197','127.0.0.1','localhost']
+ALLOWED_HOSTS = ['.elasticbeanstalk.com','13.126.68.197','127.0.0.1','localhost']
 CORS_ALLOW_ALL_ORIGINS = True
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'  # For Razorpay popups[](https://studygyaan.com/django/django-razorpay-payment-gateway-integration-tutorial)
 
 CORS_ORIGIN_WHITELIST = [
+    'https://main.d38sdwl55z3dqy.amplifyapp.com',
     'http://localhost:3000',
 ]
 # Application definition
