@@ -1,8 +1,7 @@
 from django.urls import path
-
-from .views import *
+from . import views
 
 urlpatterns = [
-    path('pay/', start_payment, name="payment"),
-    path('payment/success/', handle_payment_success, name="payment_success")
+    path('razorpay/pay/', views.start_payment, name='start_payment'),
+    path('razorpay/payment/success/', views.handle_payment_success, name='handle_payment_success'),
 ]
