@@ -4,6 +4,7 @@ import environ
 import razorpay
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.conf import settings
 
 from .models import Order
 from .serializers import OrderSerializer
@@ -18,17 +19,20 @@ environ.Env.read_env()
 @api_view (['POST'])
 def start_payment(request):
     # request.data is coming from frontend
-    amount = request.data['amount']
+    amount = request.data.get('amount')
+
+    if not amount or float(amount) <= 0:
+        return Response({'error': 'Invalid amount'}, status=400)
     
 
     # setup razorpay client this is the client to whom user is paying money to (us)
-    client = razorpay.Client(auth=(env('PUBLIC_KEY'), env('SECRET_KEY')))
+    client = razorpay.Client(auth=(settings.RAZORPAY_PUBLIC_KEY, settings.RAZORPAY_SECRET_KEY))
 
     # create razorpay order
     # the amount will come in 'paise' that means if we pass 50 amount will become
     # 0.5 rupees that means 50 paise so we have to convert it in rupees. So, we will 
     # mumtiply it by 100 so it will be 50 rupees.
-    payment = client.order.create({"amount": int(amount) * 100, 
+    payment = client.order.create({"amount": int(float(amount) * 100), 
                                    "currency": "INR", 
                                    "payment_capture": "1"})
 
@@ -37,7 +41,9 @@ def start_payment(request):
     # function
     order = Order.objects.create( 
                                  order_amount=amount, 
-                                 order_payment_id=payment['id'])
+                                 order_payment_id=payment['id']
+                                 order_product=request.data.get('product_name', '')  # Optional product name
+                                )
 
     serializer = OrderSerializer(order)
 
@@ -68,45 +74,32 @@ def handle_payment_success(request):
     this will come from frontend which we will use to validate and confirm the payment
     """
 
-    ord_id = ""
-    raz_pay_id = ""
-    raz_signature = ""
+    ord_id = res.get('razorpay_order_id')
+    raz_pay_id = res.get('razorpay_payment_id')
+    raz_signature = res.get('razorpay_signature')
+    
+    if not all([ord_id, raz_pay_id, raz_signature]):
+        return Response({'error': 'Missing payment details'}, status=400)
 
-    # res.keys() will give us list of keys in res
-    for key in res.keys():
-        if key == 'razorpay_order_id':
-            ord_id = res[key]
-        elif key == 'razorpay_payment_id':
-            raz_pay_id = res[key]
-        elif key == 'razorpay_signature':
-            raz_signature = res[key]
 
     # get order by payment_id which we've created earlier with isPaid=False
-    order = Order.objects.get(order_payment_id=ord_id)
+    try:
+        order = Order.objects.get(order_payment_id=ord_id)
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=404)
 
     # we will pass this whole data in razorpay client to verify the payment
+    client = razorpay.Client(auth=(settings.RAZORPAY_PUBLIC_KEY, settings.RAZORPAY_SECRET_KEY))
     data = {
         'razorpay_order_id': ord_id,
         'razorpay_payment_id': raz_pay_id,
         'razorpay_signature': raz_signature
     }
 
-    client = razorpay.Client(auth=(env('PUBLIC_KEY'), env('SECRET_KEY')))
-
-    # checking if the transaction is valid or not by passing above data dictionary in 
-    # razorpay client if it is "valid" then check will return None
-    check = client.utility.verify_payment_signature(data)
-
-    if check is not None:
-        print("Redirect to error url or error page")
-        return Response({'error': 'Something went wrong'})
-
-    # if payment is successful that means check is None then we will turn isPaid=True
-    order.isPaid = True
-    order.save()
-
-    res_data = {
-        'message': 'payment successfully received!'
-    }
-
-    return Response(res_data)
+    try:
+        client.utility.verify_payment_signature(data)
+        order.isPaid = True
+        order.save()
+        return Response({'message': 'payment successfully received!'})
+    except razorpay.errors.SignatureVerificationError:
+        return Response({'error': 'Payment verification failed'}, status=400)
