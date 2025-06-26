@@ -9,4 +9,4 @@ class Order(models.Model):
     order_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.order_product
+        return f"Order {self.order_payment_id} ({self.order_amount})"
