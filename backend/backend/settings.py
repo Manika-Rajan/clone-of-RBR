@@ -11,10 +11,18 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 #BASE_DIR = '/backend/backend/static/'
+
+# Load environment variables
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+# Ensure these are accessible
+RAZORPAY_PUBLIC_KEY = os.getenv('PUBLIC_KEY')
+RAZORPAY_SECRET_KEY = os.getenv('SECRET_KEY')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
