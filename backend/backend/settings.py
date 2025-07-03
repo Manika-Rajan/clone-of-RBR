@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-#BASE_DIR = '/backend/backend/static/'
 
 # Load environment variables
 load_dotenv(os.path.join(BASE_DIR, '.env'))
@@ -33,27 +32,26 @@ SECRET_KEY = 'django-insecure-fy#o=^#vr)d+d6p87l%*i%zup5=5ctv8e4l9z#6sswm5xp=wxi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.elasticbeanstalk.com','13.126.68.197','127.0.0.1','localhost']
-CORS_ALLOW_ALL_ORIGINS = True
-SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'  # For Razorpay popups[](https://studygyaan.com/django/django-razorpay-payment-gateway-integration-tutorial)
+ALLOWED_HOSTS = ['.elasticbeanstalk.com', '13.126.68.197', '127.0.0.1', 'localhost']
+CORS_ALLOW_ALL_ORIGINS = True  # Consider restricting in production
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'  # For Razorpay popups
 
 CORS_ORIGIN_WHITELIST = [
     'https://main.d38sdwl55z3dqy.amplifyapp.com',
     'http://localhost:3000',
 ]
-# Application definition
 
+# Application definition
 INSTALLED_APPS = [
-    'api',
-    'rest_framework',
-    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-  
+    'api',
+    'rest_framework',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -73,7 +71,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'frontend/build')],
+        'DIRS': [os.path.join(BASE_DIR, '../frontend/build')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -88,21 +86,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR/'db.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -118,30 +112,23 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR,'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, '../frontend/build'),
+    os.path.join(BASE_DIR, '../frontend/build/static'),
+]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# STATICFILES_DIRS=[
-# os.path.join(BASE_DIR,'frontend/build/static'),
-# ]
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

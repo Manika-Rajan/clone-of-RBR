@@ -15,29 +15,25 @@ import { server } from './Server';
 const Payment = () => {
   const navigate = useNavigate();
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { totalPrice, name, phone, email } = state;
+  const { totalPrice = 10, name, phone, email } = state; // Default to 10 INR
   const [editName, setEditName] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
-  const [inputName, setInputName] = useState('');
-  const [inputEmail, setInputEmail] = useState('');
+  const [inputName, setInputName] = useState(name || '');
+  const [inputEmail, setInputEmail] = useState(email || '');
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
   const [verify, setVerify] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleName = (e) => {
-    if (e.key === 'Enter') {
-      cxtDispatch({ type: 'SET_NAME', payload: inputName });
-      setEditName(false);
-    }
+  const handleNameChange = (e) => {
+    setInputName(e.target.value);
+    cxtDispatch({ type: 'SET_NAME', payload: e.target.value }); // Update state immediately
   };
 
-  const handleEmail = (e) => {
-    if (e.key === 'Enter') {
-      cxtDispatch({ type: 'SET_EMAIL', payload: inputEmail });
-      setEditEmail(false);
-      setSuccess(true);
-    }
+  const handleEmailChange = (e) => {
+    setInputEmail(e.target.value);
+    cxtDispatch({ type: 'SET_EMAIL', payload: e.target.value }); // Update state immediately
+    setSuccess(true);
   };
 
   const loadRazorpayScript = () => {
@@ -69,8 +65,8 @@ const Payment = () => {
       const response = await Axios.post(
         `${server}razorpay/pay/`,
         { 
-          amount: totalPrice,
-          product_name: 'Business Report'  // Optional, adjust as needed
+          amount: totalPrice || 10, // Ensure 10 INR
+          product_name: 'Business Report'
         },
         {
           headers: {
@@ -103,7 +99,7 @@ const Payment = () => {
             if (verifyResponse.data.message === 'payment successfully received!') {
               setSuccess(true);
               alert('Payment successful!');
-              navigate('/report-display'); // Navigate to report display
+              navigate('/report-display');
             } else {
               alert('Payment verification failed!');
             }
@@ -165,8 +161,7 @@ const Payment = () => {
                     }}
                     name="inputName"
                     value={inputName}
-                    onChange={(e) => setInputName(e.target.value)}
-                    onKeyDown={handleName}
+                    onChange={handleNameChange}
                   />
                 ) : (
                   <p style={{ fontSize: '20px', fontWeight: '400' }}>{name || 'Enter name'}</p>
@@ -203,8 +198,7 @@ const Payment = () => {
                     }}
                     name="inputEmail"
                     value={inputEmail}
-                    onChange={(e) => setInputEmail(e.target.value)}
-                    onKeyDown={handleEmail}
+                    onChange={handleEmailChange}
                   />
                 ) : (
                   <p style={{ fontSize: '20px', fontWeight: '400' }}>{email || 'Enter email'}</p>
@@ -228,6 +222,7 @@ const Payment = () => {
                 type="checkbox"
                 name="verify"
                 id="verify"
+                checked={verify}
                 onChange={(e) => setVerify(e.target.checked)}
               />
               <label className="form-check-label" htmlFor="verify">
@@ -242,7 +237,7 @@ const Payment = () => {
               <div className="pdf-div"></div>
             </div>
             <div className="row">
-              <p className="pay-price">Total Price: ₹{totalPrice || 0}</p>
+              <p className="pay-price">Total Price: ₹{totalPrice || 10}</p>
             </div>
             <div className="row">
               <button onClick={showRazorpay} className="pay-btn" disabled={loading}>
