@@ -1,0 +1,19 @@
+# Python/Django
+venv/
+*.pyc
+__pycache__/
+db.sqlite3
+*.log
+.env
+
+# Frontend
+node_modules/
+frontend/build/
+frontend/.cache/
+frontend/dist/
+
+# Static files (already collected)
+backend/static/
+
+# Sensitive files
+backend/backend/settings.py.bak
