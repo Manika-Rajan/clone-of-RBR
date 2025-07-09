@@ -4,7 +4,6 @@ import UserPool from './UserPool';
 import { Amplify } from 'aws-amplify';
 import Auth from '@aws-amplify/auth';
 import { Store } from '../Store';
-import awsconfig from '../aws-exports.js';
 Amplify.configure(awsconfig);
 
 const Login = ({ onClose }) => {
