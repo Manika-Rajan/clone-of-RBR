@@ -3,7 +3,6 @@ import './Login.css';
 import { Amplify } from 'aws-amplify';
 import Auth from '@aws-amplify/auth';
 import { Store } from '../Store';
-Amplify.configure(awsconfig);
 
 const Login = ({ onClose }) => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
