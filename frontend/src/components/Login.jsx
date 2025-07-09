@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
 import './Login.css';
-import UserPool from './UserPool';
 import { Amplify } from 'aws-amplify';
 import Auth from '@aws-amplify/auth';
 import { Store } from '../Store';
