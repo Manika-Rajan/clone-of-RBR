@@ -1,262 +1,141 @@
-import Axios from "axios";
-import React, { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Store } from '../Store';
-import Navbar from './Navbar';
-import './ReportDisplay.css';
 import './PaymentGateway.css';
-import Personal from '../assets/Personal.svg';
-import Delivery from '../assets/Delivery.svg';
-import pencil from '../assets/pencil.svg';
-import green from '../assets/green-tick.svg';
-import logo from '../assets/logo.svg';
-import { server } from './Server';
 
 const Payment = () => {
-    const navigate = useNavigate();
-    const { state, dispatch: cxtDispatch } = useContext(Store);
-    const { name, phone, email } = state; // Remove totalPrice from state
-    const [editName, setEditName] = useState(false);
-    const [editEmail, setEditEmail] = useState(false);
-    const [inputName, setInputName] = useState(name || '');
-    const [inputEmail, setInputEmail] = useState(email || '');
-    const [success, setSuccess] = useState(false);
-    const [error, setError] = useState(false);
-    const [verify, setVerify] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const fixedAmount = 1; // Hardcode to 1 INR
+  const { state: { isLogin, userId } } = useContext(Store);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { reportId } = location.state || {};
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-    const handleNameChange = (e) => {
-        setInputName(e.target.value);
-        cxtDispatch({ type: 'SET_NAME', payload: e.target.value });
+  useEffect(() => {
+    if (!isLogin) {
+      navigate('/login?redirect=/payment');
+    }
+
+    // Load Razorpay script
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => console.log('Razorpay script loaded');
+    script.onerror = () => setError('Failed to load Razorpay script');
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
     };
+  }, [isLogin, navigate]);
 
-    const handleEmailChange = (e) => {
-        setInputEmail(e.target.value);
-        cxtDispatch({ type: 'SET_EMAIL', payload: e.target.value });
-        setSuccess(true);
-    };
+  const handlePayment = async () => {
+    setError('');
+    setLoading(true);
+    if (!reportId || !userId) {
+      setError('Missing report or user information');
+      setLoading(false);
+      return;
+    }
+    if (!window.Razorpay) {
+      setError('Razorpay script failed to load');
+      setLoading(false);
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please log in again');
+        navigate('/login?redirect=/payment');
+        setLoading(false);
+        return;
+      }
+      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/create-razorpay-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reportId, amount: 1000, userId }),
+      });
+      const order = await response.json();
+      if (!response.ok) {
+        throw new Error(order.error || 'Failed to create order');
+      }
 
-    const loadRazorpayScript = () => {
-        return new Promise((resolve) => {
-            const script = document.createElement('script');
-            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-            script.onload = () => resolve(true);
-            script.onerror = () => resolve(false);
-            document.body.appendChild(script);
-        });
-    };
-
-    const showRazorpay = async () => {
-        if (!name || !email || !verify) {
-            setError(true);
-            return;
-        }
-        setError(false);
-        setLoading(true);
-
-        const res = await loadRazorpayScript();
-        if (!res) {
-            alert('Razorpay SDK failed to load. Please try again.');
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const response = await Axios.post(
-                'http://localhost:8000/razorpay/pay/',
-                { 
-                    amount: fixedAmount, // Use fixed 1 INR
-                    product_name: 'Business Report'
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            const { payment } = response.data;
-
-            const options = {
-                key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-                amount: payment.amount,
-                currency: 'INR',
-                name: 'Rajan Business Ideas Pvt. Ltd',
-                description: 'Business Report Purchase',
-                image: logo,
-                order_id: payment.id,
-                handler: async function (response) {
-                    console.log('Razorpay response:', response);
-                    try {
-                        const verifyResponse = await Axios.post(
-                            'http://localhost:8000/razorpay/payment/success/',
-                            { response: JSON.stringify(response) },
-                            {
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                            }
-                        );
-                        console.log('Verification response:', verifyResponse.data);
-                        if (verifyResponse.data.message === 'payment successfully received!') {
-                            setSuccess(true);
-                            alert('Payment successful!');
-                            navigate('/report-display');
-                        } else {
-                            alert('Payment verification failed!');
-                        }
-                    } catch (error) {
-                        console.error('Payment verification error:', error);
-                        alert('Payment verification failed. Please contact support.');
-                    } finally {
-                        setLoading(false);
-                    }
-                },
-                prefill: {
-                    name: name || '',
-                    email: email || '',
-                    contact: phone || '',
-                },
-                notes: {
-                    address: 'Razorpay Corporate Office',
-                },
-                theme: {
-                    color: '#3399cc',
-                },
-            };
-
-            const rzp1 = new window.Razorpay(options);
-            rzp1.on('payment.failed', function (response) {
-                alert('Payment failed: ' + response.error.description);
-                setLoading(false);
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: 'INR',
+        name: 'Rajan Business Ideas Pvt. Ltd',
+        description: 'Business Report Purchase',
+        image: '/logo.svg', // Ensure logo.svg is in public/
+        order_id: order.id,
+        handler: async (response) => {
+          try {
+            const verifyResponse = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                reportId,
+                userId,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
             });
-            rzp1.open();
-        } catch (error) {
-            console.error('Payment initiation error:', error);
-            alert('Failed to initiate payment. Please try again.');
+            const verifyData = await verifyResponse.json();
+            if (verifyResponse.ok) {
+              navigate('/profile');
+            } else {
+              setError(`Payment verification failed: ${verifyData.error}`);
+            }
+          } catch (err) {
+            setError('Failed to verify payment');
+          } finally {
             setLoading(false);
-        }
-    };
+          }
+        },
+        prefill: {
+          contact: userId,
+        },
+        notes: {
+          address: 'Razorpay Corporate Office',
+        },
+        theme: {
+          color: '#3399cc',
+        },
+      };
 
-    return (
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (response) => {
+        setError(`Payment failed: ${response.error.description}`);
+        setLoading(false);
+      });
+      rzp.open();
+    } catch (error) {
+      setError(`Failed to initiate payment: ${error.message}`);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="payment-container">
+      <h1>Payment Window</h1>
+      {reportId && isLogin ? (
         <>
-            <div>
-                <Navbar reports />
-                <div className="payments-page row mt-4">
-                    <div className="payments-left col-md-6">
-                        <div className="row" style={{ textAlign: 'center' }}>
-                            <img src={Personal} style={{ width: '187px', height: '36px', marginLeft: '15%' }} alt="Personal" />
-                        </div>
-                        <div className="payment-name mt-2">
-                            <div style={{ paddingRight: '20px' }}>
-                                <label style={{ fontSize: '20px', fontWeight: '600' }}>Name:</label>
-                            </div>
-                            <div style={{ paddingRight: '30px' }}>
-                                {editName ? (
-                                    <input
-                                        className="edit-input"
-                                        style={{
-                                            border: 'none',
-                                            background: 'transparent',
-                                            borderBottom: '1px solid #0263c7',
-                                            width: '90%',
-                                        }}
-                                        name="inputName"
-                                        value={inputName}
-                                        onChange={handleNameChange}
-                                    />
-                                ) : (
-                                    <p style={{ fontSize: '20px', fontWeight: '400' }}>{name || 'Enter name'}</p>
-                                )}
-                            </div>
-                            <div>
-                                <img src={pencil} onClick={() => setEditName(!editName)} alt="Edit" />
-                            </div>
-                        </div>
-                        <div className="payment-name mt-2">
-                            <div style={{ paddingRight: '20px' }}>
-                                <label style={{ fontSize: '20px', fontWeight: '600' }}>Phone Number:</label>
-                            </div>
-                            <div style={{ paddingRight: '30px' }}>
-                                <p style={{ fontSize: '20px', fontWeight: '400' }}>{phone || 'N/A'}</p>
-                            </div>
-                        </div>
-                        <div className="row mt-2" style={{ textAlign: 'center' }}>
-                            <img src={Delivery} style={{ width: '187px', height: '36px', marginLeft: '15%' }} alt="Delivery" />
-                        </div>
-                        <div className="payment-name mt-3">
-                            <div style={{ paddingRight: '20px' }}>
-                                <label style={{ fontSize: '20px', fontWeight: '600' }}>Email:</label>
-                            </div>
-                            <div style={{ paddingRight: '30px' }}>
-                                {editEmail ? (
-                                    <input
-                                        className="edit-input"
-                                        style={{
-                                            border: 'none',
-                                            background: 'transparent',
-                                            borderBottom: '1px solid #0263c7',
-                                            width: '90%',
-                                        }}
-                                        name="inputEmail"
-                                        value={inputEmail}
-                                        onChange={handleEmailChange}
-                                    />
-                                ) : (
-                                    <p style={{ fontSize: '20px', fontWeight: '400' }}>{email || 'Enter email'}</p>
-                                )}
-                            </div>
-                            <div>
-                                <img src={pencil} onClick={() => setEditEmail(!editEmail)} alt="Edit" />
-                            </div>
-                        </div>
-                        {success && (
-                            <div className="success-message" style={{ marginLeft: '20%', marginTop: '5%' }}>
-                                <div>
-                                    <img src={green} alt="Success" />
-                                </div>
-                                <div>Your email id has been changed successfully</div>
-                            </div>
-                        )}
-                        <div className="form-check" style={{ paddingLeft: '25%', paddingTop: '5%' }}>
-                            <input
-                                className="form-check-input"
-                                type="checkbox"
-                                name="verify"
-                                id="verify"
-                                checked={verify}
-                                onChange={(e) => setVerify(e.target.checked)}
-                            />
-                            <label className="form-check-label" htmlFor="verify">
-                                <p className="text-secondary">
-                                    I agree to all terms <span className="text-primary">Terms & Conditions</span>
-                                </p>
-                            </label>
-                        </div>
-                    </div>
-                    <div className="payments-right col-md-6">
-                        <div className="row">
-                            <div className="pdf-div"></div>
-                        </div>
-                        <div className="row">
-                            <p className="pay-price">Total Price: ₹{fixedAmount}</p> // Hardcode to 1 INR
-                        </div>
-                        <div className="row">
-                            <button onClick={showRazorpay} className="pay-btn" disabled={loading}>
-                                {loading ? 'Processing...' : 'PAY NOW'}
-                            </button>
-                        </div>
-                        {error && (
-                            <div className="row">
-                                <p className="error-message">*Please enter your name, email, and agree to terms to proceed</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
+          <button onClick={handlePayment} className="pay-btn" disabled={loading}>
+            {loading ? 'Processing...' : 'Pay Now'}
+          </button>
+          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
         </>
-    );
+      ) : (
+        <p>No report selected or not logged in. Please go back and generate a report.</p>
+      )}
+    </div>
+  );
 };
 
 export default Payment;
