@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
 import './Login.css';
-// import { Amplify } from 'aws-amplify';
-// import Auth from '@aws-amplify/auth';
 import { Store } from '../Store';
 
 const Login = ({ onClose }) => {
