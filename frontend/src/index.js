@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { StoreProvider } from './Store';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 //configure(awsmobile);
 
