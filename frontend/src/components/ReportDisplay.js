@@ -15,25 +15,28 @@ const ReportDisplay = () => {
   const { state: { isLogin, userId, totalPrice, name, email, status }, dispatch: cxtDispatch } = useContext(Store);
   const location = useLocation();
   const navigate = useNavigate();
-  const { fileKey, reportTitle = "Paper Industry In India", reportDescription = "Candy production is a seasonal business, with the majority of those involved in market normally doubling their staffs during the winter months" } = location.state || {};
-  const amount = totalPrice || 400; // Fallback to 400 INR
+  const { file_key, reportId, amount = totalPrice || 400 } = location.state || {};
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
 
-  console.log('ReportDisplay - Initial state:', { isLogin, userId, fileKey, totalPrice, amount, reportTitle, reportDescription });
+  // Dynamically generate title based on file_key (to be enhanced later)
+  const reportTitle = file_key ? file_key.replace(/_/g, ' ').replace(/\.[^.]+$/, '') : "Paper Industry In India";
+  const reportDescription = file_key ? "Generated report based on selected filters" : "Candy production is a seasonal business, with the majority of those involved in market normally doubling their staffs during the winter months";
+
+  console.log('ReportDisplay - Initial state:', { isLogin, userId, file_key, reportId, totalPrice, amount, reportTitle, reportDescription });
 
   useEffect(() => {
     const fetchPresignedUrl = async () => {
-      if (!fileKey) {
-        console.error('No fileKey found. Skipping API request.');
+      if (!file_key) {
+        console.error('No file_key found. Skipping API request.');
         setError('No report selected. Please generate a report first.');
         setIsLoading(false);
         return;
       }
-      console.log('Fetching presigned URL for fileKey:', fileKey);
+      console.log('Fetching presigned URL for file_key:', file_key);
       setIsLoading(true);
       try {
         const headers = { 'Content-Type': 'application/json' };
@@ -47,7 +50,7 @@ const ReportDisplay = () => {
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
           headers,
-          body: JSON.stringify({ file_key: fileKey, userId: isLogin ? userId : null }),
+          body: JSON.stringify({ file_key, userId: isLogin ? userId : null }),
         });
         console.log('RBR_report_pre-signed_URL response status:', response.status);
         if (!response.ok) {
@@ -70,30 +73,30 @@ const ReportDisplay = () => {
       }
     };
     fetchPresignedUrl();
-  }, [fileKey, userId, isLogin]);
+  }, [file_key, userId, isLogin]);
 
   const handleBuyNow = () => {
-    console.log('handleBuyNow called', { isLogin, userId, fileKey, amount });
+    console.log('handleBuyNow called', { isLogin, userId, file_key, reportId, amount, locationState: location.state });
     if (!isLogin) {
       console.log('Not logged in, opening login modal');
       setOpenModel(true);
-    } else if (!fileKey) {
-      console.log('No fileKey available');
+    } else if (!reportId) {
+      console.log('No reportId available');
       setError('Please generate a report first');
     } else {
-      console.log('Navigating to /payment with fileKey and amount:', { fileKey, amount });
-      navigate('/payment', { state: { fileKey, amount } });
+      console.log('Navigating to /payment with reportId and amount:', { reportId, amount });
+      navigate('/payment', { state: { reportId, amount } });
     }
   };
 
   const handleLoginSuccess = () => {
     setOpenModel(false);
-    console.log('handleLoginSuccess called', { fileKey, amount, isLogin, userId });
-    if (fileKey) {
-      console.log('Login successful, navigating to /payment with:', { fileKey, amount });
-      navigate('/payment', { state: { fileKey, amount } });
+    console.log('handleLoginSuccess called', { file_key, reportId, amount, isLogin, userId });
+    if (reportId) {
+      console.log('Login successful, navigating to /payment with:', { reportId, amount });
+      navigate('/payment', { state: { reportId, amount } });
     } else {
-      console.log('Login successful, but missing fileKey');
+      console.log('Login successful, but missing reportId');
       setError('Please generate a report first');
       navigate('/');
     }
