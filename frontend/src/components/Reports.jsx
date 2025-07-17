@@ -24,27 +24,24 @@ const Reports = () => {
   const [select_pain, setSelect_pain] = useState([]);
   const [select_competitors, setSelect_competitors] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState({});
-
   const [country, setCountry] = useState(false);
   const [industry, setIndustry] = useState(false);
   const [city, setCity] = useState(false);
   const [market, setMarket] = useState(false);
   const [competitors, setCompetitors] = useState(false);
   const [painpoints, setPainpoints] = useState(false);
-
   const [expandIndustry, setExpandIndustry] = useState(false);
   const [expandCity, setExpandCity] = useState(false);
   const [expandMarket, setExpandMarket] = useState(false);
   const [expandCompetitors, setExpandCompetitors] = useState(false);
   const [expandPain, setExpandPain] = useState(false);
-
   const [popup, setPopup] = useState(true);
   const [noSearch, setNoSearch] = useState(false);
   const [nogenerate, setNoGenerate] = useState(false);
   const [price, setPrice] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastReportId, setLastReportId] = useState(0); // Track the last used ID
 
-  // Update selectedFilters whenever filter selections change
   useEffect(() => {
     const filters = {
       industry: select_industry,
@@ -56,7 +53,6 @@ const Reports = () => {
     setSelectedFilters(filters);
     console.log('Updated selectedFilters:', filters);
 
-    // Update generate state
     const hasFilters =
       select_industry.length > 0 ||
       select_city.length > 0 ||
@@ -69,7 +65,6 @@ const Reports = () => {
   const generateReport = async () => {
     setIsLoading(true);
     try {
-      // Generate timestamp (DDMMYYYYHHMM)
       const now = new Date();
       const timestamp = `${now.getDate().toString().padStart(2, '0')}${(
         now.getMonth() + 1
@@ -78,10 +73,14 @@ const Reports = () => {
         .toString()
         .padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
+      const nextReportId = `RBR${(lastReportId + 1).toString().padStart(4, '0')}`;
+      setLastReportId(lastReportId + 1); // Increment for next use
+
       const payload = {
         filters: selectedFilters,
         folderId: 'rbrfinalfiles',
-        timestamp: timestamp
+        timestamp: timestamp,
+        reportId: nextReportId // Include the new report ID
       };
       console.log('Sending payload to Lambda:', payload);
 
@@ -114,10 +113,7 @@ const Reports = () => {
         throw new Error('No file_key returned in API response');
       }
 
-      const fileKey = data.file_key;
-      console.log('Navigating with fileKey:', fileKey);
-
-      navigate('/report-display', { state: { fileKey } });
+      navigate('/report-display', { state: { file_key: data.file_key, reportId: nextReportId } });
     } catch (error) {
       console.error('Error generating report:', error);
       console.error('Error stack:', error.stack);
@@ -295,7 +291,6 @@ const Reports = () => {
               style={{ textAlign: 'center', justifyContent: 'flex-end' }}
             >
               <img src={india} alt="" />
-                
               <span>India</span>
             </div>
           </div>
@@ -320,7 +315,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    Industry   
+                    Industry 
                     {select_industry.length ? (
                       <span className="text-primary">({select_industry.length})</span>
                     ) : (
@@ -396,7 +391,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    City   
+                    City 
                     {select_city.length ? (
                       <span className="text-primary">({select_city.length})</span>
                     ) : (
@@ -472,7 +467,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    List of Competitors   
+                    List of Competitors 
                     {select_competitors.length ? (
                       <span className="text-primary">({select_competitors.length})</span>
                     ) : (
@@ -548,7 +543,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    Market Segment   
+                    Market Segment 
                     {select_market.length ? (
                       <span className="text-primary">({select_market.length})</span>
                     ) : (
@@ -624,7 +619,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    Pain Points   
+                    Pain Points 
                     {select_pain.length ? (
                       <span className="text-primary">({select_pain.length})</span>
                     ) : (
@@ -726,9 +721,8 @@ const Reports = () => {
             </div>
           </div>
         </div>
-      </div>
-    </>
-  );
-};
+      </>
+    );
+  };
 
-export default Reports;
+  export default Reports;
