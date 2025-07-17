@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import logo from '../assets/logo.svg';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './ReportDisplay.css';
 import { Worker } from '@react-pdf-viewer/core';
 import { Viewer } from '@react-pdf-viewer/core';
@@ -10,12 +10,11 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import Login from './Login';
 import { Store } from '../Store';
 import { Modal, ModalBody } from "reactstrap";
-import { useLocation } from 'react-router-dom';
 
 const ReportsDisplay = () => {
   const location = useLocation();
-  const fileKey = location.state?.fileKey || '';
-  console.log("Received fileKey:", fileKey);
+  const { file_key, reportId, amount = 400 } = location.state || {}; // Match casing with Reports.jsx
+  console.log("Received file_key:", file_key, "reportId:", reportId, "amount:", amount);
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
@@ -25,15 +24,18 @@ const ReportsDisplay = () => {
   console.log("ReportsDisplay - isLogin:", isLogin); // Debug
 
   const [openModel, setOpenModel] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Added back
-  const [pdfUrl, setPdfUrl] = useState(''); // Added back
+  const [isLoading, setIsLoading] = useState(true);
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [error, setError] = useState(''); // Added to track errors
 
   const handlePayment = () => {
-    console.log("handlePayment - isLogin:", isLogin); // Debug
-    if (isLogin) {
-      navigate("/payment");
-    } else {
+    console.log("handlePayment - isLogin:", isLogin, "reportId:", reportId, "amount:", amount);
+    if (!isLogin) {
       setOpenModel(true);
+    } else if (!reportId) {
+      setError('Please generate a report first');
+    } else {
+      navigate("/payment", { state: { reportId, amount, file_key } });
     }
   };
 
@@ -44,37 +46,45 @@ const ReportsDisplay = () => {
 
   useEffect(() => {
     const fetchPresignedUrl = async () => {
-      if (!fileKey) {
-        console.error("No fileKey found. Skipping API request.");
+      if (!file_key) {
+        console.error("No file_key found. Skipping API request.");
+        setError('No report selected. Please generate a report first.');
+        setIsLoading(false);
         return;
       }
-      console.log("Fetching presigned URL for fileKey:", fileKey);
-      setIsLoading(true); // Now defined
+      console.log("Fetching presigned URL for file_key:", file_key);
+      setIsLoading(true);
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (isLogin) {
+          const token = localStorage.getItem('token');
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+        }
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file_key: fileKey }),
+          headers,
+          body: JSON.stringify({ file_key, userId: isLogin ? state.userId : null }),
         });
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
         const data = await response.json();
         console.log('API Response:', data);
         if (data.presigned_url) {
-          setPdfUrl(data.presigned_url); // Now defined
+          setPdfUrl(data.presigned_url);
         } else {
           throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
         }
       } catch (error) {
-        console.error('Error fetching presigned URL:', error.message);
-        setPdfUrl(null); // Now defined
+        console.error('Error fetching presigned URL:', error.message, error.stack);
+        setError(`Failed to load report: ${error.message}`);
       } finally {
-        setIsLoading(false); // Now defined
+        setIsLoading(false);
       }
     };
     fetchPresignedUrl();
-  }, [fileKey]);
+  }, [file_key, isLogin, state.userId]);
 
   return (
     <>
@@ -88,9 +98,11 @@ const ReportsDisplay = () => {
                 </Link>
               </div>
               <div className="text">
-                <p className='nav-title report-display-title' style={{ fontSize: "28px" }}>Paper Industry In India</p>
+                <p className='nav-title report-display-title' style={{ fontSize: "28px" }}>
+                  {file_key ? file_key.replace(/_/g, ' ').replace(/\.[^.]+$/, '') : "Paper Industry In India"}
+                </p>
                 <p className='report-display-desc' style={{ marginTop: "-10px", width: "70%" }}>
-                  Candy production is a seasonal business, with the majority of those involved in market normally doubling their staffs during the winter months
+                  {file_key ? "Generated report based on selected filters" : "Candy production is a seasonal business, with the majority of those involved in market normally doubling their staffs during the winter months"}
                 </p>
               </div>
             </div>
@@ -100,7 +112,9 @@ const ReportsDisplay = () => {
             <div className="collapse navbar-collapse" id="navbarSupportedContent">
               <ul className="navbar-nav ms-auto">
                 <li className="nav-item">
-                  <button className="buy-btn" onClick={handlePayment} style={{ color: "white" }}>BUY NOW</button>
+                  <button className="buy-btn" onClick={handlePayment} style={{ color: "white" }} disabled={!reportId}>
+                    BUY NOW (₹{amount})
+                  </button>
                 </li>
               </ul>
             </div>
@@ -108,16 +122,16 @@ const ReportsDisplay = () => {
         </nav>
         <div className='viewer col-md-11 col-sm-11 col-11'>
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-            {isLoading ? ( // Now defined
+            {isLoading ? (
               <div className="spinner-border" role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
-            ) : pdfUrl ? ( // Now defined
+            ) : error ? (
+              <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>
+            ) : pdfUrl ? (
               <Viewer fileUrl={pdfUrl} plugins={[defaultLayoutPluginInstance]} />
             ) : (
-              <div className="spinner-border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+              <p>No report available. Please generate a report first.</p>
             )}
           </Worker>
         </div>
@@ -129,7 +143,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => setOpenModel(false)} />
+          <Login onClose={() => { setOpenModel(false); if (isLogin) handlePayment(); }} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
