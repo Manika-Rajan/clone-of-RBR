@@ -315,7 +315,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    Industry 
+                    Industry&nbsp;
                     {select_industry.length ? (
                       <span className="text-primary">({select_industry.length})</span>
                     ) : (
@@ -337,7 +337,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -358,7 +358,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -391,7 +391,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    City 
+                    City&nbsp;
                     {select_city.length ? (
                       <span className="text-primary">({select_city.length})</span>
                     ) : (
@@ -413,7 +413,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -434,7 +434,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -467,7 +467,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    List of Competitors 
+                    List of Competitors&nbsp;
                     {select_competitors.length ? (
                       <span className="text-primary">({select_competitors.length})</span>
                     ) : (
@@ -489,7 +489,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -510,7 +510,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -543,7 +543,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    Market Segment 
+                    Market Segment&nbsp;
                     {select_market.length ? (
                       <span className="text-primary">({select_market.length})</span>
                     ) : (
@@ -565,7 +565,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -586,7 +586,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -619,7 +619,7 @@ const Reports = () => {
                     }}
                     style={{ cursor: 'pointer', fontFamily: 'Baskerville Old Face' }}
                   >
-                    Pain Points 
+                    Pain Points&nbsp;
                     {select_pain.length ? (
                       <span className="text-primary">({select_pain.length})</span>
                     ) : (
@@ -641,7 +641,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -662,7 +662,7 @@ const Reports = () => {
                                   paddingTop: '4px',
                                   height: '16px',
                                   width: '16px',
-                                  marginLeft: '8px'
+                                  marginLeft: '8px',
                                 }}
                               >
                                 X
@@ -721,8 +721,9 @@ const Reports = () => {
             </div>
           </div>
         </div>
-      </>
-    );
-  };
+      </div>
+    </>
+  );
+};
 
-  export default Reports;
+export default Reports;
