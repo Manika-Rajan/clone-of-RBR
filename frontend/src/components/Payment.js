@@ -2,17 +2,27 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Store } from '../Store';
 import './PaymentGateway.css';
+import Personal from '../assets/Personal.svg';
+import Delivery from '../assets/Delivery.svg';
+import pencil from '../assets/pencil.svg';
+import green from '../assets/green-tick.svg';
 
 const Payment = () => {
-  const { state: { isLogin, userId } } = useContext(Store);
+  const { state: { isLogin, userId, name, phone, email }, dispatch: cxtDispatch } = useContext(Store);
   const navigate = useNavigate();
   const location = useLocation();
   const { reportId, amount, file_key } = location.state || {};
+  const [editName, setEditName] = useState(false);
+  const [editEmail, setEditEmail] = useState(false);
+  const [inputName, setInputName] = useState(name || '');
+  const [inputEmail, setInputEmail] = useState(email || '');
+  const [verify, setVerify] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    console.log('Payment.js - isLogin:', isLogin, 'userId:', userId, 'reportId:', reportId, 'amount:', amount, 'file_key:', file_key, 'location.state:', location.state);
+    console.log('Payment.js - isLogin:', isLogin, 'userId:', userId, 'reportId:', reportId, 'amount:', amount, 'file_key:', file_key);
     if (!isLogin) {
       navigate('/login?redirect=/payment');
       return;
@@ -33,12 +43,27 @@ const Payment = () => {
     };
   }, [isLogin, userId, navigate]);
 
+  const handleName = (e) => {
+    if (e.key === 'Enter') {
+      cxtDispatch({ type: 'SET_NAME', payload: inputName });
+      setEditName(false);
+    }
+  };
+
+  const handleEmail = (e) => {
+    if (e.key === 'Enter') {
+      cxtDispatch({ type: 'SET_EMAIL', payload: inputEmail });
+      setEditEmail(false);
+      setSuccess(true);
+    }
+  };
+
   const handlePayment = async () => {
     setError('');
     setLoading(true);
-    console.log('handlePayment called', { reportId, amount, file_key, userId });
-    if (!reportId || !userId || !amount) {
-      setError('Missing required payment information (reportId, userId, or amount)');
+    console.log('handlePayment called', { reportId, amount, file_key, userId, inputName, inputEmail, verify });
+    if (!reportId || !userId || !amount || !inputName || !inputEmail || !verify) {
+      setError('Please fill all fields and agree to terms');
       setLoading(false);
       return;
     }
@@ -103,7 +128,7 @@ const Payment = () => {
             const verifyData = await verifyResponse.json();
             console.log('Payment verification response:', verifyData);
 
-            await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment', {
+            await fetch('https://your-api-gateway-id.execute-api.ap-south-1.amazonaws.com/prod/log-payment', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -129,9 +154,9 @@ const Payment = () => {
           }
         },
         prefill: {
-          contact: userId,
-          name: 'User', // Default name
-          email: 'user@example.com', // Default email (replace with dynamic value if possible)
+          name: inputName,
+          email: inputEmail,
+          contact: phone || userId,
         },
         notes: {
           file_key,
@@ -146,7 +171,7 @@ const Payment = () => {
       rzp.on('payment.failed', async (response) => {
         console.error('Payment failed:', response.error.description);
         setError(`Payment failed: ${response.error.description}`);
-        await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment', {
+        await fetch('https://your-api-gateway-id.execute-api.ap-south-1.amazonaws.com/prod/log-payment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -175,18 +200,102 @@ const Payment = () => {
   };
 
   return (
-    <div className="payment-container" style={{ position: 'relative', zIndex: 1000 }}>
-      <h1>Payment Window</h1>
-      {reportId && isLogin && amount ? (
-        <>
+    <div className="payments-page">
+      <div className="payments-left">
+        <div className="row" style={{ textAlign: "center" }}>
+          <img src={Personal} style={{ width: "187px", height: "36px", marginLeft: "15%" }} />
+        </div>
+        <div className="payment-name mt-2">
+          <div style={{ paddingRight: "20px" }}>
+            <label style={{ fontSize: "20px", fontWeight: "600" }}>Name:</label>
+          </div>
+          <div style={{ paddingRight: "30px" }}>
+            {editName ? (
+              <input
+                className="edit-input"
+                style={{ border: "none", background: "transparent", borderBottom: "1px solid #0263c7", width: "90%" }}
+                value={inputName}
+                onChange={(e) => setInputName(e.target.value)}
+                onKeyDown={handleName}
+              />
+            ) : (
+              <p style={{ fontSize: "20px", fontWeight: "400" }}>{name || inputName}</p>
+            )}
+          </div>
+          <div>
+            <img src={pencil} onClick={() => setEditName(!editName)} />
+          </div>
+        </div>
+        <div className="payment-name mt-2">
+          <div style={{ paddingRight: "20px" }}>
+            <label style={{ fontSize: "20px", fontWeight: "600" }}>Phone Number:</label>
+          </div>
+          <div style={{ paddingRight: "30px" }}>
+            <p style={{ fontSize: "20px", fontWeight: "400" }}>{phone || userId}</p>
+          </div>
+        </div>
+        <div className="row mt-2" style={{ textAlign: "center" }}>
+          <img src={Delivery} style={{ width: "187px", height: "36px", marginLeft: "15%" }} />
+        </div>
+        <div className="payment-name mt-3">
+          <div style={{ paddingRight: "20px" }}>
+            <label style={{ fontSize: "20px", fontWeight: "600" }}>Email:</label>
+          </div>
+          <div style={{ paddingRight: "30px" }}>
+            {editEmail ? (
+              <input
+                className="edit-input"
+                style={{ border: "none", background: "transparent", borderBottom: "1px solid #0263c7", width: "90%" }}
+                value={inputEmail}
+                onChange={(e) => setInputEmail(e.target.value)}
+                onKeyDown={handleEmail}
+              />
+            ) : (
+              <p style={{ fontSize: "20px", fontWeight: "400" }}>{email || inputEmail}</p>
+            )}
+          </div>
+          <div>
+            <img src={pencil} onClick={() => setEditEmail(!editEmail)} />
+          </div>
+        </div>
+        {success && (
+          <div className="success-message" style={{ marginLeft: "20%", marginTop: "5%" }}>
+            <div>
+              <img src={green} />
+            </div>
+            <div>Your email id has been changed successfully</div>
+          </div>
+        )}
+        <div className="form-check" style={{ paddingLeft: "25%", paddingTop: "5%" }}>
+          <input
+            className="form-check-input"
+            type="checkbox"
+            id="verify"
+            checked={verify}
+            onChange={(e) => setVerify(e.target.checked)}
+          />
+          <label className="form-check-label" htmlFor="verify">
+            <p className="text-secondary">
+              I agree to all terms <span className="text-primary">Terms & Conditions</span>
+            </p>
+          </label>
+        </div>
+      </div>
+      <div className="payments-right">
+        <div className="row">
+          <p className="pay-price">Total Price: ₹{amount || 0}</p>
+        </div>
+        <div className="row">
           <button onClick={handlePayment} className="pay-btn" disabled={loading}>
-            {loading ? 'Processing...' : `Pay Now (₹${amount})`}
+            {loading ? 'Processing...' : 'Pay Now'}
           </button>
-          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-        </>
-      ) : (
-        <p>No report selected, invalid amount, or not logged in. Please go back and generate a report.</p>
-      )}
+        </div>
+        {error && (
+          <div className="row">
+            <p className="error-message">{error}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
