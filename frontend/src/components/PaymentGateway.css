@@ -36,4 +36,66 @@
       transform: rotate(360deg);
     }
   }
-  
+
+.payments-page {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  z-index: 1000;
+}
+
+.payments-left, .payments-right {
+  flex: 1;
+  padding: 10px;
+}
+
+.payment-name {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.edit-input {
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.pay-price {
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.pay-btn {
+  background-color: #3399cc;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.pay-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  color: green;
+}
+
+.success-message img {
+  margin-right: 10px;
+}
