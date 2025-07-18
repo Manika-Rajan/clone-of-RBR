@@ -7,7 +7,7 @@ const Payment = () => {
   const { state: { isLogin, userId } } = useContext(Store);
   const navigate = useNavigate();
   const location = useLocation();
-  const { reportId, amount, file_key } = location.state || {}; // Include file_key in destructuring
+  const { reportId, amount, file_key } = location.state || {};
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -73,7 +73,7 @@ const Payment = () => {
       console.log('Razorpay order response:', order);
 
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID, // Ensure this is in .env
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: 'INR',
         name: 'Rajan Business Ideas Pvt. Ltd',
@@ -130,10 +130,11 @@ const Payment = () => {
         },
         prefill: {
           contact: userId,
-          name: 'User', // Add a default name if available
+          name: 'User', // Default name
+          email: 'user@example.com', // Default email (replace with dynamic value if possible)
         },
         notes: {
-          file_key, // Pass file_key as a note
+          file_key,
           address: 'Rajan Business Ideas Office',
         },
         theme: {
@@ -145,7 +146,7 @@ const Payment = () => {
       rzp.on('payment.failed', async (response) => {
         console.error('Payment failed:', response.error.description);
         setError(`Payment failed: ${response.error.description}`);
-        await fetch('https://your-api-gateway-id.execute-api.ap-south-1.amazonaws.com/prod/log-payment', {
+        await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -174,7 +175,7 @@ const Payment = () => {
   };
 
   return (
-    <div className="payment-container">
+    <div className="payment-container" style={{ position: 'relative', zIndex: 1000 }}>
       <h1>Payment Window</h1>
       {reportId && isLogin && amount ? (
         <>
