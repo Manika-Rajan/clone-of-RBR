@@ -28,18 +28,24 @@ const Payment = () => {
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => console.log('Razorpay script loaded successfully');
-    script.onerror = () => {
-      console.error('Failed to load Razorpay script');
-      setError('Failed to load payment gateway. Please try again later.');
-    };
-    document.body.appendChild(script);
+    try {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => console.log('Razorpay script loaded successfully');
+      script.onerror = () => {
+        console.error('Failed to load Razorpay script');
+        setError('Failed to load payment gateway. Please try again later.');
+      };
+      document.body.appendChild(script);
+    } catch (e) {
+      console.error('Error loading Razorpay script:', e.message);
+      setError('Error initializing payment gateway.');
+    }
 
     return () => {
-      document.body.removeChild(script);
+      const script = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (script) document.body.removeChild(script);
     };
   }, [isLogin, userId, navigate]);
 
@@ -200,7 +206,7 @@ const Payment = () => {
   };
 
   return (
-    <div className="payments-page">
+    <div className="payments-page" style={{ position: 'relative', zIndex: 1000 }}>
       <div className="payments-left">
         <div className="row" style={{ textAlign: "center" }}>
           <img src={Personal} style={{ width: "187px", height: "36px", marginLeft: "15%" }} />
