@@ -8,36 +8,51 @@ import pencil from '../assets/pencil.svg';
 import green from '../assets/green-tick.svg';
 
 const Payment = () => {
-  const { state: { isLogin, userId, name, phone, email }, dispatch: cxtDispatch } = useContext(Store);
+  const { state: { isLogin, userId }, dispatch: cxtDispatch } = useContext(Store);
   const navigate = useNavigate();
   const location = useLocation();
   const { reportId, amount, file_key } = location.state || {};
+  const storedName = localStorage.getItem('userName') || '';
+  const storedPhone = localStorage.getItem('userPhone') || userId;
+  const storedEmail = localStorage.getItem('userEmail') || '';
   const [editName, setEditName] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
-  const [inputName, setInputName] = useState(name || '');
-  const [inputEmail, setInputEmail] = useState(email || '');
+  const [inputName, setInputName] = useState(storedName);
+  const [inputEmail, setInputEmail] = useState(storedEmail);
   const [verify, setVerify] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    console.log('Payment.js - isLogin:', isLogin, 'userId:', userId, 'reportId:', reportId, 'amount:', amount, 'file_key:', file_key);
+    console.log('Payment.js - Initial state:', { isLogin, userId, reportId, amount, file_key });
     if (!isLogin) {
       navigate('/login?redirect=/payment');
       return;
     }
 
+    let scriptLoaded = false;
     try {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.async = true;
-      script.onload = () => console.log('Razorpay script loaded successfully');
+      script.onload = () => {
+        console.log('Razorpay script loaded successfully');
+        scriptLoaded = true;
+      };
       script.onerror = () => {
         console.error('Failed to load Razorpay script');
         setError('Failed to load payment gateway. Please try again later.');
+        scriptLoaded = false;
       };
       document.body.appendChild(script);
+
+      setTimeout(() => {
+        if (!scriptLoaded) {
+          console.error('Razorpay script timeout');
+          setError('Payment gateway timed out. Please refresh.');
+        }
+      }, 5000);
     } catch (e) {
       console.error('Error loading Razorpay script:', e.message);
       setError('Error initializing payment gateway.');
@@ -52,6 +67,7 @@ const Payment = () => {
   const handleName = (e) => {
     if (e.key === 'Enter') {
       cxtDispatch({ type: 'SET_NAME', payload: inputName });
+      localStorage.setItem('userName', inputName);
       setEditName(false);
     }
   };
@@ -59,6 +75,7 @@ const Payment = () => {
   const handleEmail = (e) => {
     if (e.key === 'Enter') {
       cxtDispatch({ type: 'SET_EMAIL', payload: inputEmail });
+      localStorage.setItem('userEmail', inputEmail);
       setEditEmail(false);
       setSuccess(true);
     }
@@ -68,7 +85,7 @@ const Payment = () => {
     setError('');
     setLoading(true);
     console.log('handlePayment called', { reportId, amount, file_key, userId, inputName, inputEmail, verify });
-    if (!reportId || !userId || !amount || !inputName || !inputEmail || !verify) {
+    if (!reportId || !userId || !amount || !inputName.trim() || !inputEmail.trim() || !verify) {
       setError('Please fill all fields and agree to terms');
       setLoading(false);
       return;
@@ -80,7 +97,7 @@ const Payment = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         setError('Please log in again');
         navigate('/login?redirect=/payment');
@@ -88,6 +105,7 @@ const Payment = () => {
         return;
       }
 
+      console.log('Fetching create-razorpay-order...');
       const response = await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/create-razorpay-order', {
         method: 'POST',
         headers: {
@@ -96,6 +114,7 @@ const Payment = () => {
         },
         body: JSON.stringify({ reportId, amount: Math.round(amount * 100), userId }),
       });
+      console.log('create-razorpay-order response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to create order: ${errorText}`);
@@ -162,7 +181,7 @@ const Payment = () => {
         prefill: {
           name: inputName,
           email: inputEmail,
-          contact: phone || userId,
+          contact: storedPhone,
         },
         notes: {
           file_key,
@@ -197,6 +216,7 @@ const Payment = () => {
         });
         setLoading(false);
       });
+      console.log('Opening Razorpay popup...');
       rzp.open();
     } catch (error) {
       console.error('Payment initiation error:', error.message, error.stack);
@@ -225,7 +245,7 @@ const Payment = () => {
                 onKeyDown={handleName}
               />
             ) : (
-              <p style={{ fontSize: "20px", fontWeight: "400" }}>{name || inputName}</p>
+              <p style={{ fontSize: "20px", fontWeight: "400" }}>{inputName}</p>
             )}
           </div>
           <div>
@@ -237,7 +257,7 @@ const Payment = () => {
             <label style={{ fontSize: "20px", fontWeight: "600" }}>Phone Number:</label>
           </div>
           <div style={{ paddingRight: "30px" }}>
-            <p style={{ fontSize: "20px", fontWeight: "400" }}>{phone || userId}</p>
+            <p style={{ fontSize: "20px", fontWeight: "400" }}>{storedPhone}</p>
           </div>
         </div>
         <div className="row mt-2" style={{ textAlign: "center" }}>
@@ -257,7 +277,7 @@ const Payment = () => {
                 onKeyDown={handleEmail}
               />
             ) : (
-              <p style={{ fontSize: "20px", fontWeight: "400" }}>{email || inputEmail}</p>
+              <p style={{ fontSize: "20px", fontWeight: "400" }}>{inputEmail}</p>
             )}
           </div>
           <div>
