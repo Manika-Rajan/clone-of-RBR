@@ -23,6 +23,7 @@ const Payment = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false); // New state for success notification
 
   useEffect(() => {
     console.log('Payment.js - Initial state:', { isLogin, userId, reportId, amount, file_key });
@@ -122,8 +123,13 @@ const Payment = () => {
       const order = await response.json();
       console.log('Razorpay order response:', order);
 
+      const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
+      if (!razorpayKey) {
+        throw new Error('No Razorpay key configured. Please contact support.');
+      }
+
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        key: razorpayKey,
         amount: order.amount,
         currency: 'INR',
         name: 'Rajan Business Ideas Pvt. Ltd',
@@ -132,11 +138,20 @@ const Payment = () => {
         order_id: order.id,
         handler: async (response) => {
           try {
+            console.log('Verifying payment with:', {
+              reportId,
+              userId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
             const verifyResponse = await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/verify-payment', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
+                'Access-Control-Request-Method': 'POST',
+                'Access-Control-Request-Headers': 'Content-Type,Authorization',
               },
               body: JSON.stringify({
                 reportId,
@@ -146,9 +161,10 @@ const Payment = () => {
                 razorpay_signature: response.razorpay_signature,
               }),
             });
+            console.log('verify-payment response status:', verifyResponse.status);
             if (!verifyResponse.ok) {
               const verifyError = await verifyResponse.text();
-              throw new Error(`Verification failed: ${verifyError}`);
+              throw new Error(`Verification failed: ${verifyError || 'Unknown server error'}`);
             }
             const verifyData = await verifyResponse.json();
             console.log('Payment verification response:', verifyData);
@@ -171,8 +187,13 @@ const Payment = () => {
                 timestamp: new Date().toISOString(),
               }),
             });
-            navigate('/profile');
+            // Show success message before navigating
+            setShowSuccessMessage(true);
+            setTimeout(() => {
+              navigate('/profile');
+            }, 3000); // Delay navigation for 3 seconds to show the message
           } catch (err) {
+            console.error('Payment verification error:', err.message, err.stack);
             setError(`Payment verification failed: ${err.message}`);
           } finally {
             setLoading(false);
@@ -238,6 +259,7 @@ const Payment = () => {
           <div style={{ paddingRight: "30px" }}>
             {editName ? (
               <input
+                id="nameInput"
                 className="edit-input"
                 style={{ border: "none", background: "transparent", borderBottom: "1px solid #0263c7", width: "90%" }}
                 value={inputName}
@@ -270,6 +292,7 @@ const Payment = () => {
           <div style={{ paddingRight: "30px" }}>
             {editEmail ? (
               <input
+                id="emailInput"
                 className="edit-input"
                 style={{ border: "none", background: "transparent", borderBottom: "1px solid #0263c7", width: "90%" }}
                 value={inputEmail}
@@ -319,6 +342,11 @@ const Payment = () => {
         {error && (
           <div className="row">
             <p className="error-message">{error}</p>
+          </div>
+        )}
+        {showSuccessMessage && (
+          <div className="row" style={{ color: 'green', fontWeight: 'bold', marginTop: '10px' }}>
+            Purchase successful! You can view/read your purchased report under "Purchased Reports" in your profile.
           </div>
         )}
       </div>
