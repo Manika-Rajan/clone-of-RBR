@@ -23,7 +23,6 @@ const Payment = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false); // New state for success notification
 
   useEffect(() => {
     console.log('Payment.js - Initial state:', { isLogin, userId, reportId, amount, file_key });
@@ -187,11 +186,8 @@ const Payment = () => {
                 timestamp: new Date().toISOString(),
               }),
             });
-            // Show success message before navigating
-            setShowSuccessMessage(true);
-            setTimeout(() => {
-              navigate('/profile');
-            }, 3000); // Delay navigation for 3 seconds to show the message
+            // Navigate immediately with success state
+            navigate('/profile', { state: { showSuccess: true } });
           } catch (err) {
             console.error('Payment verification error:', err.message, err.stack);
             setError(`Payment verification failed: ${err.message}`);
@@ -342,11 +338,6 @@ const Payment = () => {
         {error && (
           <div className="row">
             <p className="error-message">{error}</p>
-          </div>
-        )}
-        {showSuccessMessage && (
-          <div className="row" style={{ color: 'green', fontWeight: 'bold', marginTop: '10px' }}>
-            Purchase successful! You can view/read your purchased report under "Purchased Reports" in your profile.
           </div>
         )}
       </div>
