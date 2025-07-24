@@ -13,7 +13,6 @@ const Login = ({ onClose }) => {
   const [otpSent, setOtpSent] = useState(false);
 
   useEffect(() => {
-    // Sync state with context on mount and load from localStorage
     const storedPhone = localStorage.getItem('userPhone');
     const storedName = localStorage.getItem('userName');
     const storedEmail = localStorage.getItem('userEmail');
@@ -48,7 +47,7 @@ const Login = ({ onClose }) => {
         if (response.ok) {
           setResponseMessage('OTP sent! Enter it below:');
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
-          localStorage.setItem('userPhone', phoneNumber); // Persist phone
+          localStorage.setItem('userPhone', phoneNumber);
           setOtpSent(true);
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
@@ -73,18 +72,21 @@ const Login = ({ onClose }) => {
           body: JSON.stringify({ phone_number: phoneNumber, otp: otpInput }),
         });
         const data = await response.json();
-        console.log('Verify OTP response:', data);
-        const body = JSON.parse(data.body);
-        if (data.statusCode === 200) {
-          setResponseMessage(body.message);
+        console.log('Verify OTP raw response:', data);
+        let body = data; // Use raw data as default
+        if (data.body && typeof data.body === 'string') {
+          body = JSON.parse(data.body); // Parse body if it exists and is a string
+        }
+        if (response.status === 200) {
+          setResponseMessage(body.message || 'Login successful');
           const userId = body.user_id || phoneNumber;
-          const token = body.token; // Extract token from response
+          const token = body.token; // Extract token
           if (token) {
-            localStorage.setItem('authToken', token); // Store token
+            localStorage.setItem('authToken', token);
             cxtDispatch({ type: 'USER_LOGIN', payload: { isLogin: true, userId } });
-            cxtDispatch({ type: 'SET_NAME', payload: phoneNumber }); // Default name to phone
-            localStorage.setItem('userName', phoneNumber); // Persist name
-            localStorage.setItem('userPhone', phoneNumber); // Persist phone
+            cxtDispatch({ type: 'SET_NAME', payload: phoneNumber });
+            localStorage.setItem('userName', phoneNumber);
+            localStorage.setItem('userPhone', phoneNumber);
             onClose();
           } else {
             setError('No token received from server');
