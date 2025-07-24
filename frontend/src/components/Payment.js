@@ -153,7 +153,7 @@ const Payment = () => {
             const verifyData = await verifyResponse.json();
             console.log('Payment verification response:', verifyData);
 
-            await fetch('https://your-api-gateway-id.execute-api.ap-south-1.amazonaws.com/prod/log-payment', {
+            await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -196,7 +196,7 @@ const Payment = () => {
       rzp.on('payment.failed', async (response) => {
         console.error('Payment failed:', response.error.description);
         setError(`Payment failed: ${response.error.description}`);
-        await fetch('https://your-api-gateway-id.execute-api.ap-south-1.amazonaws.com/prod/log-payment', {
+        await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
