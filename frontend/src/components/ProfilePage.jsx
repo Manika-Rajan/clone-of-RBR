@@ -2,9 +2,11 @@ import React, { useEffect, useState, useContext } from 'react';
 import Navbar from './Navbar';
 import './ProfilePage.css';
 import { Store } from '../Store';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import PDFViewer from './PDFViewer';
 import { Modal, ModalBody, ModalHeader } from 'reactstrap';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ProfilePage = () => {
   const { state, dispatch } = useContext(Store);
@@ -13,6 +15,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [selectedUrl, setSelectedUrl] = useState(null);
   const [showNameModal, setShowNameModal] = useState(false);
@@ -81,7 +84,20 @@ const ProfilePage = () => {
       }
     };
     fetchProfilePhoto();
-  }, [isLogin, userId, navigate, dispatch]);
+
+    // Handle payment success toast
+    if (location.state?.showSuccess) {
+      toast.success('Payment successful!', {
+        position: 'top-right',
+        autoClose: 3000,
+        onOpen: () => console.log('Toast opened'),
+        onClose: () => {
+          // Clear the state to prevent re-triggering on refresh
+          window.history.replaceState({}, document.title);
+        },
+      });
+    }
+  }, [isLogin, userId, navigate, dispatch, location.state]);
 
   const fetchPresignedUrl = async (fileKey) => {
     try {
@@ -334,6 +350,9 @@ const ProfilePage = () => {
             </div>
           </ModalBody>
         </Modal>
+
+        {/* Toast Container for notifications */}
+        <ToastContainer />
       </div>
     </div>
   );
