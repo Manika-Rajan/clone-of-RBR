@@ -1,0 +1,23 @@
+{
+  "main": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-clonerbrproject-main-e431d-authRole",
+      "UnauthRoleArn": "arn:aws:iam::922250156832:role/amplify-clonerbrproject-main-e431d-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::922250156832:role/amplify-clonerbrproject-main-e431d-authRole",
+      "Region": "ap-south-1",
+      "DeploymentBucketName": "amplify-clonerbrproject-main-e431d-deployment",
+      "UnauthRoleName": "amplify-clonerbrproject-main-e431d-unauthRole",
+      "StackName": "amplify-clonerbrproject-main-e431d",
+      "StackId": "arn:aws:cloudformation:ap-south-1:922250156832:stack/amplify-clonerbrproject-main-e431d/4d5fd6e0-691d-11f0-bd25-0237420bea5b",
+      "AmplifyAppId": "d3mhst3zlivow8"
+    },
+    "categories": {
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d3mhst3zlivow8",
+          "type": "manual"
+        }
+      }
+    }
+  }
+}
