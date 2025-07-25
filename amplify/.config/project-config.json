@@ -8,8 +8,8 @@
     "config": {
       "SourceDir": "frontend",
       "DistributionDir": "frontend/build",
-      "BuildCommand": "cd frontend && npm run build",
-      "StartCommand": "npm start"
+      "BuildCommand": "npm --prefix frontend run build",
+      "StartCommand": "npm --prefix frontend start"
     }
   },
   "providers": [
