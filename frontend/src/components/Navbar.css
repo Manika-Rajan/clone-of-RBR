@@ -36,6 +36,7 @@
 .navbar-nav {
   display: flex;
   align-items: center;
+  margin-right: 40px;
 }
 
 .nav-item {
