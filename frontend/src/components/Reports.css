@@ -1,8 +1,9 @@
 .filters{
   margin: auto;
 }
-.report{
-    padding-top:20px ;
+.report {
+    padding-top: 20px;
+    padding-bottom: 40px;
 }
 .personalized-report-head{
     font-family: BaskervilleOldFace;
