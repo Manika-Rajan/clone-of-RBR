@@ -105,7 +105,8 @@ const Navbar = (props) => {
                     <button className="nav-link login-btn" onClick={() => {
                       resetModal();
                       setOpenModel(true);
-                    }}>LOGIN</button>
+                    }}style={{ backgroundColor: '#0263c7', color: 'white', opacity: 1, visibility: 'visible', zIndex: 1000 }}
+                      >LOGIN</button>
                   </li>
                 )}
               </ul>
