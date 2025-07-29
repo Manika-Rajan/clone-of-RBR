@@ -59,6 +59,7 @@
   align-items: center;
   cursor: pointer;
   padding: 10px;
+  margin-right: 40px; /* Added 40px space on the right */
 }
 
 .avatar {
