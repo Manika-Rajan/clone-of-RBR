@@ -54,7 +54,7 @@
 }
 
 /* User Profile Section */
-.user-menu {
+.navbar-nav .user-menu {
   display: flex;
   align-items: center;
   cursor: pointer;
