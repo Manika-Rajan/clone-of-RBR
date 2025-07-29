@@ -59,9 +59,9 @@ body
   width: 84px;
   height: 36px;
   border-radius: 9px;
-  background-color: #0263c7;
+  background-color: #0263c7 !important;
   border: none;
-  color: white;
+  color: white !important;
   font-size: 16px;
   font-weight: 600;
   font-stretch: normal;
@@ -69,8 +69,9 @@ body
   line-height: normal;
   letter-spacing: 0.48px;
   text-align:center;
-  color: #fff;
   padding:8px 16px 8px 16px;
+  opacity: 1 !important; /* Ensure full opacity */
+  visibility: visible !important; /* Ensure visibility */
 }
 .nav-item .login-btn{
   color: white;
@@ -159,4 +160,11 @@ color: #0263C7;
   border-radius: 10px;
   font-size: 20px;
   font-weight: 400;
+}
+
+.navbar-nav .login-btn {
+  background-color: #0263c7; /* Fallback rule */
+  color: white;
+  opacity: 1;
+  visibility: visible;
 }
