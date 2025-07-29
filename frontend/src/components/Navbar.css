@@ -59,7 +59,7 @@
   align-items: center;
   cursor: pointer;
   padding: 10px;
-  margin-right: 40px; /* Added 40px space on the right */
+  margin-right: 90px; /* Added 40px space on the right */
 }
 
 .avatar {
@@ -87,7 +87,6 @@
   padding: 10px 0;
   z-index: 1000;
   display: none;
-  margin-right: 40px;
 }
 
 .dropdown-menu.show {
