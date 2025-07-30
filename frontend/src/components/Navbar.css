@@ -55,6 +55,15 @@
 }
 
 /* User Profile Section */
+.dropdown-toggle.user-menu {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  margin-right: 40px; /* Added specific style for the exact class combination */
+}
+
+/* User Profile Section */
 .navbar-nav .nav-item.dropdown .user-menu {
   display: flex;
   align-items: center;
