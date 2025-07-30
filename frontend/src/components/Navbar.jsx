@@ -81,7 +81,7 @@ const Navbar = (props) => {
                 </li>
                 {isLogin ? (
                   <li className="nav-item dropdown">
-                    <div className="dropdown-toggle user-menu" onClick={toggleDropdown}>
+                    <div className="dropdown-toggle user-menu" onClick={toggleDropdown} style={{ marginRight: '40px' }}>
                       <img src={avatar} className="avatar" alt="User Avatar" />
                       <span className="user-name">{name || "User"}</span>
                     </div>
