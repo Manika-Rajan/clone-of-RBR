@@ -54,12 +54,11 @@
 }
 
 /* User Profile Section */
-.navbar-nav .nav-item.dropdown .user-menu {
+.dropdown-toggle.user-menu {
   display: flex;
   align-items: center;
   cursor: pointer;
   padding: 10px;
-  margin-right: 90px !important; /* Increased specificity and forced application */
 }
 
 .avatar {
