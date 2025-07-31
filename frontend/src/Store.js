@@ -3,7 +3,7 @@ import { createContext, useReducer, useContext } from "react";
 export const Store = createContext();
 
 const initialState = {
-  isLogin: localStorage.getItem("isLogin") === "true" || false,
+  isLogin: localStorage.getItem("isLogin") === "true",
   userId: localStorage.getItem("userId") || '', // Added userId
   name: localStorage.getItem('userName') || '',
   phone: localStorage.getItem('userPhone') || '',
@@ -19,7 +19,14 @@ const reducer = (state, action) => {
     case 'USER_LOGIN':
       localStorage.setItem("isLogin", action.payload.isLogin);
       if (action.payload.userId) localStorage.setItem("userId", action.payload.userId); // Persist userId
-      return { ...state, isLogin: action.payload.isLogin, userId: action.payload.userId || state.userId };
+      return {
+        ...state,
+        isLogin: action.payload.isLogin,
+        userId: action.payload.userId || state.userId,
+        name: action.payload.name || state.name,
+        email: action.payload.email || state.email,
+        phone: action.payload.phone || state.phone
+      };
     case 'SET_USER_ID': // Added
       localStorage.setItem("userId", action.payload);
       return { ...state, userId: action.payload };
