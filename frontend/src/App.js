@@ -54,7 +54,7 @@ function App() {
   }, [state.isLogin, dispatch]);
     
   return (
-    <BrowserRouter>
+    <Router>
       <div className="App">
         {/* Navbar on all pages except /report-display */}
         {window.location.pathname !== "/report-display" && <Navbar />}
@@ -77,7 +77,7 @@ function App() {
         </Routes>
         <Footer />
       </div>
-    </BrowserRouter>
+    </Router>
   );
 }
 
