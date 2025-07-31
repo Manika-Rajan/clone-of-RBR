@@ -4,7 +4,7 @@ import { Store } from '../Store';
 
 const Login = ({ onClose }) => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { totalPrice, name, phone, email, status } = state;
+  //const { totalPrice, name, phone, email, status } = state;
 
   const [number, setNumber] = useState('');
   const [otpInput, setOtpInput] = useState('');
@@ -14,11 +14,11 @@ const Login = ({ onClose }) => {
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
-    const storedName = localStorage.getItem('userName');
-    const storedEmail = localStorage.getItem('userEmail');
+    //const storedName = localStorage.getItem('userName');
+    //const storedEmail = localStorage.getItem('userEmail');
     if (storedPhone) setNumber(storedPhone.replace('+91', ''));
-    if (storedName) cxtDispatch({ type: 'SET_NAME', payload: storedName });
-    if (storedEmail) cxtDispatch({ type: 'SET_EMAIL', payload: storedEmail });
+    //if (storedName) cxtDispatch({ type: 'SET_NAME', payload: storedName });
+    //if (storedEmail) cxtDispatch({ type: 'SET_EMAIL', payload: storedEmail });
   }, [phone, cxtDispatch]);
 
   const Signup = async (event) => {
@@ -79,18 +79,19 @@ const Login = ({ onClose }) => {
         }
         if (response.status === 200) {
           setResponseMessage(body.message || 'Login successful');
-          const userId = body.user_id || phoneNumber;
+          //const userId = body.user_id || phoneNumber;
           const token = body.token; // Extract token
+          const { userId, name, email } = body.user;
           if (token) {
             localStorage.setItem('authToken', token);
             localStorage.setItem('userId', userId);
             localStorage.setItem('userName', name);
             localStorage.setItem('userEmail', email);
             localStorage.setItem('userPhone', phoneNumber);
-            cxtDispatch({ type: 'USER_LOGIN', payload: { isLogin: true, userId } });
-            cxtDispatch({ type: 'SET_NAME', payload: name });
-            cxtDispatch({ type: 'SET_EMAIL', payload: email });
-            cxtDispatch({ type: 'SET_PHONE', payload: userId });
+            cxtDispatch({ type: 'USER_LOGIN', payload: { isLogin: true, userId, name, email, phone: phoneNumber } });
+            //cxtDispatch({ type: 'SET_NAME', payload: name });
+            //cxtDispatch({ type: 'SET_EMAIL', payload: email });
+            //cxtDispatch({ type: 'SET_PHONE', payload: userId });
             onClose();
           } else {
             setError('No token received from server');
