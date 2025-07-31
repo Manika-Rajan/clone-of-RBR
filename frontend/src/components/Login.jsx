@@ -19,7 +19,7 @@ const Login = ({ onClose }) => {
     if (storedPhone) setNumber(storedPhone.replace('+91', ''));
     //if (storedName) cxtDispatch({ type: 'SET_NAME', payload: storedName });
     //if (storedEmail) cxtDispatch({ type: 'SET_EMAIL', payload: storedEmail });
-  }, [phone, cxtDispatch]);
+  }, [userPhone, cxtDispatch]);
 
   const Signup = async (event) => {
     event.preventDefault();
