@@ -83,10 +83,14 @@ const Login = ({ onClose }) => {
           const token = body.token; // Extract token
           if (token) {
             localStorage.setItem('authToken', token);
-            cxtDispatch({ type: 'USER_LOGIN', payload: { isLogin: true, userId } });
-            cxtDispatch({ type: 'SET_NAME', payload: phoneNumber });
-            localStorage.setItem('userName', phoneNumber);
+            localStorage.setItem('userId', userId);
+            localStorage.setItem('userName', name);
+            localStorage.setItem('userEmail', email);
             localStorage.setItem('userPhone', phoneNumber);
+            cxtDispatch({ type: 'USER_LOGIN', payload: { isLogin: true, userId } });
+            cxtDispatch({ type: 'SET_NAME', payload: name });
+            cxtDispatch({ type: 'SET_EMAIL', payload: email });
+            cxtDispatch({ type: 'SET_PHONE', payload: userId });
             onClose();
           } else {
             setError('No token received from server');
