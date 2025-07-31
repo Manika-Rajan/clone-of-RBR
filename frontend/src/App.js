@@ -20,6 +20,39 @@ import Login from './components/Login';
 
 
 function App() {
+  const { state, dispatch } = useContext(Store);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('authToken');
+      if (token && !state.isLogin) {
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+          try {
+            const response = await fetch(
+              'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId }),
+              }
+            );
+            const data = await response.json();
+            if (response.ok && data.name && data.email) {
+              dispatch({ type: 'USER_LOGIN', payload: { isLogin: true, userId } });
+              dispatch({ type: 'SET_NAME', payload: data.name });
+              dispatch({ type: 'SET_EMAIL', payload: data.email });
+              dispatch({ type: 'SET_PHONE', payload: userId });
+            }
+          } catch (error) {
+            console.error('Auth check error:', error);
+          }
+        }
+      }
+    };
+    checkAuth();
+  }, [state.isLogin, dispatch]);
+    
   return (
     <BrowserRouter>
       <div className="App">
@@ -29,11 +62,11 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/" element={<Reports />} />
           <Route path='/contact' element={<Contact />} />
-          <Route path='/report-display' element={<ReportsDisplay />} />
-          <Route path='/payment' element={<Payment />} />
+          //<Route path='/report-display' element={<ReportsDisplay />} />
+          //<Route path='/payment' element={<Payment />} />
           <Route path='/commingSoon' element={<CommingSoon />} />
           <Route path='/not-found' element={<Invalid />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          //<Route path="/profile" element={<ProfilePage />} />
           <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
