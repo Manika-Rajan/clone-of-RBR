@@ -217,6 +217,9 @@ const ProfilePage = () => {
         }
       );
       if (!response.ok) throw new Error('Failed to save profile');
+      const data = await response.json();
+      dispatch({ type: 'SET_NAME', payload: nameInput });
+      dispatch({ type: 'SET_EMAIL', payload: emailInput });
       alert('Profile saved successfully');
     } catch (error) {
       console.error('Error saving profile:', error);
