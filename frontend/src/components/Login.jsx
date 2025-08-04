@@ -12,6 +12,7 @@ const Login = ({ onClose }) => {
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [requireDetails, setRequireDetails] = useState(false);
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -20,7 +21,7 @@ const Login = ({ onClose }) => {
 
   const fetchUserDetails = async (phoneNumber) => {
     try {
-      const response = await fetch('https://YOUR_API_ID.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
+      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'get', phone_number: phoneNumber })
@@ -29,33 +30,40 @@ const Login = ({ onClose }) => {
       if (response.ok) {
         setName(data.name || '');
         setEmail(data.email || '');
+        // Only require details if name or email is missing/empty
+        setRequireDetails(!data.name || !data.email || data.name.trim() === '' || data.email.trim() === '');
       } else {
         console.error('Error fetching user details:', data.error);
+        setRequireDetails(true); // Prompt for details if fetch fails
       }
     } catch (err) {
       console.error('Fetch user details error:', err);
+      setRequireDetails(true); // Prompt for details on network error
     }
   };
 
   const saveUserDetails = async (phoneNumber, name, email) => {
     try {
-      const response = await fetch('https://YOUR_API_ID.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
+      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update', phone_number: phoneNumber, name, email })
       });
       const data = await response.json();
       if (!response.ok) {
-        console.error('Error saving user details:', data.error);
+        throw new Error(data.error || 'Failed to save user details');
       }
+      console.log('User details saved successfully');
+      return true;
     } catch (err) {
-      console.error('Save user details error:', err);
+      console.error('Save user details error:', err.message);
+      throw err;
     }
   };
 
   const Signup = async (event) => {
     event.preventDefault();
-    console.log('Signup triggered, otpSent:', otpSent, 'isVerified:', isVerified);
+    console.log('Signup triggered, otpSent:', otpSent, 'isVerified:', isVerified, 'requireDetails:', requireDetails);
 
     if (!otpSent) {
       if (number.length !== 10 || !/^\d+$/.test(number)) {
@@ -108,8 +116,21 @@ const Login = ({ onClose }) => {
           body = JSON.parse(data.body);
         }
         if (response.status === 200) {
-          setResponseMessage(body.message || 'OTP verified successfully');
+          setResponseMessage('OTP verified successfully');
           setIsVerified(true);
+          // If details are not required, complete login immediately
+          if (!requireDetails) {
+            const token = localStorage.getItem('authToken') || 'temp-token';
+            localStorage.setItem('userName', name);
+            localStorage.setItem('userEmail', email);
+            localStorage.setItem('userId', phoneNumber);
+            cxtDispatch({
+              type: 'USER_LOGIN',
+              payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
+            });
+            setResponseMessage('Login successful');
+            onClose();
+          }
         } else {
           setError(`Error: ${body.error || 'Invalid OTP'}`);
         }
@@ -117,17 +138,17 @@ const Login = ({ onClose }) => {
         console.error('Verify OTP error:', err);
         setError('Failed to verify OTP');
       }
-    } else {
+    } else if (requireDetails) {
       // Save updated name and email
-      if (!name.trim() || !email.trim()) {
-        setError('Please enter both name and email');
+      if (!name.trim() || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError('Please enter a valid name and email');
         return;
       }
       setError('');
       const phoneNumber = `+91${number}`;
       try {
         await saveUserDetails(phoneNumber, name, email);
-        const token = localStorage.getItem('authToken') || 'temp-token'; // Use existing token or placeholder
+        const token = localStorage.getItem('authToken') || 'temp-token';
         localStorage.setItem('userName', name);
         localStorage.setItem('userEmail', email);
         localStorage.setItem('userId', phoneNumber);
@@ -138,8 +159,7 @@ const Login = ({ onClose }) => {
         setResponseMessage('Login successful');
         onClose();
       } catch (err) {
-        console.error('Save user details error:', err);
-        setError('Failed to save user details');
+        setError(`Failed to save user details: ${err.message}`);
       }
     }
   };
@@ -148,7 +168,7 @@ const Login = ({ onClose }) => {
     <div className="login-popup-container">
       <div className="login-popup">
         <div className="login-title">
-          <h3>{isVerified ? 'Enter Your Details' : otpSent ? 'Enter OTP to Login' : 'Please Enter Your Mobile Number'}</h3>
+          <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Enter OTP to Login' : 'Please Enter Your Mobile Number'}</h3>
         </div>
         <div className="login-paragraph">
           {!otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
@@ -183,7 +203,7 @@ const Login = ({ onClose }) => {
               maxLength={6}
             />
           </div>
-        ) : (
+        ) : requireDetails ? (
           <div className="user-details" style={{ width: '70%', margin: 'auto', marginBottom: '20px' }}>
             <div className="input-group mb-3">
               <input
@@ -204,10 +224,10 @@ const Login = ({ onClose }) => {
               />
             </div>
           </div>
-        )}
+        ) : null}
         <div>
           <button type="submit" className="login-button" onClick={Signup}>
-            {isVerified ? 'SAVE & LOGIN' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
+            {isVerified && requireDetails ? 'SAVE & LOGIN' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
           </button>
         </div>
         {responseMessage && <p style={{ color: 'green', textAlign: 'center' }}>{responseMessage}</p>}
