@@ -1,6 +1,21 @@
 /* .login-popup-container{
     height: 100vh;
 } */
+
+.user-details input {
+  border: none;
+  border-bottom: 1px solid grey;
+  text-align: center;
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+.user-details input:focus {
+  outline: none;
+  border-bottom: 1px solid #0263c7;
+}
+
+
 .login-popup{
     margin: auto;
     /* margin-top: 50%; */
