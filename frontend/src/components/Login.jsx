@@ -28,10 +28,18 @@ const Login = ({ onClose }) => {
       });
       const data = await response.json();
       if (response.ok) {
-        setName(data.name || '');
-        setEmail(data.email || '');
-        // Only require details if name or email is missing/empty
-        setRequireDetails(!data.name || !data.email || data.name.trim() === '' || data.email.trim() === '');
+        const fetchedName = data.name || '';
+        const fetchedEmail = data.email || '';
+        setName(fetchedName);
+        setEmail(fetchedEmail);
+        // Require details if name is phone number, empty, or email is empty
+        setRequireDetails(
+          !fetchedName ||
+          fetchedName === phoneNumber ||
+          fetchedName.trim() === '' ||
+          !fetchedEmail ||
+          fetchedEmail.trim() === ''
+        );
       } else {
         console.error('Error fetching user details:', data.error);
         setRequireDetails(true); // Prompt for details if fetch fails
@@ -43,6 +51,9 @@ const Login = ({ onClose }) => {
   };
 
   const saveUserDetails = async (phoneNumber, name, email) => {
+    if (!phoneNumber || !name || !email) {
+      throw new Error('Missing required fields for saving user details');
+    }
     try {
       const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
         method: 'POST',
@@ -51,14 +62,27 @@ const Login = ({ onClose }) => {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save user details');
+        throw new Error(data.error || `HTTP error ${response.status}`);
       }
-      console.log('User details saved successfully');
+      console.log('User details saved successfully:', data);
       return true;
     } catch (err) {
-      console.error('Save user details error:', err.message);
-      throw err;
+      console.error('Save user details error:', err.message, err.stack);
+      throw new Error(`Failed to save user details: ${err.message}`);
     }
+  };
+
+  const completeLogin = (phoneNumber, name, email) => {
+    const token = localStorage.getItem('authToken') || 'temp-token';
+    localStorage.setItem('userName', name);
+    localStorage.setItem('userEmail', email);
+    localStorage.setItem('userId', phoneNumber);
+    cxtDispatch({
+      type: 'USER_LOGIN',
+      payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
+    });
+    setResponseMessage('Login successful');
+    setTimeout(onClose, 1000); // Delay closing to show success message
   };
 
   const Signup = async (event) => {
@@ -118,18 +142,9 @@ const Login = ({ onClose }) => {
         if (response.status === 200) {
           setResponseMessage('OTP verified successfully');
           setIsVerified(true);
-          // If details are not required, complete login immediately
+          // If details are not required, complete login
           if (!requireDetails) {
-            const token = localStorage.getItem('authToken') || 'temp-token';
-            localStorage.setItem('userName', name);
-            localStorage.setItem('userEmail', email);
-            localStorage.setItem('userId', phoneNumber);
-            cxtDispatch({
-              type: 'USER_LOGIN',
-              payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
-            });
-            setResponseMessage('Login successful');
-            onClose();
+            completeLogin(phoneNumber, name || phoneNumber, email || '');
           }
         } else {
           setError(`Error: ${body.error || 'Invalid OTP'}`);
@@ -145,21 +160,13 @@ const Login = ({ onClose }) => {
         return;
       }
       setError('');
+      setResponseMessage('');
       const phoneNumber = `+91${number}`;
       try {
         await saveUserDetails(phoneNumber, name, email);
-        const token = localStorage.getItem('authToken') || 'temp-token';
-        localStorage.setItem('userName', name);
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userId', phoneNumber);
-        cxtDispatch({
-          type: 'USER_LOGIN',
-          payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
-        });
-        setResponseMessage('Login successful');
-        onClose();
+        completeLogin(phoneNumber, name, email);
       } catch (err) {
-        setError(`Failed to save user details: ${err.message}`);
+        setError(err.message);
       }
     }
   };
