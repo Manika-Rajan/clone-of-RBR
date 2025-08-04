@@ -64,18 +64,46 @@ const Payment = () => {
     };
   }, [isLogin, userId, navigate]);
 
+  const saveUserDetails = async () => {
+    try {
+      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update', phone_number: storedPhone, name: inputName, email: inputEmail })
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error saving user details:', errorData.error || 'Unknown error');
+      } else {
+        console.log('User details saved successfully');
+      }
+    } catch (err) {
+      console.error('Save user details error:', err);
+    }
+  };
+
   const handleName = (e) => {
     if (e.key === 'Enter') {
+      if (!inputName.trim()) {
+        setError('Name cannot be empty');
+        return;
+      }
       cxtDispatch({ type: 'SET_NAME', payload: inputName });
       localStorage.setItem('userName', inputName);
+      saveUserDetails(); // Save to backend
       setEditName(false);
     }
   };
 
   const handleEmail = (e) => {
     if (e.key === 'Enter') {
+      if (!inputEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputEmail)) {
+        setError('Please enter a valid email');
+        return;
+      }
       cxtDispatch({ type: 'SET_EMAIL', payload: inputEmail });
       localStorage.setItem('userEmail', inputEmail);
+      saveUserDetails(); // Save to backend
       setEditEmail(false);
       setSuccess(true);
     }
@@ -186,6 +214,8 @@ const Payment = () => {
                 timestamp: new Date().toISOString(),
               }),
             });
+            // Save user details after successful payment
+            await saveUserDetails();
             // Navigate immediately with success state
             navigate('/profile', { state: { showSuccess: true } });
           } catch (err) {
