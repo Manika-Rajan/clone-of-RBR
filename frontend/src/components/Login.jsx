@@ -28,6 +28,7 @@ const Login = ({ onClose }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
       });
+      console.log('fetchUserDetails status:', response.status);
       const data = await response.json();
       console.log('fetchUserDetails response:', data);
       if (response.ok) {
@@ -42,12 +43,15 @@ const Login = ({ onClose }) => {
           !fetchedEmail ||
           fetchedEmail.trim() === ''
         );
+        console.log('requireDetails set to:', !fetchedName || fetchedName === phoneNumber || fetchedName.trim() === '' || !fetchedEmail || fetchedEmail.trim() === '');
       } else {
-        console.error('Error fetching user details:', data.error);
+        console.error('fetchUserDetails error:', data.error || 'Unknown error');
+        setError(`Failed to fetch user details: ${data.error || 'Unknown error'}`);
         setRequireDetails(true);
       }
     } catch (err) {
-      console.error('Fetch user details error:', err);
+      console.error('fetchUserDetails exception:', err.message, err.stack);
+      setError('Failed to connect to server for user details');
       setRequireDetails(true);
     }
   };
@@ -64,6 +68,7 @@ const Login = ({ onClose }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
       });
+      console.log('saveUserDetails status:', response.status);
       const data = await response.json();
       console.log('saveUserDetails response:', data);
       if (!response.ok) {
@@ -71,7 +76,7 @@ const Login = ({ onClose }) => {
       }
       return true;
     } catch (err) {
-      console.error('Save user details error:', err.message, err.stack);
+      console.error('saveUserDetails exception:', err.message, err.stack);
       throw new Error(`Failed to save user details: ${err.message}`);
     }
   };
@@ -108,8 +113,9 @@ const Login = ({ onClose }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone_number: phoneNumber })
         });
+        console.log('send-otp status:', response.status);
         const data = await response.json();
-        console.log('Send OTP response:', data);
+        console.log('send-otp response:', data);
         if (response.ok) {
           setResponseMessage('OTP sent! Enter it below:');
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
@@ -120,7 +126,7 @@ const Login = ({ onClose }) => {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
       } catch (err) {
-        console.error('Send OTP error:', err);
+        console.error('send-otp exception:', err);
         setError('Failed to connect to server');
       }
     } else if (!isVerified) {
@@ -137,8 +143,9 @@ const Login = ({ onClose }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone_number: phoneNumber, otp: otpInput })
         });
+        console.log('verify-otp status:', response.status);
         const data = await response.json();
-        console.log('Verify OTP raw response:', data);
+        console.log('verify-otp raw response:', data);
         let body = data;
         if (data.body && typeof data.body === 'string') {
           body = JSON.parse(data.body);
@@ -153,7 +160,7 @@ const Login = ({ onClose }) => {
           setError(`Error: ${body.error || 'Invalid OTP'}`);
         }
       } catch (err) {
-        console.error('Verify OTP error:', err);
+        console.error('verify-otp exception:', err);
         setError('Failed to verify OTP');
       }
     } else if (requireDetails) {
