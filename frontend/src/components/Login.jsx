@@ -20,19 +20,21 @@ const Login = ({ onClose }) => {
   }, []);
 
   const fetchUserDetails = async (phoneNumber) => {
+    const requestBody = { action: 'get', phone_number: phoneNumber };
+    console.log('fetchUserDetails request:', requestBody);
     try {
       const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'get', phone_number: phoneNumber })
+        body: JSON.stringify(requestBody)
       });
       const data = await response.json();
+      console.log('fetchUserDetails response:', data);
       if (response.ok) {
         const fetchedName = data.name || '';
         const fetchedEmail = data.email || '';
         setName(fetchedName);
         setEmail(fetchedEmail);
-        // Require details if name is phone number, empty, or email is empty
         setRequireDetails(
           !fetchedName ||
           fetchedName === phoneNumber ||
@@ -42,11 +44,11 @@ const Login = ({ onClose }) => {
         );
       } else {
         console.error('Error fetching user details:', data.error);
-        setRequireDetails(true); // Prompt for details if fetch fails
+        setRequireDetails(true);
       }
     } catch (err) {
       console.error('Fetch user details error:', err);
-      setRequireDetails(true); // Prompt for details on network error
+      setRequireDetails(true);
     }
   };
 
@@ -54,17 +56,19 @@ const Login = ({ onClose }) => {
     if (!phoneNumber || !name || !email) {
       throw new Error('Missing required fields for saving user details');
     }
+    const requestBody = { action: 'update', phone_number: phoneNumber, name, email };
+    console.log('saveUserDetails request:', requestBody);
     try {
       const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update', phone_number: phoneNumber, name, email })
+        body: JSON.stringify(requestBody)
       });
       const data = await response.json();
+      console.log('saveUserDetails response:', data);
       if (!response.ok) {
         throw new Error(data.error || `HTTP error ${response.status}`);
       }
-      console.log('User details saved successfully:', data);
       return true;
     } catch (err) {
       console.error('Save user details error:', err.message, err.stack);
@@ -82,7 +86,7 @@ const Login = ({ onClose }) => {
       payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
     });
     setResponseMessage('Login successful');
-    setTimeout(onClose, 1000); // Delay closing to show success message
+    setTimeout(onClose, 1000);
   };
 
   const Signup = async (event) => {
@@ -111,7 +115,7 @@ const Login = ({ onClose }) => {
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
           setOtpSent(true);
-          await fetchUserDetails(phoneNumber); // Fetch name and email
+          await fetchUserDetails(phoneNumber);
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
@@ -142,7 +146,6 @@ const Login = ({ onClose }) => {
         if (response.status === 200) {
           setResponseMessage('OTP verified successfully');
           setIsVerified(true);
-          // If details are not required, complete login
           if (!requireDetails) {
             completeLogin(phoneNumber, name || phoneNumber, email || '');
           }
@@ -154,7 +157,6 @@ const Login = ({ onClose }) => {
         setError('Failed to verify OTP');
       }
     } else if (requireDetails) {
-      // Save updated name and email
       if (!name.trim() || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         setError('Please enter a valid name and email');
         return;
