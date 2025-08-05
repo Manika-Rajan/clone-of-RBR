@@ -53,6 +53,7 @@ const Login = ({ onClose }) => {
       type: 'USER_LOGIN',
       payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
     });
+    console.log('completeLogin called with:', { phoneNumber, name, email });
     setResponseMessage('Login successful');
     setTimeout(onClose, 1000);
   };
@@ -106,8 +107,13 @@ const Login = ({ onClose }) => {
           body: JSON.stringify({ phone_number: phoneNumber, otp: otpInput })
         });
         console.log('verify-otp status:', response.status);
-        const data = await response.json();
-        console.log('verify-otp raw response:', data);
+        const rawData = await response.json();
+        console.log('verify-otp raw response:', rawData);
+        let data = rawData;
+        if (rawData.body && typeof rawData.body === 'string') {
+          data = JSON.parse(rawData.body);
+        }
+        console.log('verify-otp parsed data:', data);
         if (response.status === 200) {
           setResponseMessage('OTP verified successfully');
           setIsVerified(true);
@@ -116,6 +122,7 @@ const Login = ({ onClose }) => {
           const isExistingUser = data.isExistingUser || false;
           setName(fetchedName);
           setEmail(fetchedEmail);
+          console.log('Setting name:', fetchedName, 'email:', fetchedEmail, 'isExistingUser:', isExistingUser);
           setRequireDetails(
             !isExistingUser ||
             !fetchedName ||
