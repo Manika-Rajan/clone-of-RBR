@@ -11,11 +11,11 @@
 }
 
 .login-popup-container:not(.success-popup-container) {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(100, 0, 0, 0.5);
 }
 
 .success-popup-container {
-  background: white;
+  background: none;
 }
 
 .user-details input {
