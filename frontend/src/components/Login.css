@@ -96,7 +96,7 @@
   padding: 15px;
   border-radius: 8px;
   margin-top: 20px;
-  margin-bottom: 42px; /* Matches .login-paragraph */
+  margin-bottom: 42px;
   animation: fadeIn 0.5s ease-in;
 }
 
@@ -130,6 +130,21 @@
   stroke-dasharray: 48;
   stroke-dashoffset: 48;
   animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+.success-popup {
+  position: relative;
+  width: 400px;
+  min-height: 150px;
+  margin: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001; /* Ensure above other elements */
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 @keyframes stroke {
