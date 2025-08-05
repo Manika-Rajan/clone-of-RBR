@@ -160,7 +160,7 @@ const Login = ({ onClose }) => {
   };
 
   return (
-    <div className="login-popup-container">
+    <div className={`login-popup-container ${responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
       <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`}>
         <div className="login-title">
           <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Enter OTP to Login' : 'Please Enter Your Mobile Number'}</h3>
