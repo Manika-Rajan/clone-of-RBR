@@ -55,7 +55,7 @@ const Login = ({ onClose }) => {
     });
     console.log('completeLogin called with:', { phoneNumber, name, email });
     setResponseMessage('Login successful');
-    setTimeout(onClose, 2000); // Increased to 2s for visibility
+    setTimeout(onClose, 2000);
   };
 
   const Signup = async (event) => {
@@ -161,7 +161,7 @@ const Login = ({ onClose }) => {
 
   return (
     <div className="login-popup-container">
-      <div className="login-popup">
+      <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`}>
         <div className="login-title">
           <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Enter OTP to Login' : 'Please Enter Your Mobile Number'}</h3>
         </div>
