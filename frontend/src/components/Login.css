@@ -4,15 +4,18 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
+.login-popup-container:not(.success-popup-container) {
+  background: rgba(0, 0, 0, 0.5);
+}
+
 .success-popup-container {
-  background: transparent;
+  background: none;
 }
 
 .user-details input {
@@ -109,7 +112,7 @@
   padding: 15px;
   border-radius: 8px;
   margin: 20px auto;
-  width: 260px; /* Fit content */
+  width: 260px;
   animation: fadeIn 0.5s ease-in;
 }
 
@@ -146,7 +149,7 @@
 }
 
 .success-popup {
-  position: relative;
+  position: fixed;
   width: 300px;
   min-height: 120px;
   margin: 0;
@@ -154,8 +157,8 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1001;
-  background: transparent; /* No background for popup container */
-  padding: 0; /* Remove padding to fit success-message */
+  background: transparent;
+  padding: 0;
 }
 
 @keyframes stroke {
