@@ -55,7 +55,7 @@ const Login = ({ onClose }) => {
     });
     console.log('completeLogin called with:', { phoneNumber, name, email });
     setResponseMessage('Login successful');
-    setTimeout(onClose, 1000);
+    setTimeout(onClose, 2000); // Increased to 2s for visibility
   };
 
   const Signup = async (event) => {
@@ -221,11 +221,27 @@ const Login = ({ onClose }) => {
           </div>
         ) : null}
         <div>
-          <button type="submit" className="login-button" onClick={Signup}>
-            {isVerified && requireDetails ? 'SAVE & LOGIN' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
-          </button>
+          {responseMessage === 'Login successful' ? (
+            <div className="success-message">
+              <svg
+                className="checkmark"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 52 52"
+              >
+                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+              </svg>
+              <p>Login Successful!</p>
+            </div>
+          ) : (
+            <button type="submit" className="login-button" onClick={Signup}>
+              {isVerified && !requireDetails ? 'CONTINUE' : isVerified && requireDetails ? 'SAVE & LOGIN' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
+            </button>
+          )}
         </div>
-        {responseMessage && <p style={{ color: 'green', textAlign: 'center' }}>{responseMessage}</p>}
+        {responseMessage && responseMessage !== 'Login successful' && (
+          <p style={{ color: 'green', textAlign: 'center' }}>{responseMessage}</p>
+        )}
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       </div>
     </div>
