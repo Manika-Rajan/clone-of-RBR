@@ -1,8 +1,4 @@
 
-.login-popup-container:not(.success-popup-container) {
-  background: rgba(0, 0, 0, 0.5);
-}
-
 .success-popup-container {
   background: none;
 }
