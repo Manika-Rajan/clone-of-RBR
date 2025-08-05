@@ -19,43 +19,6 @@ const Login = ({ onClose }) => {
     if (storedPhone) setNumber(storedPhone.replace('+91', ''));
   }, []);
 
-  const fetchUserDetails = async (phoneNumber) => {
-    const requestBody = { action: 'get', phone_number: phoneNumber };
-    console.log('fetchUserDetails request:', requestBody);
-    try {
-      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
-      console.log('fetchUserDetails status:', response.status);
-      const data = await response.json();
-      console.log('fetchUserDetails response:', data);
-      if (response.ok) {
-        const fetchedName = data.name || '';
-        const fetchedEmail = data.email || '';
-        setName(fetchedName);
-        setEmail(fetchedEmail);
-        setRequireDetails(
-          !fetchedName ||
-          fetchedName === phoneNumber ||
-          fetchedName.trim() === '' ||
-          !fetchedEmail ||
-          fetchedEmail.trim() === ''
-        );
-        console.log('requireDetails set to:', !fetchedName || fetchedName === phoneNumber || fetchedName.trim() === '' || !fetchedEmail || fetchedEmail.trim() === '');
-      } else {
-        console.error('fetchUserDetails error:', data.error || 'Unknown error');
-        setError(`Failed to fetch user details: ${data.error || 'Unknown error'}`);
-        setRequireDetails(true);
-      }
-    } catch (err) {
-      console.error('fetchUserDetails exception:', err.message, err.stack);
-      setError('Failed to connect to server for user details');
-      setRequireDetails(true);
-    }
-  };
-
   const saveUserDetails = async (phoneNumber, name, email) => {
     if (!phoneNumber || !name || !email) {
       throw new Error('Missing required fields for saving user details');
@@ -121,7 +84,6 @@ const Login = ({ onClose }) => {
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
           setOtpSent(true);
-          await fetchUserDetails(phoneNumber);
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
@@ -146,18 +108,28 @@ const Login = ({ onClose }) => {
         console.log('verify-otp status:', response.status);
         const data = await response.json();
         console.log('verify-otp raw response:', data);
-        let body = data;
-        if (data.body && typeof data.body === 'string') {
-          body = JSON.parse(data.body);
-        }
         if (response.status === 200) {
           setResponseMessage('OTP verified successfully');
           setIsVerified(true);
+          const fetchedName = data.user?.name || phoneNumber;
+          const fetchedEmail = data.user?.email || '';
+          const isExistingUser = data.isExistingUser || false;
+          setName(fetchedName);
+          setEmail(fetchedEmail);
+          setRequireDetails(
+            !isExistingUser ||
+            !fetchedName ||
+            fetchedName === phoneNumber ||
+            fetchedName.trim() === '' ||
+            !fetchedEmail ||
+            fetchedEmail.trim() === ''
+          );
+          console.log('requireDetails set to:', !isExistingUser || !fetchedName || fetchedName === phoneNumber || fetchedName.trim() === '' || !fetchedEmail || fetchedEmail.trim() === '');
           if (!requireDetails) {
-            completeLogin(phoneNumber, name || phoneNumber, email || '');
+            completeLogin(phoneNumber, fetchedName, fetchedEmail);
           }
         } else {
-          setError(`Error: ${body.error || 'Invalid OTP'}`);
+          setError(`Error: ${data.error || 'Invalid OTP'}`);
         }
       } catch (err) {
         console.error('verify-otp exception:', err);
