@@ -32,6 +32,11 @@
 .login-popup {
   margin: auto;
   text-align: center;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 400px;
 }
 
 .login-title {
@@ -103,8 +108,8 @@
   background-color: #e6f4ea;
   padding: 15px;
   border-radius: 8px;
-  margin-top: 20px;
-  margin-bottom: 42px;
+  margin: 20px auto;
+  width: 260px; /* Fit content */
   animation: fadeIn 0.5s ease-in;
 }
 
@@ -142,17 +147,15 @@
 
 .success-popup {
   position: relative;
-  width: 300px; /* Reduced for compactness */
-  min-height: 120px; /* Adjusted for content */
+  width: 300px;
+  min-height: 120px;
   margin: 0;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1001;
-  background: #e6f4ea; /* Match success-message background */
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: transparent; /* No background for popup container */
+  padding: 0; /* Remove padding to fit success-message */
 }
 
 @keyframes stroke {
