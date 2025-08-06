@@ -1,260 +1,398 @@
-/* ProfilePage.css */
-.profile-page {
-  min-height: 100vh;
-  background-color: #f4f7fa;
-  padding-top: 58px; /* Reduced to 58px to tightly match Navbar height (~60px logo) */
-}
+import React, { useEffect, useState, useContext } from 'react';
+import Navbar from './Navbar';
+import './ProfilePage.css';
+import { Store } from '../Store';
+import { useNavigate, useLocation } from 'react-router-dom';
+import PDFViewer from './PDFViewer';
+import { Modal, ModalBody, ModalHeader } from 'reactstrap';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-.profile-page .header {
-  margin: 0 !important; /* Neutralize header spacing */
-  padding: 0 !important;
-}
+const ProfilePage = () => {
+  const { state, dispatch } = useContext(Store);
+  const { isLogin, userId, name, phone, email } = state;
+  const [purchasedReports, setPurchasedReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-.profile-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  margin-top: 0;
-  padding-top: 0;
-}
+  const [selectedUrl, setSelectedUrl] = useState(null);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [nameInput, setNameInput] = useState(name || '');
+  const [emailInput, setEmailInput] = useState(email || '');
+  const [photoUrl, setPhotoUrl] = useState(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-.profile-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-  margin-bottom: 24px;
-  margin-top: 0;
-}
+  useEffect(() => {
+    console.log("ProfilePage mounted. State:", state);
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 24px;
-}
+    if (!isLogin) {
+      navigate('/');
+      return;
+    }
 
-.photo-section {
-  flex-shrink: 0;
-}
+    const storedUserId = userId || localStorage.getItem('userId');
+    if (!storedUserId) {
+      console.warn('User ID missing.');
+      setLoading(false);
+      setError('User ID not found. Please log in again.');
+      return;
+    }
 
-.profile-photo {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #e5e7eb;
-}
+    if (!userId) {
+      dispatch({ type: 'SET_USER_ID', payload: storedUserId });
+    }
 
-.upload-photo-container {
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #e5e7eb;
-  border-radius: 50%;
-  overflow: hidden;
-}
+    const fetchPurchasedReports = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(
+          `https://xdueps3m8l.execute-api.ap-south-1.amazonaws.com/fetchPurchasedReports-RBRmain-API?user_id=${storedUserId}`
+        );
+        if (!response.ok) throw new Error('Failed to fetch reports');
+        const data = await response.json();
+        console.log('Fetched reports:', data);
+        setPurchasedReports(data.reports || []);
+      } catch (err) {
+        console.error('Error fetching reports:', err);
+        setError('Failed to load purchased reports.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-.upload-button {
-  background-color: #3b82f6;
-  color: #ffffff;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
+    fetchPurchasedReports();
 
-.upload-button:hover {
-  background-color: #2563eb;
-}
+    const fetchProfilePhoto = async () => {
+      try {
+        const response = await fetch(
+          'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: storedUserId }),
+          }
+        );
+        const data = await response.json();
+        if (data.photo_url) setPhotoUrl(data.photo_url);
+      } catch (err) {
+        console.error('Error fetching profile photo:', err);
+      }
+    };
+    fetchProfilePhoto();
 
-.upload-button:disabled {
-  background-color: #93c5fd;
-  cursor: not-allowed;
-}
+    // Handle payment success toast
+    if (location.state?.showSuccess) {
+      toast.success('Payment successful!', {
+        position: 'top-right',
+        autoClose: 3000,
+        onOpen: () => console.log('Toast opened'),
+        onClose: () => {
+          // Clear the state to prevent re-triggering on refresh
+          window.history.replaceState({}, document.title);
+        },
+      });
+    }
+  }, [isLogin, userId, navigate, dispatch, location.state]);
 
-.photo-input {
-  display: none;
-}
+  const fetchPresignedUrl = async (fileKey) => {
+    try {
+      const response = await fetch(
+        'https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_key: fileKey }),
+        }
+      );
+      if (!response.ok) throw new Error('Failed to get presigned URL');
+      const data = await response.json();
+      setSelectedUrl(data.presigned_url);
+    } catch (error) {
+      console.error('Error fetching presigned URL:', error);
+      alert('Failed to open the report.');
+    }
+  };
 
-.info-section {
-  flex-grow: 1;
-}
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
 
-.user-name {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 8px;
-}
+    console.log('File selected:', file.name, file.type, file.size);
+    console.log('Current userId:', userId);
+    if (!userId) {
+      console.error('userId is undefined');
+      alert('Failed to upload photo: userId is undefined');
+      return;
+    }
 
-.user-detail {
-  font-size: 16px;
-  color: #4b5563;
-  margin: 4px 0;
-}
+    setPhotoUploading(true);
+    try {
+      console.log('Fetching presigned URL for userId:', userId);
+      const response = await fetch(
+        'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        }
+      );
+      console.log('Presigned URL response:', response ? response.status : 'No response');
+      if (!response) {
+        throw new Error('No response from server');
+      }
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
+      }
+      const { presignedUrl, photoUrl } = await response.json();
+      console.log('Presigned URL received:', presignedUrl);
+      console.log('Photo URL:', photoUrl);
 
-.update-link {
-  color: #3b82f6;
-  cursor: pointer;
-  text-decoration: underline;
-}
+      console.log('Uploading file to S3...');
+      const uploadResponse = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      console.log('S3 upload response:', uploadResponse ? uploadResponse.status : 'No response');
+      if (!uploadResponse) {
+        throw new Error('No response from S3');
+      }
+      if (!uploadResponse.ok) {
+        const uploadErrorText = await uploadResponse.text();
+        throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
+      }
 
-.update-link:hover {
-  color: #2563eb;
-}
+      setPhotoUrl(photoUrl);
+      console.log('Photo upload successful, photoUrl set:', photoUrl);
+      alert('Photo uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading photo:', error.message);
+      alert(`Failed to upload photo: ${error.message}`);
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
-.save-button {
-  background-color: #3b82f6;
-  color: #ffffff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
+  const updateName = () => {
+    dispatch({ type: 'SET_NAME', payload: nameInput });
+    setShowNameModal(false);
+    saveProfile();
+  };
 
-.save-button:hover {
-  background-color: #2563eb;
-}
+  const updateEmail = () => {
+    dispatch({ type: 'SET_EMAIL', payload: emailInput });
+    setShowEmailModal(false);
+    saveProfile();
+  };
 
-.save-button:disabled {
-  background-color: #93c5fd;
-  cursor: not-allowed;
-}
+  const saveProfile = async () => {
+    if (!userId) {
+      alert('User ID is missing.');
+      return;
+    }
 
-.reports-section {
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-}
+    const profileData = {
+      user_id: userId,
+      name: nameInput,
+      email: emailInput,
+      phone: phone || '',
+      photo_url: photoUrl || '',
+    };
 
-.section-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 16px;
-}
+    setIsSaving(true);
+    try {
+      const response = await fetch(
+        'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(profileData),
+        }
+      );
+      if (!response.ok) throw new Error('Failed to save profile');
+      const data = await response.json();
+      dispatch({ type: 'SET_NAME', payload: nameInput });
+      dispatch({ type: 'SET_EMAIL', payload: emailInput });
+      alert('Profile saved successfully');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Failed to save profile.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-.reports-list {
-  display: grid;
-  gap: 12px;
-}
+  return (
+    <div className="profile-page">
+      <Navbar profile />
+      <div className="profile-container">
+        <div className="profile-card">
+          <div className="user-info">
+            <div className="photo-section">
+              {photoUrl ? (
+                <img src={photoUrl} alt="Profile" className="profile-photo" />
+              ) : (
+                <div className="upload-photo-container">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    id="photo-upload-input"
+                    name="photoUpload"
+                    className="photo-input"
+                    disabled={photoUploading}
+                  />
+                  <label htmlFor="photo-upload-input" className="upload-photo-label">
+                    <button
+                      type="button"
+                      disabled={photoUploading}
+                      className="upload-button"
+                    >
+                      {photoUploading ? 'Uploading...' : 'Upload Photo'}
+                    </button>
+                  </label>
+                </div>
+              )}
+            </div>
+            <div className="info-section">
+              <h2 className="user-name">
+                {name ? (
+                  <>
+                    {name}{' '}
+                    <span
+                      className="modify-link"
+                      onClick={() => {
+                        setNameInput(name);
+                        setShowNameModal(true);
+                      }}
+                    >
+                      Modify
+                    </span>
+                  </>
+                ) : (
+                  <span className="update-link" onClick={() => setShowNameModal(true)}>
+                    Update Name
+                  </span>
+                )}
+              </h2>
+              <p className="user-detail">
+                <strong>Phone:</strong> {phone || 'Not Available'}
+              </p>
+              <p className="user-detail">
+                <strong>Email:</strong>{' '}
+                {email ? (
+                  <>
+                    {email}{' '}
+                    <span
+                      className="modify-link"
+                      onClick={() => {
+                        setEmailInput(email);
+                        setShowEmailModal(true);
+                      }}
+                    >
+                      Modify
+                    </span>
+                  </>
+                ) : (
+                  <span className "update-link" onClick={() => setShowEmailModal(true)}>
+                    Update Email
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+          <button className="save-button" onClick={saveProfile} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Profile'}
+          </button>
+        </div>
 
-.report-card {
-  background-color: #f9fafb;
-  padding: 12px;
-  border-radius: 8px;
-  transition: background-color 0.2s;
-}
+        <div className="reports-section">
+          <h3 className="section-title">Purchased Reports</h3>
+          {loading ? (
+            <div className="loading-spinner">Loading...</div>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : purchasedReports.length > 0 ? (
+            <div className="reports-list">
+              {purchasedReports.map((report) => (
+                <div key={report.file_key} className="report-card">
+                  <button
+                    onClick={() => fetchPresignedUrl(report.file_key)}
+                    className="report-button"
+                  >
+                    {report.file_key.split('/').pop()} (Version: {report.report_version || 'N/A'})
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="no-reports">No purchased reports found.</p>
+          )}
+        </div>
 
-.report-card:hover {
-  background-color: #e5e7eb;
-}
+        {selectedUrl && <PDFViewer pdfUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
 
-.report-button {
-  background: none;
-  border: none;
-  color: #3b82f6;
-  font-size: 16px;
-  text-align: left;
-  cursor: pointer;
-}
+        <Modal isOpen={showNameModal} toggle={() => setShowNameModal(false)} className="profile-modal">
+          <ModalHeader toggle={() => setShowNameModal(false)} className="modal-header">
+            Edit Name
+          </ModalHeader>
+          <ModalBody className="modal-body">
+            <input
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              className="form-control custom-input"
+              placeholder="Enter your name"
+              autoFocus
+            />
+            <div className="modal-buttons">
+              <button className="btn btn-primary custom-submit" onClick={updateName}>
+                Submit
+              </button>
+              <button className="btn btn-secondary custom-cancel" onClick={() => setShowNameModal(false)}>
+                Cancel
+              </button>
+            </div>
+          </ModalBody>
+        </Modal>
 
-.report-button:hover {
-  color: #2563eb;
-  text-decoration: underline;
-}
+        <Modal isOpen={showEmailModal} toggle={() => setShowEmailModal(false)} className="profile-modal">
+          <ModalHeader toggle={() => setShowEmailModal(false)} className="modal-header">
+            Edit Email
+          </ModalHeader>
+          <ModalBody className="modal-body">
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              className="form-control custom-input"
+              placeholder="Enter your email"
+              autoFocus
+            />
+            <div className="modal-buttons">
+              <button className="btn btn-primary custom-submit" onClick={updateEmail}>
+                Submit
+              </button>
+              <button className="btn btn-secondary custom-cancel" onClick={() => setShowEmailModal(false)}>
+                Cancel
+              </button>
+            </div>
+          </ModalBody>
+        </Modal>
 
-.loading-spinner {
-  font-size: 16px;
-  color: #4b5563;
-  text-align: center;
-  animation: spin 1s linear infinite;
-}
+        {/* Toast Container for notifications */}
+        <ToastContainer />
+      </div>
+    </div>
+  );
+};
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-message {
-  color: #dc2626;
-  font-size: 16px;
-  text-align: center;
-}
-
-.no-reports {
-  color: #4b5563;
-  font-size: 16px;
-  text-align: center;
-}
-
-.profile-modal .modal-content {
-  border-radius: 12px;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.btn-primary {
-  background-color: #3b82f6;
-  border-color: #3b82f6;
-}
-
-.btn-primary:hover {
-  background-color: #2563eb;
-  border-color: #2563eb;
-}
-
-.btn-secondary {
-  background-color: #6b7280;
-  border-color: #6b7280;
-}
-
-.btn-secondary:hover {
-  background-color: #4b5563;
-  border-color: #4b5563;
-}
-
-/* Responsive Design */
-@media (max-width: 600px) {
-  .profile-container {
-    padding: 16px;
-    max-width: 100%;
-  }
-
-  .user-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .profile-photo,
-  .upload-photo-container {
-    width: 100px;
-    height: 100px;
-  }
-
-  .user-name {
-    font-size: 20px;
-  }
-
-  .user-detail {
-    font-size: 14px;
-  }
-
-  .save-button {
-    width: 100%;
-    padding: 12px;
-  }
-}
+export default ProfilePage;
