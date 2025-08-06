@@ -59,6 +59,11 @@
   background: #0250a3;
 }
 
+.login-button:disabled {
+  background: #a3b8d5;
+  cursor: not-allowed;
+}
+
 .login-phone-input {
   display: flex;
   justify-content: space-between;
@@ -164,4 +169,11 @@
 @keyframes fadeIn {
   0% { opacity: 0; }
   100% { opacity: 1; }
+}
+
+.loading-message {
+  font-family: 'Open Sans';
+  font-size: 16px;
+  color: #293750;
+  margin-top: 10px;
 }
