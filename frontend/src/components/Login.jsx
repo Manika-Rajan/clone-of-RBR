@@ -122,7 +122,7 @@ const Login = ({ onClose }) => {
         if (response.status === 200) {
           setResponseMessage('OTP verified successfully');
           setIsVerified(true);
-          const fetchedName = data.user?.name || phoneNumber;
+          const fetchedName = data.user?.name || '';
           const fetchedEmail = data.user?.email || '';
           const isExistingUser = data.isExistingUser || false;
           setName(fetchedName);
@@ -130,7 +130,6 @@ const Login = ({ onClose }) => {
           setRequireDetails(
             !isExistingUser ||
             !fetchedName ||
-            fetchedName === phoneNumber ||
             fetchedName.trim() === '' ||
             !fetchedEmail ||
             fetchedEmail.trim() === ''
@@ -208,7 +207,7 @@ const Login = ({ onClose }) => {
               <input
                 type="text"
                 className="form-control"
-                placeholder="Enter Your Name"
+                placeholder="Enter Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -243,7 +242,7 @@ const Login = ({ onClose }) => {
             </div>
           ) : (
             <button type="submit" className="login-button" onClick={Signup} disabled={isLoading}>
-              {isVerified && requireDetails ? 'SAVE & LOGIN' : isVerified && !requireDetails ? 'CONTINUE' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
+              {isVerified && requireDetails ? 'Submit' : isVerified && !requireDetails ? 'CONTINUE' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
         </div>
