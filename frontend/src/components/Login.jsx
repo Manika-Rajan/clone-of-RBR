@@ -58,6 +58,13 @@ const Login = ({ onClose }) => {
     setTimeout(onClose, 2000);
   };
 
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      Signup(event);
+    }
+  };
+
   const Signup = async (event) => {
     event.preventDefault();
     console.log('Signup triggered, otpSent:', otpSent, 'isVerified:', isVerified, 'requireDetails:', requireDetails);
@@ -186,6 +193,7 @@ const Login = ({ onClose }) => {
                 style={{ textAlign: 'center' }}
                 value={number}
                 onChange={(event) => setNumber(event.target.value)}
+                onKeyPress={handleKeyPress}
                 maxLength={10}
               />
             </div>
@@ -197,6 +205,7 @@ const Login = ({ onClose }) => {
               placeholder="Enter 6-digit OTP"
               value={otpInput}
               onChange={(e) => setOtpInput(e.target.value)}
+              onKeyPress={handleKeyPress}
               maxLength={6}
             />
           </div>
@@ -209,6 +218,7 @@ const Login = ({ onClose }) => {
                 placeholder="Enter Your Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onKeyPress={handleKeyPress}
               />
             </div>
             <div className="input-group mb-3">
@@ -218,6 +228,7 @@ const Login = ({ onClose }) => {
                 placeholder="Enter Your Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyPress={handleKeyPress}
               />
             </div>
           </div>
