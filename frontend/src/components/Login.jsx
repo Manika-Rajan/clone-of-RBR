@@ -162,9 +162,11 @@ const Login = ({ onClose }) => {
   return (
     <div className={`login-popup-container ${responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
       <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`}>
-        <div className="login-title">
-          <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Enter OTP to Login' : 'Please Enter Your Mobile Number'}</h3>
-        </div>
+        {responseMessage !== 'Login successful' && (
+          <div className="login-title">
+            <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Enter OTP to Login' : 'Please Enter Your Mobile Number'}</h3>
+          </div>
+        )}
         <div className="login-paragraph">
           {!otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
         </div>
