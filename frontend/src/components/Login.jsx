@@ -13,6 +13,7 @@ const Login = ({ onClose }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [requireDetails, setRequireDetails] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -59,7 +60,7 @@ const Login = ({ onClose }) => {
   };
 
   const handleKeyPress = (event) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !isLoading) {
       event.preventDefault();
       Signup(event);
     }
@@ -67,24 +68,26 @@ const Login = ({ onClose }) => {
 
   const Signup = async (event) => {
     event.preventDefault();
+    if (isLoading) return;
+    setIsLoading(true);
     console.log('Signup triggered, otpSent:', otpSent, 'isVerified:', isVerified, 'requireDetails:', requireDetails);
 
-    if (!otpSent) {
-      if (number.length !== 10 || !/^\d+$/.test(number)) {
-        setError('Please enter a valid 10-digit mobile number');
-        return;
-      }
-      setError('');
-      setResponseMessage('');
-      setOtpInput('');
-      const phoneNumber = `+91${number}`;
-      try {
+    try {
+      if (!otpSent) {
+        if (number.length !== 10 || !/^\d+$/.test(number)) {
+          setError('Please enter a valid 10-digit mobile number');
+          return;
+        }
+        setError('');
+        setResponseMessage('');
+        setOtpInput('');
+        const phoneNumber = `+91${number}`;
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone_number: phoneNumber })
         });
-        console.log('send-otp status:', response.status);
+        console.log('send-otp status:', response.status, 'at', new Date().toISOString());
         const data = await response.json();
         console.log('send-otp response:', data);
         if (response.ok) {
@@ -95,25 +98,20 @@ const Login = ({ onClose }) => {
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
-      } catch (err) {
-        console.error('send-otp exception:', err);
-        setError('Failed to connect to server');
-      }
-    } else if (!isVerified) {
-      if (otpInput.length !== 6 || !/^\d+$/.test(otpInput)) {
-        setError('Please enter a valid 6-digit OTP');
-        return;
-      }
-      setError('');
-      setResponseMessage('');
-      const phoneNumber = `+91${number}`;
-      try {
+      } else if (!isVerified) {
+        if (otpInput.length !== 6 || !/^\d+$/.test(otpInput)) {
+          setError('Please enter a valid 6-digit OTP');
+          return;
+        }
+        setError('');
+        setResponseMessage('');
+        const phoneNumber = `+91${number}`;
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone_number: phoneNumber, otp: otpInput })
         });
-        console.log('verify-otp status:', response.status);
+        console.log('verify-otp status:', response.status, 'at', new Date().toISOString());
         const rawData = await response.json();
         console.log('verify-otp raw response:', rawData);
         let data = rawData;
@@ -145,24 +143,22 @@ const Login = ({ onClose }) => {
         } else {
           setError(`Error: ${data.error || 'Invalid OTP'}`);
         }
-      } catch (err) {
-        console.error('verify-otp exception:', err);
-        setError('Failed to verify OTP');
-      }
-    } else if (requireDetails) {
-      if (!name.trim() || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        setError('Please enter a valid name and email');
-        return;
-      }
-      setError('');
-      setResponseMessage('');
-      const phoneNumber = `+91${number}`;
-      try {
+      } else if (requireDetails) {
+        if (!name.trim() || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setError('Please enter a valid name and email');
+          return;
+        }
+        setError('');
+        setResponseMessage('');
+        const phoneNumber = `+91${number}`;
         await saveUserDetails(phoneNumber, name, email);
         completeLogin(phoneNumber, name, email);
-      } catch (err) {
-        setError(err.message);
       }
+    } catch (err) {
+      console.error('Signup error:', err.message, err.stack, 'at', new Date().toISOString());
+      setError(`An error occurred: ${err.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -195,6 +191,7 @@ const Login = ({ onClose }) => {
                 onChange={(event) => setNumber(event.target.value)}
                 onKeyPress={handleKeyPress}
                 maxLength={10}
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -207,6 +204,7 @@ const Login = ({ onClose }) => {
               onChange={(e) => setOtpInput(e.target.value)}
               onKeyPress={handleKeyPress}
               maxLength={6}
+              disabled={isLoading}
             />
           </div>
         ) : requireDetails ? (
@@ -219,6 +217,7 @@ const Login = ({ onClose }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyPress={handleKeyPress}
+                disabled={isLoading}
               />
             </div>
             <div className="input-group mb-3">
@@ -229,6 +228,7 @@ const Login = ({ onClose }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyPress={handleKeyPress}
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -247,7 +247,7 @@ const Login = ({ onClose }) => {
               <p>Login Successful!</p>
             </div>
           ) : (
-            <button type="submit" className="login-button" onClick={Signup}>
+            <button type="submit" className="login-button" onClick={Signup} disabled={isLoading}>
               {isVerified && !requireDetails ? 'CONTINUE' : isVerified && requireDetails ? 'SAVE & LOGIN' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
@@ -256,6 +256,7 @@ const Login = ({ onClose }) => {
           <p style={{ color: 'green', textAlign: 'center' }}>{responseMessage}</p>
         )}
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+        {isLoading && <p style={{ textAlign: 'center' }}>Processing...</p>}
       </div>
     </div>
   );
