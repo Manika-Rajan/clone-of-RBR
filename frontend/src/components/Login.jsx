@@ -127,7 +127,6 @@ const Login = ({ onClose }) => {
           const isExistingUser = data.isExistingUser || false;
           setName(fetchedName);
           setEmail(fetchedEmail);
-          console.log('Setting name:', fetchedName, 'email:', fetchedEmail, 'isExistingUser:', isExistingUser);
           setRequireDetails(
             !isExistingUser ||
             !fetchedName ||
@@ -136,10 +135,6 @@ const Login = ({ onClose }) => {
             !fetchedEmail ||
             fetchedEmail.trim() === ''
           );
-          console.log('requireDetails set to:', !isExistingUser || !fetchedName || fetchedName === phoneNumber || fetchedName.trim() === '' || !fetchedEmail || fetchedEmail.trim() === '');
-          if (!requireDetails) {
-            completeLogin(phoneNumber, fetchedName, fetchedEmail);
-          }
         } else {
           setError(`Error: ${data.error || 'Invalid OTP'}`);
         }
@@ -248,7 +243,7 @@ const Login = ({ onClose }) => {
             </div>
           ) : (
             <button type="submit" className="login-button" onClick={Signup} disabled={isLoading}>
-              {isVerified && !requireDetails ? 'CONTINUE' : isVerified && requireDetails ? 'SAVE & LOGIN' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
+              {isVerified && requireDetails ? 'SAVE & LOGIN' : isVerified && !requireDetails ? 'CONTINUE' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
         </div>
@@ -256,7 +251,7 @@ const Login = ({ onClose }) => {
           <p style={{ color: 'green', textAlign: 'center' }}>{responseMessage}</p>
         )}
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-        {isLoading && <p style={{ textAlign: 'center' }}>Processing...</p>}
+        {isLoading && <p className="loading-message">Processing...</p>}
       </div>
     </div>
   );
