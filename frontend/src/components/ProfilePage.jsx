@@ -303,7 +303,7 @@ const ProfilePage = () => {
                     </span>
                   </>
                 ) : (
-                  <span className "update-link" onClick={() => setShowEmailModal(true)}>
+                  <span className="update-link" onClick={() => setShowEmailModal(true)}>
                     Update Email
                   </span>
                 )}
