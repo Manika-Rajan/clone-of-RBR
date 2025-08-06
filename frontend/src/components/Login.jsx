@@ -125,7 +125,8 @@ const Login = ({ onClose }) => {
           const fetchedName = data.user?.name || '';
           const fetchedEmail = data.user?.email || '';
           const isExistingUser = data.isExistingUser || false;
-          setName(fetchedName);
+          // Only set name if it's a valid name, otherwise leave it empty
+          setName(fetchedName && fetchedName !== phoneNumber && fetchedName.trim() !== '' ? fetchedName : '');
           setEmail(fetchedEmail);
           setRequireDetails(
             !isExistingUser ||
