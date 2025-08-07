@@ -122,19 +122,21 @@ const Login = ({ onClose }) => {
         if (response.status === 200) {
           setResponseMessage('OTP verified successfully');
           setIsVerified(true);
-          const fetchedName = data.user?.name || phoneNumber;
+          const fetchedName = data.user?.name || '';
           const fetchedEmail = data.user?.email || '';
           const isExistingUser = data.isExistingUser || false;
-          setName(fetchedName);
+          setName(fetchedName && fetchedName !== phoneNumber && fetchedName.trim() !== '' ? fetchedName : '');
           setEmail(fetchedEmail);
           setRequireDetails(
             !isExistingUser ||
             !fetchedName ||
-            fetchedName === phoneNumber ||
             fetchedName.trim() === '' ||
             !fetchedEmail ||
             fetchedEmail.trim() === ''
           );
+          if (!requireDetails) {
+            completeLogin(phoneNumber, fetchedName || phoneNumber, fetchedEmail || '');
+          }
         } else {
           setError(`Error: ${data.error || 'Invalid OTP'}`);
         }
@@ -208,7 +210,7 @@ const Login = ({ onClose }) => {
               <input
                 type="text"
                 className="form-control"
-                placeholder="Enter Your Name"
+                placeholder="Enter Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -243,7 +245,7 @@ const Login = ({ onClose }) => {
             </div>
           ) : (
             <button type="submit" className="login-button" onClick={Signup} disabled={isLoading}>
-              {isVerified && requireDetails ? 'SAVE & LOGIN' : isVerified && !requireDetails ? 'CONTINUE' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
+              {isVerified && requireDetails ? 'Submit' : isVerified && !requireDetails ? 'CONTINUE' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
         </div>
