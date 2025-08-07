@@ -14,6 +14,7 @@ const Login = ({ onClose }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [requireDetails, setRequireDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true); // Modal starts open
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -57,8 +58,8 @@ const Login = ({ onClose }) => {
     console.log('completeLogin called with:', { phoneNumber, name, email });
     setResponseMessage('Login successful');
     setTimeout(() => {
-      setIsModalOpen(false); // Direct closure
-      if (onClose) onClose(); // Fallback to prop if available
+      setIsModalOpen(false); // Close modal directly
+      if (onClose) onClose(); // Fallback to prop
     }, 2000);
   };
 
@@ -137,6 +138,9 @@ const Login = ({ onClose }) => {
             !fetchedEmail ||
             fetchedEmail.trim() === ''
           );
+          if (isVerified && !requireDetails) {
+            handleContinue(); // Auto-trigger continue for existing users
+          }
         } else {
           setError(`Error: ${data.error || 'Invalid OTP'}`);
         }
@@ -169,15 +173,12 @@ const Login = ({ onClose }) => {
     }
   };
 
-  // State to control modal visibility directly (for debugging)
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   return (
     <div className={`login-popup-container ${responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
-      <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`}>
+      <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {responseMessage !== 'Login successful' && (
           <div className="login-title">
-            <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Enter OTP to Login' : 'Please Enter Your Mobile Number'}</h3>
+            <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3> {/* Updated title */}
           </div>
         )}
         <div className="login-paragraph">
