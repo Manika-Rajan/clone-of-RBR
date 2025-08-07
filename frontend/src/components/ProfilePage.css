@@ -98,6 +98,18 @@
   margin: 4px 0;
 }
 
+.modify-link {
+  color: #3b82f6;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.modify-link:hover {
+  color: #2563eb;
+}
+
 .update-link {
   color: #3b82f6;
   cursor: pointer;
@@ -198,63 +210,77 @@
 
 .profile-modal .modal-content {
   border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border-bottom: none;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  padding: 16px 20px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-body {
+  background-color: #ffffff;
+  padding: 20px;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+.custom-input:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
 }
 
 .modal-buttons {
   display: flex;
   gap: 12px;
   margin-top: 16px;
+  justify-content: flex-end;
 }
 
-.btn-primary {
+.custom-submit {
   background-color: #3b82f6;
-  border-color: #3b82f6;
+  color: #ffffff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.btn-primary:hover {
+.custom-submit:hover {
   background-color: #2563eb;
-  border-color: #2563eb;
 }
 
-.btn-secondary {
+.custom-cancel {
   background-color: #6b7280;
-  border-color: #6b7280;
+  color: #ffffff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.btn-secondary:hover {
+.custom-cancel:hover {
   background-color: #4b5563;
-  border-color: #4b5563;
 }
 
 /* Responsive Design */
-@media (max-width: 600px) {
-  .profile-container {
-    padding: 16px;
-    max-width: 100%;
-  }
-
-  .user-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .profile-photo,
-  .upload-photo-container {
-    width: 100px;
-    height: 100px;
-  }
-
-  .user-name {
-    font-size: 20px;
-  }
-
-  .user-detail {
-    font-size: 14px;
-  }
-
-  .save-button {
-    width: 100%;
-    padding: 12px;
-  }
-}
+@media (max-width
