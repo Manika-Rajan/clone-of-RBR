@@ -185,11 +185,13 @@ const ProfilePage = () => {
   const updateName = () => {
     dispatch({ type: 'SET_NAME', payload: nameInput });
     setShowNameModal(false);
+    saveProfile();
   };
 
   const updateEmail = () => {
     dispatch({ type: 'SET_EMAIL', payload: emailInput });
     setShowEmailModal(false);
+    saveProfile();
   };
 
   const saveProfile = async () => {
@@ -208,6 +210,7 @@ const ProfilePage = () => {
 
     setIsSaving(true);
     try {
+      console.log('Sending profile data to API:', profileData);
       const response = await fetch(
         'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
         {
@@ -216,14 +219,18 @@ const ProfilePage = () => {
           body: JSON.stringify(profileData),
         }
       );
-      if (!response.ok) throw new Error('Failed to save profile');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save profile: ${response.status} - ${errorText}`);
+      }
       const data = await response.json();
+      console.log('API response:', data);
       dispatch({ type: 'SET_NAME', payload: nameInput });
       dispatch({ type: 'SET_EMAIL', payload: emailInput });
       alert('Profile saved successfully');
     } catch (error) {
-      console.error('Error saving profile:', error);
-      alert('Failed to save profile.');
+      console.error('Error saving profile:', error.message);
+      alert(`Failed to save profile: ${error.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -263,7 +270,20 @@ const ProfilePage = () => {
             </div>
             <div className="info-section">
               <h2 className="user-name">
-                {name || (
+                {name ? (
+                  <>
+                    {name}{' '}
+                    <span
+                      className="modify-link"
+                      onClick={() => {
+                        setNameInput(name);
+                        setShowNameModal(true);
+                      }}
+                    >
+                      Modify
+                    </span>
+                  </>
+                ) : (
                   <span className="update-link" onClick={() => setShowNameModal(true)}>
                     Update Name
                   </span>
@@ -274,7 +294,20 @@ const ProfilePage = () => {
               </p>
               <p className="user-detail">
                 <strong>Email:</strong>{' '}
-                {email || (
+                {email ? (
+                  <>
+                    {email}{' '}
+                    <span
+                      className="modify-link"
+                      onClick={() => {
+                        setEmailInput(email);
+                        setShowEmailModal(true);
+                      }}
+                    >
+                      Modify
+                    </span>
+                  </>
+                ) : (
                   <span className="update-link" onClick={() => setShowEmailModal(true)}>
                     Update Email
                   </span>
@@ -314,19 +347,22 @@ const ProfilePage = () => {
         {selectedUrl && <PDFViewer pdfUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
 
         <Modal isOpen={showNameModal} toggle={() => setShowNameModal(false)} className="profile-modal">
-          <ModalHeader toggle={() => setShowNameModal(false)}>Update Name</ModalHeader>
-          <ModalBody>
+          <ModalHeader toggle={() => setShowNameModal(false)} className="modal-header">
+            Edit Name
+          </ModalHeader>
+          <ModalBody className="modal-body">
             <input
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              className="form-control"
+              className="form-control custom-input"
               placeholder="Enter your name"
+              autoFocus
             />
             <div className="modal-buttons">
-              <button className="btn btn-primary" onClick={updateName}>
-                Update
+              <button className="btn btn-primary custom-submit" onClick={updateName}>
+                Submit
               </button>
-              <button className="btn btn-secondary" onClick={() => setShowNameModal(false)}>
+              <button className="btn btn-secondary custom-cancel" onClick={() => setShowNameModal(false)}>
                 Cancel
               </button>
             </div>
@@ -334,20 +370,23 @@ const ProfilePage = () => {
         </Modal>
 
         <Modal isOpen={showEmailModal} toggle={() => setShowEmailModal(false)} className="profile-modal">
-          <ModalHeader toggle={() => setShowEmailModal(false)}>Update Email</ModalHeader>
-          <ModalBody>
+          <ModalHeader toggle={() => setShowEmailModal(false)} className="modal-header">
+            Edit Email
+          </ModalHeader>
+          <ModalBody className="modal-body">
             <input
               type="email"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              className="form-control"
+              className="form-control custom-input"
               placeholder="Enter your email"
+              autoFocus
             />
             <div className="modal-buttons">
-              <button className="btn btn-primary" onClick={updateEmail}>
-                Update
+              <button className="btn btn-primary custom-submit" onClick={updateEmail}>
+                Submit
               </button>
-              <button className="btn btn-secondary" onClick={() => setShowEmailModal(false)}>
+              <button className="btn btn-secondary custom-cancel" onClick={() => setShowEmailModal(false)}>
                 Cancel
               </button>
             </div>
