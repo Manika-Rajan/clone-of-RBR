@@ -21,6 +21,14 @@ const Login = ({ onClose }) => {
     if (storedPhone) setNumber(storedPhone.replace('+91', ''));
   }, []);
 
+  useEffect(() => {
+    // Auto-trigger continue for existing users after verification
+    if (isVerified && !requireDetails && !isLoading) {
+      console.log('useEffect triggered, calling handleContinue');
+      handleContinue();
+    }
+  }, [isVerified, requireDetails, isLoading]); // Depend on these states
+
   const saveUserDetails = async (phoneNumber, name, email) => {
     if (!phoneNumber || !name || !email) {
       throw new Error('Missing required fields for saving user details');
@@ -138,9 +146,6 @@ const Login = ({ onClose }) => {
             !fetchedEmail ||
             fetchedEmail.trim() === ''
           );
-          if (isVerified && !requireDetails) {
-            handleContinue(); // Auto-trigger continue for existing users
-          }
         } else {
           setError(`Error: ${data.error || 'Invalid OTP'}`);
         }
@@ -178,7 +183,7 @@ const Login = ({ onClose }) => {
       <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {responseMessage !== 'Login successful' && (
           <div className="login-title">
-            <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3> {/* Updated title */}
+            <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
           </div>
         )}
         <div className="login-paragraph">
