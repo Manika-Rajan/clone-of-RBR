@@ -56,21 +56,21 @@ const Login = ({ onClose }) => {
     });
     console.log('completeLogin called with:', { phoneNumber, name, email });
     setResponseMessage('Login successful');
-    setTimeout(onClose, 2000);
+    setTimeout(onClose, 2000); // Close after 2 seconds
   };
 
   const handleKeyPress = (event) => {
     if (event.key === 'Enter' && !isLoading) {
       event.preventDefault();
-      Signup(event);
+      handleSubmit(event);
     }
   };
 
-  const Signup = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (isLoading) return;
     setIsLoading(true);
-    console.log('Signup triggered, otpSent:', otpSent, 'isVerified:', isVerified, 'requireDetails:', requireDetails);
+    console.log('handleSubmit triggered, otpSent:', otpSent, 'isVerified:', isVerified, 'requireDetails:', requireDetails);
 
     try {
       if (!otpSent) {
@@ -149,10 +149,19 @@ const Login = ({ onClose }) => {
         completeLogin(phoneNumber, name, email);
       }
     } catch (err) {
-      console.error('Signup error:', err.message, err.stack, 'at', new Date().toISOString());
+      console.error('handleSubmit error:', err.message, err.stack, 'at', new Date().toISOString());
       setError(`An error occurred: ${err.message}`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleContinue = () => {
+    if (isVerified && !requireDetails) {
+      const phoneNumber = `+91${number}`;
+      const fetchedName = name || number; // Fallback to phone if no name
+      const fetchedEmail = email || ''; // Fallback to empty if no email
+      completeLogin(phoneNumber, fetchedName, fetchedEmail);
     }
   };
 
@@ -241,7 +250,7 @@ const Login = ({ onClose }) => {
               <p>Login Successful!</p>
             </div>
           ) : (
-            <button type="submit" className="login-button" onClick={Signup} disabled={isLoading}>
+            <button type="submit" className="login-button" onClick={handleSubmit} disabled={isLoading}>
               {isVerified && requireDetails ? 'Submit' : isVerified && !requireDetails ? 'CONTINUE' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
