@@ -56,7 +56,10 @@ const Login = ({ onClose }) => {
     });
     console.log('completeLogin called with:', { phoneNumber, name, email });
     setResponseMessage('Login successful');
-    setTimeout(onClose, 2000); // Close after 2 seconds
+    setTimeout(() => {
+      setIsModalOpen(false); // Direct closure
+      if (onClose) onClose(); // Fallback to prop if available
+    }, 2000);
   };
 
   const handleKeyPress = (event) => {
@@ -157,6 +160,7 @@ const Login = ({ onClose }) => {
   };
 
   const handleContinue = () => {
+    console.log('handleContinue triggered, isVerified:', isVerified, 'requireDetails:', requireDetails);
     if (isVerified && !requireDetails) {
       const phoneNumber = `+91${number}`;
       const fetchedName = name || number; // Fallback to phone if no name
@@ -164,6 +168,9 @@ const Login = ({ onClose }) => {
       completeLogin(phoneNumber, fetchedName, fetchedEmail);
     }
   };
+
+  // State to control modal visibility directly (for debugging)
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className={`login-popup-container ${responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
