@@ -134,9 +134,6 @@ const Login = ({ onClose }) => {
             !fetchedEmail ||
             fetchedEmail.trim() === ''
           );
-          if (!requireDetails) {
-            completeLogin(phoneNumber, fetchedName || phoneNumber, fetchedEmail || '');
-          }
         } else {
           setError(`Error: ${data.error || 'Invalid OTP'}`);
         }
