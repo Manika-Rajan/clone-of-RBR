@@ -8,7 +8,7 @@ import avatar from '../assets/avatar.svg';
 
 const Navbar = (props) => {
   const [openModel, setOpenModel] = useState(false);
-  const { state } = useContext(Store);
+  const { state, dispatch: cxtDispatch } = useContext(Store); // Top-level useContext
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
   const name = userInfo?.name || "User";
@@ -33,8 +33,7 @@ const Navbar = (props) => {
   };
 
   const handleLogout = () => {
-    const { dispatch: cxtDispatch } = useContext(Store);
-    cxtDispatch({ type: "LOGOUT" });
+    cxtDispatch({ type: "LOGOUT" }); // Use existing cxtDispatch
     setDropdownOpen(false);
     navigate('/');
   };
