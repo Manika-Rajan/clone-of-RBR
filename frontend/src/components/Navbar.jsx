@@ -8,7 +8,7 @@ import avatar from '../assets/avatar.svg';
 
 const Navbar = (props) => {
   const [openModel, setOpenModel] = useState(false);
-  const { state, dispatch: cxtDispatch } = useContext(Store); // Top-level useContext
+  const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
   const name = userInfo?.name || "User";
@@ -19,8 +19,7 @@ const Navbar = (props) => {
   const location = useLocation();
 
   useEffect(() => {
-    console.log("Navbar rerendered - isLogin:", isLogin);
-    // Close modal if user is logged in and on a different route
+    console.log("Navbar rerendered - isLogin:", isLogin, "Route:", location.pathname);
     if (isLogin && location.pathname !== "/login") {
       setOpenModel(false);
     }
@@ -33,7 +32,7 @@ const Navbar = (props) => {
   };
 
   const handleLogout = () => {
-    cxtDispatch({ type: "LOGOUT" }); // Use existing cxtDispatch
+    cxtDispatch({ type: "LOGOUT" });
     setDropdownOpen(false);
     navigate('/');
   };
