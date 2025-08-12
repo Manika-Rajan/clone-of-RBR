@@ -3,11 +3,9 @@ import { createContext, useReducer, useContext } from "react";
 export const Store = createContext();
 
 const initialState = {
-  isLogin: localStorage.getItem("isLogin") === "true",
-  userId: localStorage.getItem("userId") || '', // Added userId
-  name: localStorage.getItem('userName') || '',
-  phone: localStorage.getItem('userPhone') || '',
-  email: localStorage.getItem('userEmail') || '',
+  userInfo: localStorage.getItem("userInfo")
+    ? JSON.parse(localStorage.getItem("userInfo"))
+    : { isLogin: false, userId: '', name: '', phone: '', email: '' },
   totalPrice: 0,
   status: false,
 };
@@ -17,38 +15,36 @@ const reducer = (state, action) => {
     case 'SET_PRICE':
       return { ...state, totalPrice: action.payload };
     case 'USER_LOGIN':
-      localStorage.setItem("isLogin", action.payload.isLogin);
-      if (action.payload.userId) localStorage.setItem("userId", action.payload.userId); // Persist userId
-      return {
-        ...state,
-        isLogin: action.payload.isLogin,
-        userId: action.payload.userId || state.userId,
-        name: action.payload.name || state.name,
-        email: action.payload.email || state.email,
-        phone: action.payload.phone || state.phone
+      const userInfo = {
+        isLogin: true,
+        userId: action.payload.userId || state.userInfo.userId,
+        name: action.payload.name || state.userInfo.name,
+        email: action.payload.email || state.userInfo.email,
+        phone: action.payload.phone || state.userInfo.phone,
       };
-    case 'SET_USER_ID': // Added
-      localStorage.setItem("userId", action.payload);
-      return { ...state, userId: action.payload };
+      localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      return { ...state, userInfo };
+    case 'SET_USER_ID':
+      const updatedUserInfo = { ...state.userInfo, userId: action.payload };
+      localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
+      return { ...state, userInfo: updatedUserInfo };
     case 'SET_NAME':
-      localStorage.setItem('userName', action.payload);
-      return { ...state, name: action.payload };
+      const updatedNameInfo = { ...state.userInfo, name: action.payload };
+      localStorage.setItem("userInfo", JSON.stringify(updatedNameInfo));
+      return { ...state, userInfo: updatedNameInfo };
     case 'SET_PHONE':
-      localStorage.setItem('userPhone', action.payload);
-      return { ...state, phone: action.payload };
+      const updatedPhoneInfo = { ...state.userInfo, phone: action.payload };
+      localStorage.setItem("userInfo", JSON.stringify(updatedPhoneInfo));
+      return { ...state, userInfo: updatedPhoneInfo };
     case 'SET_EMAIL':
-      localStorage.setItem('userEmail', action.payload);
-      return { ...state, email: action.payload };
+      const updatedEmailInfo = { ...state.userInfo, email: action.payload };
+      localStorage.setItem("userInfo", JSON.stringify(updatedEmailInfo));
+      return { ...state, userInfo: updatedEmailInfo };
     case 'SET_REPORT_STATUS':
       return { ...state, status: !state.status };
     case 'LOGOUT':
-      localStorage.setItem("isLogin", "false");
-      localStorage.removeItem("userId"); // Clear userId on logout
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userPhone');
-      return { ...state, isLogin: false, userId: '', name: '', phone: '', email: '' };
+      localStorage.removeItem("userInfo");
+      return { ...state, userInfo: { isLogin: false, userId: '', name: '', phone: '', email: '' } };
     default:
       return state;
   }
