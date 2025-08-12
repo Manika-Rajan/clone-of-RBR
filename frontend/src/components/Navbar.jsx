@@ -8,7 +8,7 @@ import avatar from '../assets/avatar.svg';
 
 const Navbar = (props) => {
   const [openModel, setOpenModel] = useState(false);
-  const { state } = useContext(Store);
+  const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
   const name = userInfo?.name || "User";
@@ -29,8 +29,6 @@ const Navbar = (props) => {
   };
 
   const handleLogout = () => {
-    // Assuming Store.js has a LOGOUT action that clears userInfo
-    const { dispatch: cxtDispatch } = useContext(Store);
     cxtDispatch({ type: "LOGOUT" });
     setDropdownOpen(false);
     navigate('/');
@@ -38,7 +36,6 @@ const Navbar = (props) => {
 
   const resetModal = () => {
     console.log("🔄 Resetting modal...");
-    // Reset state if needed, but no login/otp/verify state here anymore
   };
 
   if (hideNavbar) {
