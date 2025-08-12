@@ -18,7 +18,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Login from './components/Login';
 
 function App() {
-  const { state } = useContext(Store);
+  const { state, dispatch } = useContext(Store);
   const { userInfo } = state;
 
   useEffect(() => {
@@ -38,7 +38,6 @@ function App() {
             );
             const data = await response.json();
             if (response.ok && data.name && data.email) {
-              const { dispatch } = useContext(Store);
               dispatch({ type: 'USER_LOGIN', payload: { isLogin: true, userId, name: data.name, email: data.email, phone: userId } });
             }
           } catch (error) {
@@ -48,7 +47,7 @@ function App() {
       }
     };
     checkAuth();
-  }, [userInfo?.isLogin]);
+  }, [userInfo?.isLogin, dispatch]);
 
   return (
     <StoreProvider>
