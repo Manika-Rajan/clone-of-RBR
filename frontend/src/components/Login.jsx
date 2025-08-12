@@ -66,10 +66,9 @@ const Login = ({ onClose }) => {
     setTimeout(() => {
       if (onClose) {
         console.log('Calling onClose from completeLogin');
-        onClose(); // Ensure modal closes
+        onClose(); // Trigger modal close
       }
-      setIsModalOpen(false); // Fallback to local state
-      if (onClose) onClose(); // Double call as fallback
+      setIsModalOpen(false); // Update local state
     }, 2000);
   };
 
