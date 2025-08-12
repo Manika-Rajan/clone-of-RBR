@@ -16,28 +16,40 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState(null);
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    if (userInfo?.userId) {
+      fetchProfile();
+    } else {
+      setError('User not authenticated or userId missing');
+      setIsLoading(false);
+    }
+  }, [userInfo?.userId]);
 
   const fetchProfile = async () => {
     setIsLoading(true);
     try {
       const userId = userInfo.userId;
+      console.log('Fetching profile for userId:', userId); // Debug log
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/getUserProfile-RBRmain-APIgateway', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` // Add auth header
+        },
         body: JSON.stringify({ user_id: userId })
       });
+      console.log('fetchProfile response status:', response.status); // Debug log
       const data = await response.json();
+      console.log('fetchProfile response data:', data); // Debug log
       if (response.ok) {
         setProfileData(data);
         setNameInput(data.name || '');
         setEmailInput(data.email || '');
         setPhotoUrl(data.photo_url || '');
       } else {
-        setError(data.error || 'Failed to fetch profile');
+        setError(data.error || `Failed to fetch profile (Status: ${response.status})`);
       }
     } catch (err) {
+      console.error('fetchProfile error:', err.message, err.stack);
       setError('An error occurred while fetching profile');
     } finally {
       setIsLoading(false);
@@ -59,7 +71,10 @@ const ProfilePage = () => {
       console.log('Sending profile data to API:', profileData);
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
         body: JSON.stringify(profileData)
       });
       const data = await response.json();
@@ -89,7 +104,10 @@ const ProfilePage = () => {
       console.log('Sending purchase data to API:', profileData);
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
         body: JSON.stringify(profileData)
       });
       const data = await response.json();
@@ -120,7 +138,10 @@ const ProfilePage = () => {
       console.log('Sending view data to API:', profileData);
       const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
         body: JSON.stringify(profileData)
       });
       const data = await response.json();
