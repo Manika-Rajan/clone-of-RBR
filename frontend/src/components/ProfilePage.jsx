@@ -33,7 +33,7 @@ const ProfilePage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` // Add auth header
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` // Add token if required
         },
         body: JSON.stringify({ user_id: userId })
       });
