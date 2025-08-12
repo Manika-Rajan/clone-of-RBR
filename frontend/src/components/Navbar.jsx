@@ -12,18 +12,19 @@ const Navbar = (props) => {
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
   const name = userInfo?.name || "User";
-  console.log("Navbar - isLogin:", isLogin);
+  console.log("Navbar - isLogin:", isLogin, "openModel:", openModel);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    console.log("Navbar rerendered - isLogin:", isLogin, "Route:", location.pathname);
-    if (isLogin && location.pathname !== "/login") {
+    console.log("Navbar useEffect - isLogin:", isLogin, "Route:", location.pathname, "openModel:", openModel);
+    if (isLogin && location.pathname !== "/login" && openModel) {
+      console.log("Closing modal due to login and route change");
       setOpenModel(false);
     }
-  }, [isLogin, location.pathname]);
+  }, [isLogin, location.pathname, openModel]);
 
   const hideNavbar = location.pathname === "/report-display";
 
@@ -115,6 +116,7 @@ const Navbar = (props) => {
       <Modal
         isOpen={openModel}
         toggle={() => {
+          console.log("Toggling modal, new state:", !openModel);
           setOpenModel(!openModel);
           resetModal();
         }}
@@ -124,6 +126,7 @@ const Navbar = (props) => {
         <ModalBody>
           <Login
             onClose={() => {
+              console.log("onClose triggered from Login");
               setOpenModel(false);
               resetModal();
             }}
