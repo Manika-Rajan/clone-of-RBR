@@ -27,7 +27,7 @@ const Login = ({ onClose }) => {
       console.log('useEffect triggered, calling handleContinue');
       handleContinue();
     }
-  }, [isVerified, requireDetails, isLoading]); // Depend on these states
+  }, [isVerified, requireDetails, isLoading]);
 
   const saveUserDetails = async (phoneNumber, name, email) => {
     if (!phoneNumber || !name || !email) {
@@ -56,9 +56,7 @@ const Login = ({ onClose }) => {
 
   const completeLogin = (phoneNumber, name, email) => {
     const token = localStorage.getItem('authToken') || 'temp-token';
-    localStorage.setItem('userName', name);
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem('userId', phoneNumber);
+    localStorage.setItem('userInfo', JSON.stringify({ isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }));
     cxtDispatch({
       type: 'USER_LOGIN',
       payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
@@ -66,8 +64,12 @@ const Login = ({ onClose }) => {
     console.log('completeLogin called with:', { phoneNumber, name, email });
     setResponseMessage('Login successful');
     setTimeout(() => {
-      setIsModalOpen(false); // Close modal directly
-      if (onClose) onClose(); // Fallback to prop
+      if (onClose) {
+        console.log('Calling onClose from completeLogin');
+        onClose(); // Ensure modal closes
+      }
+      setIsModalOpen(false); // Fallback to local state
+      if (onClose) onClose(); // Double call as fallback
     }, 2000);
   };
 
