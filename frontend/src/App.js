@@ -20,6 +20,7 @@ import Login from './components/Login';
 function App() {
   const { state, dispatch } = useContext(Store);
   const { userInfo } = state;
+  const isLogin = userInfo?.isLogin || false;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,6 +50,14 @@ function App() {
     checkAuth();
   }, [userInfo?.isLogin, dispatch]);
 
+  useEffect(() => {
+    console.log("App useEffect - isLogin:", isLogin, "Route:", window.location.pathname);
+    if (isLogin && window.location.pathname === '/login') {
+      console.log("Redirecting from /login to /profile due to login state");
+      window.location.href = '/profile'; // Force redirect to ensure page reload
+    }
+  }, [isLogin]);
+
   return (
     <StoreProvider>
       <Router>
@@ -66,7 +75,10 @@ function App() {
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/login" element={<Login />} />
+            <Route
+              path="/login"
+              element={!isLogin ? <Login /> : <Navigate to="/profile" />}
+            />
           </Routes>
           <Footer />
         </div>
