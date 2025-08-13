@@ -16,7 +16,7 @@ const Login = ({ onClose }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [requireDetails, setRequireDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(true); // Modal starts open
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -24,6 +24,7 @@ const Login = ({ onClose }) => {
   }, []);
 
   useEffect(() => {
+    // Auto-trigger continue for existing users after verification
     if (isVerified && !requireDetails && !isLoading) {
       console.log('useEffect triggered, calling handleContinue');
       handleContinue();
@@ -31,7 +32,9 @@ const Login = ({ onClose }) => {
   }, [isVerified, requireDetails, isLoading]);
 
   const saveUserDetails = async (phoneNumber, name, email) => {
-    if (!phoneNumber || !name || !email) throw new Error('Missing required fields');
+    if (!phoneNumber || !name || !email) {
+      throw new Error('Missing required fields for saving user details');
+    }
     const requestBody = { action: 'update', phone_number: phoneNumber, name, email };
     console.log('saveUserDetails request:', requestBody);
     try {
@@ -43,7 +46,9 @@ const Login = ({ onClose }) => {
       console.log('saveUserDetails status:', response.status);
       const data = await response.json();
       console.log('saveUserDetails response:', data);
-      if (!response.ok) throw new Error(data.error || `HTTP error ${response.status}`);
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP error ${response.status}`);
+      }
       return true;
     } catch (err) {
       console.error('saveUserDetails exception:', err.message, err.stack);
@@ -65,8 +70,8 @@ const Login = ({ onClose }) => {
         console.log('Calling onClose from completeLogin');
         onClose();
       }
-      setIsModalOpen(false);
-      navigate('/profile'); // Force redirect to profile
+      setIsModalOpen(false); // Update local state
+      navigate('/'); // Navigate to home after login to ensure modal closes and page refreshes
     }, 2000);
   };
 
@@ -126,7 +131,9 @@ const Login = ({ onClose }) => {
         const rawData = await response.json();
         console.log('verify-otp raw response:', rawData);
         let data = rawData;
-        if (rawData.body && typeof rawData.body === 'string') data = JSON.parse(rawData.body);
+        if (rawData.body && typeof rawData.body === 'string') {
+          data = JSON.parse(rawData.body);
+        }
         console.log('verify-otp parsed data:', data);
         if (response.status === 200) {
           setResponseMessage('OTP verified successfully');
@@ -137,7 +144,11 @@ const Login = ({ onClose }) => {
           setName(fetchedName && fetchedName !== phoneNumber && fetchedName.trim() !== '' ? fetchedName : '');
           setEmail(fetchedEmail);
           setRequireDetails(
-            !isExistingUser || !fetchedName || fetchedName.trim() === '' || !fetchedEmail || fetchedEmail.trim() === ''
+            !isExistingUser ||
+            !fetchedName ||
+            fetchedName.trim() === '' ||
+            !fetchedEmail ||
+            fetchedEmail.trim() === ''
           );
         } else {
           setError(`Error: ${data.error || 'Invalid OTP'}`);
@@ -165,8 +176,8 @@ const Login = ({ onClose }) => {
     console.log('handleContinue triggered, isVerified:', isVerified, 'requireDetails:', requireDetails);
     if (isVerified && !requireDetails) {
       const phoneNumber = `+91${number}`;
-      const fetchedName = name || number;
-      const fetchedEmail = email || '';
+      const fetchedName = name || number; // Fallback to phone if no name
+      const fetchedEmail = email || ''; // Fallback to empty if no email
       completeLogin(phoneNumber, fetchedName, fetchedEmail);
     }
   };
