@@ -12,28 +12,10 @@ import CommingSoon from './components/CommingSoon';
 import Invalid from './components/Invalid';
 import RefundPolicy from './components/RefundPolicy'; 
 import PrivacyPolicy from './components/PrivacyPolicy'; 
-import React, { useEffect, useContext, useCallback } from 'react';
+import React, { useEffect, useContext } from 'react';
 import { Store, StoreProvider } from './Store';
-import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './components/Login';
-
-// Custom hook to handle navigation after login
-const useLoginRedirect = (isLogin, userInfo) => {
-  const navigate = useNavigate();
-
-  const handleRedirect = useCallback(() => {
-    if (isLogin && window.location.pathname === '/login') {
-      console.log("Redirecting from /login to /profile due to login state");
-      navigate('/profile', { replace: true }); // Replace history to avoid back navigation issues
-    }
-  }, [isLogin, navigate]);
-
-  useEffect(() => {
-    handleRedirect();
-  }, [handleRedirect]);
-
-  return null;
-};
 
 function App() {
   const { state, dispatch } = useContext(Store);
@@ -73,7 +55,6 @@ function App() {
       <Router>
         <div className="App">
           {window.location.pathname !== "/report-display" && <Navbar />}
-          <useLoginRedirect isLogin={isLogin} userInfo={userInfo} />
           <Routes>
             <Route path="/about" element={<About />} />
             <Route path="/" element={<Reports />} />
@@ -82,13 +63,13 @@ function App() {
             <Route path='/payment' element={userInfo?.isLogin ? <Payment /> : <Navigate to="/login" />} />
             <Route path='/commingSoon' element={<CommingSoon />} />
             <Route path='/not-found' element={<Invalid />} />
-            <Route path="/profile" element={userInfo?.isLogin ? <ProfilePage /> : <Navigate to="/login" />} />
+            <Route path="/profile" element={<ProfilePage />} /> {/* Removed isLogin check */}
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route
               path="/login"
-              element={!isLogin ? <Login /> : <Navigate to="/profile" />}
+              element={<Login />}
             />
           </Routes>
           <Footer />
