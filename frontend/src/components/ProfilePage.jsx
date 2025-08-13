@@ -1,166 +1,191 @@
 import React, { useState, useEffect, useContext } from 'react';
 import './ProfilePage.css';
 import { Store } from '../Store';
-import Modal from 'react-bootstrap/Modal';
-import Button from 'react-bootstrap/Button';
+import { useNavigate } from 'react-router-dom';
+import PDFViewer from './PDFViewer';
+import { Modal, ModalBody, ModalHeader } from 'reactstrap';
 
 const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
-  const [nameInput, setNameInput] = useState('');
-  const [emailInput, setEmailInput] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [profileData, setProfileData] = useState(null);
+  const { isLogin, userId, name, phone, email } = userInfo || {};
+  const navigate = useNavigate();
+
+  const [purchasedReports, setPurchasedReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedUrl, setSelectedUrl] = useState(null);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [nameInput, setNameInput] = useState(name || '');
+  const [emailInput, setEmailInput] = useState(email || '');
+  const [photoUrl, setPhotoUrl] = useState(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (userInfo?.userId) {
-      fetchProfile();
-    } else {
-      setError('User not authenticated or userId missing');
-      setIsLoading(false);
-    }
-  }, [userInfo?.userId]);
+    console.log("ProfilePage mounted. State:", state);
 
-  const fetchProfile = async () => {
-    setIsLoading(true);
-    try {
-      const userId = userInfo.userId;
-      console.log('Fetching profile for userId:', userId); // Debug log
-      const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/getUserProfile-RBRmain-APIgateway', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` // Add token if required
-        },
-        body: JSON.stringify({ user_id: userId })
-      });
-      console.log('fetchProfile response status:', response.status); // Debug log
-      const data = await response.json();
-      console.log('fetchProfile response data:', data); // Debug log
-      if (response.ok) {
-        setProfileData(data);
-        setNameInput(data.name || '');
-        setEmailInput(data.email || '');
-        setPhotoUrl(data.photo_url || '');
-      } else {
-        setError(data.error || `Failed to fetch profile (Status: ${response.status})`);
-      }
-    } catch (err) {
-      console.error('fetchProfile error:', err.message, err.stack);
-      setError('An error occurred while fetching profile');
-    } finally {
-      setIsLoading(false);
+    if (!isLogin) {
+      navigate('/');
+      return;
     }
+
+    const storedUserId = userId || localStorage.getItem('userId');
+    if (!storedUserId) {
+      console.warn('User ID missing.');
+      setLoading(false);
+      setError('User ID not found. Please log in again.');
+      return;
+    }
+
+    if (!userId) {
+      cxtDispatch({ type: 'SET_USER_ID', payload: storedUserId });
+    }
+
+    const fetchProfile = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/getUserProfile-RBRmain-APIgateway', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
+          body: JSON.stringify({ user_id: storedUserId })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setPurchasedReports(data.reports || []);
+          setNameInput(data.name || '');
+          setEmailInput(data.email || '');
+          setPhotoUrl(data.photo_url || '');
+        } else {
+          throw new Error(data.error || `Failed to fetch profile (Status: ${response.status})`);
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError('Failed to load profile data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [isLogin, userId, navigate, cxtDispatch]);
+
+  const fetchPresignedUrl = async (fileKey) => {
+    try {
+      const response = await fetch(
+        'https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_key: fileKey }),
+        }
+      );
+      if (!response.ok) throw new Error('Failed to get presigned URL');
+      const data = await response.json();
+      setSelectedUrl(data.presigned_url);
+    } catch (error) {
+      console.error('Error fetching presigned URL:', error);
+      alert('Failed to open the report.');
+    }
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+
+    console.log('File selected:', file.name, file.type, file.size);
+    if (!userId) {
+      console.error('userId is undefined');
+      alert('Failed to upload photo: userId is undefined');
+      return;
+    }
+
+    setPhotoUploading(true);
+    try {
+      const response = await fetch(
+        'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        }
+      );
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
+      }
+      const { presignedUrl, photoUrl: newPhotoUrl } = await response.json();
+      const uploadResponse = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      if (!uploadResponse.ok) {
+        const uploadErrorText = await uploadResponse.text();
+        throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
+      }
+      setPhotoUrl(newPhotoUrl);
+      console.log('Photo upload successful, photoUrl set:', newPhotoUrl);
+      alert('Photo uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading photo:', error.message);
+      alert(`Failed to upload photo: ${error.message}`);
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const updateName = () => {
+    cxtDispatch({ type: 'SET_NAME', payload: nameInput });
+    setShowNameModal(false);
+  };
+
+  const updateEmail = () => {
+    cxtDispatch({ type: 'SET_EMAIL', payload: emailInput });
+    setShowEmailModal(false);
   };
 
   const saveProfile = async () => {
-    setIsLoading(true);
-    setError('');
+    if (!userId) {
+      alert('User ID is missing.');
+      return;
+    }
+
+    const profileData = {
+      user_id: userId,
+      name: nameInput,
+      email: emailInput,
+      phone: phone || '',
+      photo_url: photoUrl || '',
+    };
+
+    setIsSaving(true);
     try {
-      const userId = userInfo.userId;
-      const profileData = {
-        user_id: userId,
-        name: nameInput,
-        email: emailInput,
-        phone: userInfo.phone || '',
-        photo_url: photoUrl || '',
-      };
-      console.log('Sending profile data to API:', profileData);
-      const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-        },
-        body: JSON.stringify(profileData)
-      });
-      const data = await response.json();
-      console.log('API response:', data);
-      if (response.ok) {
-        fetchProfile(); // Refresh profile data
-        setIsModalOpen(false);
-      } else {
-        setError(data.error || 'Failed to save profile');
-      }
-    } catch (err) {
-      setError('An error occurred while saving profile');
+      const response = await fetch(
+        'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
+          body: JSON.stringify(profileData),
+        }
+      );
+      if (!response.ok) throw new Error('Failed to save profile');
+      alert('Profile saved successfully');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Failed to save profile.');
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  const handlePurchaseReport = async (reportName) => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const userId = userInfo.userId;
-      const profileData = {
-        user_id: userId,
-        report_name: reportName
-      };
-      console.log('Sending purchase data to API:', profileData);
-      const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-        },
-        body: JSON.stringify(profileData)
-      });
-      const data = await response.json();
-      console.log('API response for purchase:', data);
-      if (response.ok) {
-        fetchProfile(); // Refresh to show new report
-      } else {
-        setError(data.error || 'Failed to purchase report');
-      }
-    } catch (err) {
-      setError('An error occurred while purchasing report');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleViewReport = async (reportName) => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const userId = userInfo.userId;
-      const currentTime = new Date().toISOString();
-      const profileData = {
-        user_id: userId,
-        report_name: reportName,
-        last_viewed_on: currentTime
-      };
-      console.log('Sending view data to API:', profileData);
-      const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-        },
-        body: JSON.stringify(profileData)
-      });
-      const data = await response.json();
-      console.log('API response for view:', data);
-      if (response.ok) {
-        fetchProfile(); // Refresh to update last viewed
-      } else {
-        setError(data.error || 'Failed to update view');
-      }
-    } catch (err) {
-      setError('An error occurred while updating view');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) return <div className="loading-spinner">Loading...</div>;
+  if (loading) return <div className="loading-spinner">Loading...</div>;
   if (error) return <div className="error-message">{error}</div>;
-  if (!profileData) return null;
 
   return (
     <div className="profile-page">
@@ -168,78 +193,120 @@ const ProfilePage = () => {
         <div className="profile-card">
           <div className="user-info">
             <div className="photo-section">
-              <img src={photoUrl || 'https://via.placeholder.com/120'} alt="Profile" className="profile-photo" />
-              <div className="modify-link" onClick={() => setIsModalOpen(true)}>Modify</div>
-            </div>
-            <div className="info-section">
-              <div className="user-name">{profileData.name}</div>
-              <div className="user-detail">Email: {profileData.email}</div>
-              <div className="user-detail">Phone: {userInfo.phone || 'Not provided'}</div>
-            </div>
-          </div>
-          <div className="reports-section">
-            <div className="section-title">Purchased Reports</div>
-            <div className="reports-list">
-              {profileData.reports && profileData.reports.length > 0 ? (
-                profileData.reports.map((report, index) => (
-                  <div key={index} className="report-card">
-                    <button className="report-button" onClick={() => handleViewReport(report.name)}>
-                      {report.name} (Purchased: {report.purchased_on}, Updated: {report.updated_on}, Last Viewed: {report.last_viewed_on || 'Never'})
-                    </button>
-                  </div>
-                ))
+              {photoUrl ? (
+                <img src={photoUrl} alt="Profile" className="profile-photo" />
               ) : (
-                <div className="no-reports">No reports purchased yet.</div>
+                <div className="upload-photo-container">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    id="photo-upload-input"
+                    name="photoUpload"
+                    className="photo-input"
+                    disabled={photoUploading}
+                  />
+                  <label htmlFor="photo-upload-input" className="upload-photo-label">
+                    <button
+                      type="button"
+                      disabled={photoUploading}
+                      className="upload-button"
+                    >
+                      {photoUploading ? 'Uploading...' : 'Upload Photo'}
+                    </button>
+                  </label>
+                </div>
               )}
             </div>
-            <button
-              className="save-button"
-              onClick={() => handlePurchaseReport('Sample Report')}
-              disabled={isLoading}
-            >
-              Purchase Sample Report
-            </button>
+            <div className="info-section">
+              <h2 className="user-name">
+                {name || (
+                  <span className="update-link" onClick={() => setShowNameModal(true)}>
+                    Update Name
+                  </span>
+                )}
+              </h2>
+              <p className="user-detail">
+                <strong>Phone:</strong> {phone || 'Not Available'}
+              </p>
+              <p className="user-detail">
+                <strong>Email:</strong>{' '}
+                {email || (
+                  <span className="update-link" onClick={() => setShowEmailModal(true)}>
+                    Update Email
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
+          <button className="save-button" onClick={saveProfile} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Profile'}
+          </button>
         </div>
-      </div>
 
-      <Modal show={isModalOpen} onHide={() => setIsModalOpen(false)} className="profile-modal">
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Profile</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <input
-            type="text"
-            className="custom-input"
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            placeholder="Name"
-          />
-          <input
-            type="email"
-            className="custom-input"
-            value={emailInput}
-            onChange={(e) => setEmailInput(e.target.value)}
-            placeholder="Email"
-          />
-          <input
-            type="text"
-            className="custom-input"
-            value={photoUrl}
-            onChange={(e) => setPhotoUrl(e.target.value)}
-            placeholder="Photo URL"
-          />
-          {error && <div style={{ color: 'red' }}>{error}</div>}
-        </Modal.Body>
-        <Modal.Footer className="modal-buttons">
-          <Button variant="secondary" className="custom-cancel" onClick={() => setIsModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" className="custom-submit" onClick={saveProfile} disabled={isLoading}>
-            Save Changes
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        <div className="reports-section">
+          <h3 className="section-title">Purchased Reports</h3>
+          {purchasedReports.length > 0 ? (
+            <div className="reports-list">
+              {purchasedReports.map((report) => (
+                <div key={report.file_key} className="report-card">
+                  <button
+                    onClick={() => fetchPresignedUrl(report.file_key)}
+                    className="report-button"
+                  >
+                    {report.file_key.split('/').pop()} (Version: {report.report_version || 'N/A'})
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="no-reports">No purchased reports found.</p>
+          )}
+        </div>
+
+        {selectedUrl && <PDFViewer pdfUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
+
+        <Modal isOpen={showNameModal} toggle={() => setShowNameModal(false)} className="profile-modal">
+          <ModalHeader toggle={() => setShowNameModal(false)}>Update Name</ModalHeader>
+          <ModalBody>
+            <input
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              className="form-control"
+              placeholder="Enter your name"
+            />
+            <div className="modal-buttons">
+              <button className="btn btn-primary" onClick={updateName}>
+                Update
+              </button>
+              <button className="btn btn-secondary" onClick={() => setShowNameModal(false)}>
+                Cancel
+              </button>
+            </div>
+          </ModalBody>
+        </Modal>
+
+        <Modal isOpen={showEmailModal} toggle={() => setShowEmailModal(false)} className="profile-modal">
+          <ModalHeader toggle={() => setShowEmailModal(false)}>Update Email</ModalHeader>
+          <ModalBody>
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              className="form-control"
+              placeholder="Enter your email"
+            />
+            <div className="modal-buttons">
+              <button className="btn btn-primary" onClick={updateEmail}>
+                Update
+              </button>
+              <button className="btn btn-secondary" onClick={() => setShowEmailModal(false)}>
+                Cancel
+              </button>
+            </div>
+          </ModalBody>
+        </Modal>
+      </div>
     </div>
   );
 };
