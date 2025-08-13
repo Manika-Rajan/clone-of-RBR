@@ -58,6 +58,7 @@ const Login = ({ onClose }) => {
 
   const completeLogin = (phoneNumber, name, email) => {
     const token = localStorage.getItem('authToken') || 'temp-token';
+    // Store login details in localStorage
     localStorage.setItem('userInfo', JSON.stringify({ isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }));
     cxtDispatch({
       type: 'USER_LOGIN',
@@ -71,7 +72,7 @@ const Login = ({ onClose }) => {
         onClose();
       }
       setIsModalOpen(false); // Update local state
-      // Removed navigate('/') to rely on App.js redirect
+      navigate('/profile', { replace: true }); // Redirect to profile after login
     }, 2000);
   };
 
