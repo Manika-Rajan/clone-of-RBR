@@ -14,7 +14,7 @@ import RefundPolicy from './components/RefundPolicy';
 import PrivacyPolicy from './components/PrivacyPolicy'; 
 import React, { useEffect, useContext } from 'react';
 import { Store, StoreProvider } from './Store';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import Login from './components/Login';
 
 function App() {
@@ -51,12 +51,13 @@ function App() {
   }, [userInfo?.isLogin, dispatch]);
 
   useEffect(() => {
-    console.log("App useEffect - isLogin:", isLogin, "Route:", window.location.pathname);
+    console.log("App useEffect - isLogin:", isLogin, "Route:", window.location.pathname, "UserInfo:", userInfo);
     if (isLogin && window.location.pathname === '/login') {
       console.log("Redirecting from /login to /profile due to login state");
-      window.location.href = '/profile'; // Force redirect to ensure page reload
+      window.history.pushState(null, '', '/profile'); // Use pushState instead of href for smoother navigation
+      window.dispatchEvent(new Event('popstate')); // Trigger a route change
     }
-  }, [isLogin]);
+  }, [isLogin, userInfo]);
 
   return (
     <StoreProvider>
