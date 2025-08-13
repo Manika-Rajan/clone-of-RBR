@@ -8,7 +8,6 @@ import { Modal, ModalBody, ModalHeader } from 'reactstrap';
 const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
-  const { isLogin, userId, name, phone, email } = userInfo || {};
   const navigate = useNavigate();
 
   const [purchasedReports, setPurchasedReports] = useState([]);
@@ -17,21 +16,17 @@ const ProfilePage = () => {
   const [selectedUrl, setSelectedUrl] = useState(null);
   const [showNameModal, setShowNameModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [nameInput, setNameInput] = useState(name || '');
-  const [emailInput, setEmailInput] = useState(email || '');
-  const [photoUrl, setPhotoUrl] = useState(null);
+  const [nameInput, setNameInput] = useState(userInfo?.name || '');
+  const [emailInput, setEmailInput] = useState(userInfo?.email || '');
+  const [photoUrl, setPhotoUrl] = useState(userInfo?.photo_url || null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     console.log("ProfilePage mounted. State:", state);
 
-    if (!isLogin) {
-      navigate('/');
-      return;
-    }
-
-    const storedUserId = userId || localStorage.getItem('userId');
+    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const storedUserId = storedUserInfo?.userId || localStorage.getItem('userId');
     if (!storedUserId) {
       console.warn('User ID missing.');
       setLoading(false);
@@ -39,7 +34,7 @@ const ProfilePage = () => {
       return;
     }
 
-    if (!userId) {
+    if (!userInfo?.userId) {
       cxtDispatch({ type: 'SET_USER_ID', payload: storedUserId });
     }
 
@@ -58,6 +53,10 @@ const ProfilePage = () => {
           setNameInput(data.name || '');
           setEmailInput(data.email || '');
           setPhotoUrl(data.photo_url || '');
+          cxtDispatch({
+            type: 'USER_LOGIN',
+            payload: { isLogin: true, userId: storedUserId, name: data.name, email: data.email, phone: data.phone, photo_url: data.photo_url }
+          });
         } else {
           throw new Error(data.error || `Failed to fetch profile (Status: ${response.status})`);
         }
@@ -70,7 +69,7 @@ const ProfilePage = () => {
     };
 
     fetchProfile();
-  }, [isLogin, userId, navigate, cxtDispatch]);
+  }, [cxtDispatch, userInfo?.userId]);
 
   const fetchPresignedUrl = async (fileKey) => {
     try {
@@ -99,6 +98,8 @@ const ProfilePage = () => {
     }
 
     console.log('File selected:', file.name, file.type, file.size);
+    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const userId = storedUserInfo?.userId;
     if (!userId) {
       console.error('userId is undefined');
       alert('Failed to upload photo: userId is undefined');
@@ -132,6 +133,7 @@ const ProfilePage = () => {
       setPhotoUrl(newPhotoUrl);
       console.log('Photo upload successful, photoUrl set:', newPhotoUrl);
       alert('Photo uploaded successfully!');
+      cxtDispatch({ type: 'SET_PHOTO_URL', payload: newPhotoUrl });
     } catch (error) {
       console.error('Error uploading photo:', error.message);
       alert(`Failed to upload photo: ${error.message}`);
@@ -151,6 +153,8 @@ const ProfilePage = () => {
   };
 
   const saveProfile = async () => {
+    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const userId = storedUserInfo?.userId;
     if (!userId) {
       alert('User ID is missing.');
       return;
@@ -160,7 +164,7 @@ const ProfilePage = () => {
       user_id: userId,
       name: nameInput,
       email: emailInput,
-      phone: phone || '',
+      phone: storedUserInfo?.phone || '',
       photo_url: photoUrl || '',
     };
 
@@ -176,6 +180,10 @@ const ProfilePage = () => {
       );
       if (!response.ok) throw new Error('Failed to save profile');
       alert('Profile saved successfully');
+      cxtDispatch({
+        type: 'USER_LOGIN',
+        payload: { isLogin: true, userId, name: nameInput, email: emailInput, phone: profileData.phone, photo_url: photoUrl }
+      });
     } catch (error) {
       console.error('Error saving profile:', error);
       alert('Failed to save profile.');
@@ -220,18 +228,18 @@ const ProfilePage = () => {
             </div>
             <div className="info-section">
               <h2 className="user-name">
-                {name || (
+                {nameInput || (
                   <span className="update-link" onClick={() => setShowNameModal(true)}>
                     Update Name
                   </span>
                 )}
               </h2>
               <p className="user-detail">
-                <strong>Phone:</strong> {phone || 'Not Available'}
+                <strong>Phone:</strong> {userInfo?.phone || 'Not Available'}
               </p>
               <p className="user-detail">
                 <strong>Email:</strong>{' '}
-                {email || (
+                {emailInput || (
                   <span className="update-link" onClick={() => setShowEmailModal(true)}>
                     Update Email
                   </span>
