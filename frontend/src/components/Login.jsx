@@ -71,7 +71,7 @@ const Login = ({ onClose }) => {
         onClose();
       }
       setIsModalOpen(false); // Update local state
-      navigate('/'); // Navigate to home after login to ensure modal closes and page refreshes
+      // Removed navigate('/') to rely on App.js redirect
     }, 2000);
   };
 
