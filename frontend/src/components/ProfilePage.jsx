@@ -14,13 +14,13 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedUrl, setSelectedUrl] = useState(null);
-  const [showNameModal, setShowNameModal] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [nameInput, setNameInput] = useState(userInfo?.name || '');
   const [emailInput, setEmailInput] = useState(userInfo?.email || '');
   const [photoUrl, setPhotoUrl] = useState(userInfo?.photo_url || null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [newPhoto, setNewPhoto] = useState(null);
 
   useEffect(() => {
     console.log("ProfilePage mounted. State:", state);
@@ -57,9 +57,9 @@ const ProfilePage = () => {
         console.log("API response data:", data);
         if (response.ok) {
           setPurchasedReports(data.reports || []);
-          setNameInput(data.name || ''); // Ensure empty string if no name
-          setEmailInput(data.email || ''); // Ensure empty string if no email
-          setPhotoUrl(data.photo_url || null); // Ensure null if no photo
+          setNameInput(data.name || '');
+          setEmailInput(data.email || '');
+          setPhotoUrl(data.photo_url || null);
           cxtDispatch({
             type: 'USER_LOGIN',
             payload: { isLogin: true, userId: storedUserId, name: data.name, email: data.email, phone: data.phone, photo_url: data.photo_url }
@@ -138,6 +138,7 @@ const ProfilePage = () => {
         throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
       }
       setPhotoUrl(newPhotoUrl);
+      setNewPhoto(null); // Clear the new photo input after upload
       console.log('Photo upload successful, photoUrl set:', newPhotoUrl);
       alert('Photo uploaded successfully!');
       cxtDispatch({ type: 'SET_PHOTO_URL', payload: newPhotoUrl });
@@ -147,16 +148,6 @@ const ProfilePage = () => {
     } finally {
       setPhotoUploading(false);
     }
-  };
-
-  const updateName = () => {
-    cxtDispatch({ type: 'SET_NAME', payload: nameInput });
-    setShowNameModal(false);
-  };
-
-  const updateEmail = () => {
-    cxtDispatch({ type: 'SET_EMAIL', payload: emailInput });
-    setShowEmailModal(false);
   };
 
   const saveProfile = async () => {
@@ -192,6 +183,7 @@ const ProfilePage = () => {
         type: 'USER_LOGIN',
         payload: { isLogin: true, userId, name: nameInput, email: emailInput, phone: profileData.phone, photo_url: photoUrl }
       });
+      setShowEditModal(false); // Close the modal after successful save
     } catch (error) {
       console.error('Error saving profile:', error);
       alert('Failed to save profile.');
@@ -235,31 +227,15 @@ const ProfilePage = () => {
               )}
             </div>
             <div className="info-section">
-              <h2 className="user-name">
-                {nameInput.trim() === '' || !nameInput ? (
-                  <span className="update-link" onClick={() => setShowNameModal(true)}>
-                    Update Name
-                  </span>
-                ) : (
-                  nameInput
-                )}
-              </h2>
-              <p className="user-detail">
-                <strong>Phone:</strong> {userInfo?.phone || 'Not Available'}
-              </p>
-              <p className="user-detail">
-                <strong>Email:</strong>{' '}
-                {emailInput.trim() === '' || !emailInput ? (
-                  <span className="update-link" onClick={() => setShowEmailModal(true)}>
-                    Update Email
-                  </span>
-                ) : (
-                  emailInput
-                )}
-              </p>
+              <h2 className="user-name">{nameInput || 'Not Available'}</h2>
+              <p className="user-detail"><strong>Phone:</strong> {userInfo?.phone || 'Not Available'}</p>
+              <p className="user-detail"><strong>Email:</strong> {emailInput || 'Not Available'}</p>
+              <button className="edit-profile-button" onClick={() => setShowEditModal(true)}>
+                Edit Profile
+              </button>
             </div>
           </div>
-          <button className="save-button" onClick={saveProfile} disabled={isSaving}>
+          <button className="save-button" onClick={saveProfile} disabled={isSaving} style={{ display: 'none' }}>
             {isSaving ? 'Saving...' : 'Save Profile'}
           </button>
         </div>
@@ -286,41 +262,48 @@ const ProfilePage = () => {
 
         {selectedUrl && <PDFViewer pdfUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
 
-        <Modal isOpen={showNameModal} toggle={() => setShowNameModal(false)} className="profile-modal">
-          <ModalHeader toggle={() => setShowNameModal(false)}>Update Name</ModalHeader>
+        <Modal isOpen={showEditModal} toggle={() => setShowEditModal(false)} className="full-page-modal">
+          <ModalHeader toggle={() => setShowEditModal(false)}>Edit Profile</ModalHeader>
           <ModalBody>
-            <input
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              className="form-control"
-              placeholder="Enter your name"
-            />
-            <div className="modal-buttons">
-              <button className="btn btn-primary" onClick={updateName}>
-                Update
+            <div className="edit-form">
+              <div className="form-group">
+                <label>Name:</label>
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  className="form-control"
+                  placeholder="Enter your name"
+                />
+              </div>
+              <div className="form-group">
+                <label>Email:</label>
+                <input
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  className="form-control"
+                  placeholder="Enter your email"
+                />
+              </div>
+              <div className="form-group">
+                <label>Photo:</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    setNewPhoto(e.target.files[0]);
+                    handlePhotoUpload(e); // Trigger upload immediately
+                  }}
+                  className="form-control"
+                  disabled={photoUploading}
+                />
+                {photoUploading && <p>Uploading...</p>}
+              </div>
+              <button className="btn btn-primary" onClick={saveProfile} disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save'}
               </button>
-              <button className="btn btn-secondary" onClick={() => setShowNameModal(false)}>
-                Cancel
-              </button>
-            </div>
-          </ModalBody>
-        </Modal>
-
-        <Modal isOpen={showEmailModal} toggle={() => setShowEmailModal(false)} className="profile-modal">
-          <ModalHeader toggle={() => setShowEmailModal(false)}>Update Email</ModalHeader>
-          <ModalBody>
-            <input
-              type="email"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              className="form-control"
-              placeholder="Enter your email"
-            />
-            <div className="modal-buttons">
-              <button className="btn btn-primary" onClick={updateEmail}>
-                Update
-              </button>
-              <button className="btn btn-secondary" onClick={() => setShowEmailModal(false)}>
+              <button className="btn btn-secondary" onClick={() => setShowEditModal(false)} disabled={isSaving}>
                 Cancel
               </button>
             </div>
