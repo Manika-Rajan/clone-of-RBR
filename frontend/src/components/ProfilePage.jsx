@@ -27,7 +27,8 @@ const ProfilePage = () => {
 
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
     const storedUserId = storedUserInfo?.userId || localStorage.getItem('userId');
-    console.log("Stored userId:", storedUserId, "Stored userInfo:", storedUserInfo);
+    const authToken = localStorage.getItem('authToken') || '';
+    console.log("Stored userId:", storedUserId, "Stored userInfo:", storedUserInfo, "authToken:", authToken);
     if (!storedUserId) {
       console.warn('User ID missing.');
       setLoading(false);
@@ -45,17 +46,20 @@ const ProfilePage = () => {
       try {
         const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/getUserProfile-RBRmain-APIgateway', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${authToken}`
+          },
           body: JSON.stringify({ user_id: storedUserId })
         });
-        console.log("API response status:", response.status);
+        console.log("API response status:", response.status, "Headers:", Object.fromEntries(response.headers));
         const data = await response.json();
         console.log("API response data:", data);
         if (response.ok) {
           setPurchasedReports(data.reports || []);
-          setNameInput(data.name || '');
-          setEmailInput(data.email || '');
-          setPhotoUrl(data.photo_url || '');
+          setNameInput(data.name || ''); // Ensure empty string if no name
+          setEmailInput(data.email || ''); // Ensure empty string if no email
+          setPhotoUrl(data.photo_url || null); // Ensure null if no photo
           cxtDispatch({
             type: 'USER_LOGIN',
             payload: { isLogin: true, userId: storedUserId, name: data.name, email: data.email, phone: data.phone, photo_url: data.photo_url }
@@ -65,7 +69,7 @@ const ProfilePage = () => {
         }
       } catch (err) {
         console.error('Error fetching profile:', err.message, err.stack);
-        setError(`Failed to load profile data: ${err.message}`);
+        setError(`Failed to load profile data: ${err.message}. Check CORS configuration on the server.`);
       } finally {
         setLoading(false);
       }
@@ -232,10 +236,12 @@ const ProfilePage = () => {
             </div>
             <div className="info-section">
               <h2 className="user-name">
-                {nameInput || (
+                {nameInput.trim() === '' || !nameInput ? (
                   <span className="update-link" onClick={() => setShowNameModal(true)}>
                     Update Name
                   </span>
+                ) : (
+                  nameInput
                 )}
               </h2>
               <p className="user-detail">
@@ -243,10 +249,12 @@ const ProfilePage = () => {
               </p>
               <p className="user-detail">
                 <strong>Email:</strong>{' '}
-                {emailInput || (
+                {emailInput.trim() === '' || !emailInput ? (
                   <span className="update-link" onClick={() => setShowEmailModal(true)}>
                     Update Email
                   </span>
+                ) : (
+                  emailInput
                 )}
               </p>
             </div>
