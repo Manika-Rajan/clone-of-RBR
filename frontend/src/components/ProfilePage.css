@@ -25,6 +25,7 @@
   padding: 24px;
   margin-bottom: 24px;
   margin-top: 0;
+  position: relative; /* For absolute positioning of edit button */
 }
 
 .user-info {
@@ -282,6 +283,50 @@
   background-color: #4b5563;
 }
 
+.edit-profile-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-profile-button:hover {
+  background-color: #2563eb;
+}
+
+.full-page-modal .modal-dialog {
+  max-width: 90%;
+  margin: 1.75rem auto;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
 /* Responsive Design */
 @media (max-width: 600px) {
   .profile-container {
@@ -331,5 +376,16 @@
   .custom-cancel {
     font-size: 14px;
     padding: 8px 16px;
+  }
+
+  .edit-profile-button {
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    font-size: 14px;
+  }
+
+  .full-page-modal .modal-dialog {
+    margin: 0.75rem auto;
   }
 }
