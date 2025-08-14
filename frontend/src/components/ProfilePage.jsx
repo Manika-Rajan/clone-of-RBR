@@ -27,6 +27,7 @@ const ProfilePage = () => {
 
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
     const storedUserId = storedUserInfo?.userId || localStorage.getItem('userId');
+    console.log("Stored userId:", storedUserId, "Stored userInfo:", storedUserInfo);
     if (!storedUserId) {
       console.warn('User ID missing.');
       setLoading(false);
@@ -47,7 +48,9 @@ const ProfilePage = () => {
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
           body: JSON.stringify({ user_id: storedUserId })
         });
+        console.log("API response status:", response.status);
         const data = await response.json();
+        console.log("API response data:", data);
         if (response.ok) {
           setPurchasedReports(data.reports || []);
           setNameInput(data.name || '');
@@ -58,11 +61,11 @@ const ProfilePage = () => {
             payload: { isLogin: true, userId: storedUserId, name: data.name, email: data.email, phone: data.phone, photo_url: data.photo_url }
           });
         } else {
-          throw new Error(data.error || `Failed to fetch profile (Status: ${response.status})`);
+          throw new Error(data.error || `Failed to fetch profile (Status: ${response.status}) - ${data.message || 'No additional details'}`);
         }
       } catch (err) {
-        console.error('Error fetching profile:', err);
-        setError('Failed to load profile data.');
+        console.error('Error fetching profile:', err.message, err.stack);
+        setError(`Failed to load profile data: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -179,6 +182,7 @@ const ProfilePage = () => {
         }
       );
       if (!response.ok) throw new Error('Failed to save profile');
+      console.log("Save profile response:", await response.json());
       alert('Profile saved successfully');
       cxtDispatch({
         type: 'USER_LOGIN',
