@@ -5,6 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import PDFViewer from './PDFViewer';
 import { Modal, ModalBody, ModalHeader } from 'reactstrap';
 
+// Default profile icon URL (replace with your asset or a public URL)
+const DEFAULT_PROFILE_ICON = 'https://via.placeholder.com/120?text=Default+Avatar';
+
 const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
@@ -119,7 +122,7 @@ const ProfilePage = () => {
         'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
           body: JSON.stringify({ userId }),
         }
       );
@@ -143,8 +146,8 @@ const ProfilePage = () => {
       alert('Photo uploaded successfully!');
       cxtDispatch({ type: 'SET_PHOTO_URL', payload: newPhotoUrl });
     } catch (error) {
-      console.error('Error uploading photo:', error.message);
-      alert(`Failed to upload photo: ${error.message}`);
+      console.error('Error uploading photo:', error.message, error.stack);
+      alert(`Unable to upload photo: ${error.message}`);
     } finally {
       setPhotoUploading(false);
     }
@@ -204,26 +207,7 @@ const ProfilePage = () => {
               {photoUrl ? (
                 <img src={photoUrl} alt="Profile" className="profile-photo" />
               ) : (
-                <div className="upload-photo-container">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    id="photo-upload-input"
-                    name="photoUpload"
-                    className="photo-input"
-                    disabled={photoUploading}
-                  />
-                  <label htmlFor="photo-upload-input" className="upload-photo-label">
-                    <button
-                      type="button"
-                      disabled={photoUploading}
-                      className="upload-button"
-                    >
-                      {photoUploading ? 'Uploading...' : 'Upload Photo'}
-                    </button>
-                  </label>
-                </div>
+                <img src={DEFAULT_PROFILE_ICON} alt="Default Profile" className="profile-photo" />
               )}
             </div>
             <div className="info-section">
@@ -299,6 +283,7 @@ const ProfilePage = () => {
                   disabled={photoUploading}
                 />
                 {photoUploading && <p>Uploading...</p>}
+                {!photoUrl && !photoUploading && <p>No photo uploaded. Upload to set a profile picture.</p>}
               </div>
               <button className="btn btn-primary" onClick={saveProfile} disabled={isSaving}>
                 {isSaving ? 'Saving...' : 'Save'}
