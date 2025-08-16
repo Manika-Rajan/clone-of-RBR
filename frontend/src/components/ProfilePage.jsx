@@ -198,6 +198,8 @@ const ProfilePage = () => {
   if (loading) return <div className="loading-spinner">Loading...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
+  console.log('Rendering photo section, photoUrl:', photoUrl, 'Default icon:', DEFAULT_PROFILE_ICON);
+
   return (
     <div className="profile-page">
       <div className="profile-container">
@@ -207,7 +209,7 @@ const ProfilePage = () => {
               {photoUrl ? (
                 <img src={photoUrl} alt="Profile" className="profile-photo" />
               ) : (
-                <img src={DEFAULT_PROFILE_ICON} alt="Default Profile" className="profile-photo" />
+                <img src={DEFAULT_PROFILE_ICON} alt="Default Profile" className="profile-photo" onError={(e) => { console.error('Default image failed to load:', e); e.target.src = 'https://via.placeholder.com/120?text=Default+Avatar'; }} />
               )}
             </div>
             <div className="info-section">
