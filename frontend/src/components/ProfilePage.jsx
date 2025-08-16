@@ -62,10 +62,12 @@ const ProfilePage = () => {
           setPurchasedReports(data.reports || []);
           setNameInput(data.name || '');
           setEmailInput(data.email || '');
-          setPhotoUrl(data.photo_url || null);
+          const fetchedPhotoUrl = data.photo_url || null;
+          setPhotoUrl(fetchedPhotoUrl);
+          console.log('Fetched photoUrl:', fetchedPhotoUrl);
           cxtDispatch({
             type: 'USER_LOGIN',
-            payload: { isLogin: true, userId: storedUserId, name: data.name, email: data.email, phone: data.phone, photo_url: data.photo_url }
+            payload: { isLogin: true, userId: storedUserId, name: data.name, email: data.email, phone: data.phone, photo_url: fetchedPhotoUrl }
           });
         } else {
           throw new Error(data.error || `Failed to fetch profile (Status: ${response.status}) - ${data.message || 'No additional details'}`);
@@ -206,8 +208,10 @@ const ProfilePage = () => {
         <div className="profile-card">
           <div className="user-info">
             <div className="photo-section">
-              {photoUrl ? (
-                <img src={photoUrl} alt="Profile" className="profile-photo" />
+              {photoUrl && !photoUrl.startsWith('http') ? (
+                <img src={DEFAULT_PROFILE_ICON} alt="Default Profile" className="profile-photo" onError={(e) => { console.error('Default image failed to load:', e); e.target.src = 'https://via.placeholder.com/120?text=Default+Avatar'; }} />
+              ) : photoUrl ? (
+                <img src={photoUrl} alt="Profile" className="profile-photo" onError={(e) => { console.error('Photo URL failed to load:', e); e.target.src = DEFAULT_PROFILE_ICON; }} />
               ) : (
                 <img src={DEFAULT_PROFILE_ICON} alt="Default Profile" className="profile-photo" onError={(e) => { console.error('Default image failed to load:', e); e.target.src = 'https://via.placeholder.com/120?text=Default+Avatar'; }} />
               )}
