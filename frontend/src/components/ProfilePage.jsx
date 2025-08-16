@@ -6,7 +6,7 @@ import PDFViewer from './PDFViewer';
 import { Modal, ModalBody, ModalHeader } from 'reactstrap';
 
 // Default profile icon URL (replace with your asset or a public URL)
-const DEFAULT_PROFILE_ICON = 'https://via.placeholder.com/120?text=Default+Avatar';
+const DEFAULT_PROFILE_ICON = 'https://github.com/Manika-Rajan/clone-of-RBR/blob/main/frontend/public/default-avatar.png';
 
 const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
