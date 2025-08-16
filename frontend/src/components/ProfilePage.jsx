@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import PDFViewer from './PDFViewer';
 import { Modal, ModalBody, ModalHeader } from 'reactstrap';
 
-// Default profile icon URL (replace with your asset or a public URL)
-const DEFAULT_PROFILE_ICON = 'https://github.com/Manika-Rajan/clone-of-RBR/blob/main/frontend/public/default-avatar.png';
+// Default profile icon URL (using local path from public folder)
+const DEFAULT_PROFILE_ICON = '/default-avatar.png';
 
 const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
@@ -119,7 +119,7 @@ const ProfilePage = () => {
     setPhotoUploading(true);
     try {
       const response = await fetch(
-        'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-photo-presigned-url',
+        'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-presigned-url-for-photo-RBRmain',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
