@@ -70,7 +70,7 @@ const ProfilePage = () => {
           setNameInput(data.name || '');
           setEmailInput(data.email || '');
           const fetchedPhotoUrl = data.photo_url || null;
-          setPhotoUrl(fetchedPhotoUrl);
+          setPhotoUrl(fetchedPhotoUrl); // This will be a presigned URL from now on
           console.log('Fetched photoUrl:', fetchedPhotoUrl);
           cxtDispatch({
             type: 'USER_LOGIN',
@@ -145,9 +145,9 @@ const ProfilePage = () => {
         const errorText = await response.text();
         throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
       }
-      const { presignedUrl, photoUrl: newPhotoUrl } = await response.json();
-      console.log('Presigned URL received:', presignedUrl, 'New photo URL:', newPhotoUrl);
-      const uploadResponse = await fetch(presignedUrl, {
+      const { presignedPutUrl, presignedGetUrl } = await response.json();
+      console.log('Presigned PUT URL received:', presignedPutUrl, 'Presigned GET URL:', presignedGetUrl);
+      const uploadResponse = await fetch(presignedPutUrl, {
         method: 'PUT',
         body: file,
         headers: { 'Content-Type': file.type },
@@ -157,21 +157,12 @@ const ProfilePage = () => {
         const uploadErrorText = await uploadResponse.text();
         throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
       }
-      // Force re-fetch of profile to update photoUrl
-      const profileResponse = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/getUserProfile-RBRmain-APIgateway', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${authToken}` 
-        },
-        body: JSON.stringify({ user_id: userId })
-      });
-      const profileData = await profileResponse.json();
-      setPhotoUrl(profileData.photo_url);
+      // Use the presigned GET URL directly
+      setPhotoUrl(presignedGetUrl);
       setNewPhoto(null); // Clear the new photo input after upload
-      console.log('Photo upload successful, photoUrl updated:', profileData.photo_url);
+      console.log('Photo upload successful, photoUrl set to presigned GET URL:', presignedGetUrl);
       alert('Photo uploaded successfully!');
-      cxtDispatch({ type: 'SET_PHOTO_URL', payload: profileData.photo_url });
+      cxtDispatch({ type: 'SET_PHOTO_URL', payload: presignedGetUrl });
     } catch (error) {
       console.error('Error uploading photo:', error.message, error.stack);
       alert(`Unable to upload photo: ${error.message}`);
@@ -239,8 +230,8 @@ const ProfilePage = () => {
                   alt="Profile"
                   className="profile-photo"
                   onError={(e) => {
-                    console.error('Photo URL failed to load:', e);
-                    e.target.src = DEFAULT_PROFILE_ICON; // Fallback to default
+                    console.error('Photo URL failed to load:', e, 'Falling back to default');
+                    e.target.src = DEFAULT_PROFILE_ICON;
                   }}
                   onLoad={() => console.log('Photo loaded successfully:', photoUrl)}
                 />
