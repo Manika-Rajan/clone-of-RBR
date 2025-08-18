@@ -171,6 +171,46 @@ const ProfilePage = () => {
     }
   };
 
+  const handleRemovePhoto = async () => {
+    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const userId = storedUserInfo?.userId;
+    const authToken = localStorage.getItem('authToken') || '';
+    if (!userId) {
+      alert('User ID is missing.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const profileData = {
+        user_id: userId,
+        name: nameInput,
+        email: emailInput,
+        phone: storedUserInfo?.phone || '',
+        photo_url: null, // Set photo_url to null to remove
+      };
+      const response = await fetch(
+        'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(profileData),
+        }
+      );
+      if (!response.ok) throw new Error('Failed to remove photo');
+      console.log("Remove photo response:", await response.json());
+      setPhotoUrl(null); // Revert to default
+      cxtDispatch({ type: 'USER_LOGIN', payload: { ...userInfo, photo_url: null } });
+      alert('Profile photo removed successfully!');
+      setShowEditModal(false); // Close the modal after removal
+    } catch (error) {
+      console.error('Error removing photo:', error);
+      alert('Failed to remove profile photo.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const saveProfile = async () => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
     const userId = storedUserInfo?.userId;
@@ -321,6 +361,11 @@ const ProfilePage = () => {
                 />
                 {photoUploading && <p>Uploading...</p>}
                 {!photoUrl && !photoUploading && <p>No photo uploaded. Upload to set a profile picture.</p>}
+                {photoUrl && (
+                  <button className="btn btn-danger" onClick={handleRemovePhoto} disabled={isSaving}>
+                    {isSaving ? 'Removing...' : 'Remove Photo'}
+                  </button>
+                )}
               </div>
               <button className="btn btn-primary" onClick={saveProfile} disabled={isSaving}>
                 {isSaving ? 'Saving...' : 'Save'}
