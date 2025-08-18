@@ -152,7 +152,7 @@ const ProfilePage = () => {
         body: file,
         headers: { 'Content-Type': file.type },
       });
-      console.log('S3 upload response status:', uploadResponse.status);
+      console.log('S3 upload response status:', uploadResponse.status, 'Headers:', Object.fromEntries(uploadResponse.headers));
       if (!uploadResponse.ok) {
         const uploadErrorText = await uploadResponse.text();
         throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
