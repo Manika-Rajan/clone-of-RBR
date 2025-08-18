@@ -157,11 +157,21 @@ const ProfilePage = () => {
         const uploadErrorText = await uploadResponse.text();
         throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
       }
-      setPhotoUrl(newPhotoUrl);
+      // Force re-fetch of profile to update photoUrl
+      const profileResponse = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/getUserProfile-RBRmain-APIgateway', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${authToken}` 
+        },
+        body: JSON.stringify({ user_id: userId })
+      });
+      const profileData = await profileResponse.json();
+      setPhotoUrl(profileData.photo_url);
       setNewPhoto(null); // Clear the new photo input after upload
-      console.log('Photo upload successful, photoUrl set:', newPhotoUrl);
+      console.log('Photo upload successful, photoUrl updated:', profileData.photo_url);
       alert('Photo uploaded successfully!');
-      cxtDispatch({ type: 'SET_PHOTO_URL', payload: newPhotoUrl });
+      cxtDispatch({ type: 'SET_PHOTO_URL', payload: profileData.photo_url });
     } catch (error) {
       console.error('Error uploading photo:', error.message, error.stack);
       alert(`Unable to upload photo: ${error.message}`);
@@ -223,12 +233,27 @@ const ProfilePage = () => {
         <div className="profile-card">
           <div className="user-info">
             <div className="photo-section">
-              {photoUrl && !photoUrl.startsWith('http') ? (
-                <img src={DEFAULT_PROFILE_ICON} alt="Default Profile" className="profile-photo" onError={(e) => { console.error('Default image failed to load:', e); e.target.src = 'https://via.placeholder.com/120?text=Default+Avatar'; }} />
-              ) : photoUrl ? (
-                <img src={photoUrl} alt="Profile" className="profile-photo" onError={(e) => { console.error('Photo URL failed to load:', e); e.target.src = DEFAULT_PROFILE_ICON; }} />
+              {photoUrl ? (
+                <img
+                  src={photoUrl}
+                  alt="Profile"
+                  className="profile-photo"
+                  onError={(e) => {
+                    console.error('Photo URL failed to load:', e);
+                    e.target.src = DEFAULT_PROFILE_ICON; // Fallback to default
+                  }}
+                  onLoad={() => console.log('Photo loaded successfully:', photoUrl)}
+                />
               ) : (
-                <img src={DEFAULT_PROFILE_ICON} alt="Default Profile" className="profile-photo" onError={(e) => { console.error('Default image failed to load:', e); e.target.src = 'https://via.placeholder.com/120?text=Default+Avatar'; }} />
+                <img
+                  src={DEFAULT_PROFILE_ICON}
+                  alt="Default Profile"
+                  className="profile-photo"
+                  onError={(e) => {
+                    console.error('Default image failed to load:', e);
+                    e.target.src = 'https://via.placeholder.com/120?text=Default+Avatar';
+                  }}
+                />
               )}
             </div>
             <div className="info-section">
