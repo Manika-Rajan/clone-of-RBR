@@ -29,14 +29,21 @@ const ProfilePage = () => {
     console.log("ProfilePage mounted. State:", state);
 
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const storedUserId = storedUserInfo?.userId || localStorage.getItem('userId');
-    const authToken = localStorage.getItem('authToken') || '';
+    let storedUserId = storedUserInfo?.userId || localStorage.getItem('userId');
+    let authToken = localStorage.getItem('authToken') || '';
     console.log("Stored userId:", storedUserId, "Stored userInfo:", storedUserInfo, "authToken:", authToken);
     if (!storedUserId) {
       console.warn('User ID missing.');
       setLoading(false);
       setError('User ID not found. Please log in again.');
       return;
+    }
+
+    // Set authToken if missing but present in userInfo
+    if (!authToken && storedUserInfo?.token) {
+      authToken = storedUserInfo.token;
+      localStorage.setItem('authToken', authToken);
+      console.log('Updated authToken from userInfo:', authToken);
     }
 
     if (!userInfo?.userId) {
@@ -67,7 +74,7 @@ const ProfilePage = () => {
           console.log('Fetched photoUrl:', fetchedPhotoUrl);
           cxtDispatch({
             type: 'USER_LOGIN',
-            payload: { isLogin: true, userId: storedUserId, name: data.name, email: data.email, phone: data.phone, photo_url: fetchedPhotoUrl }
+            payload: { isLogin: true, userId: storedUserId, name: data.name, email: data.email, phone: data.phone, photo_url: fetchedPhotoUrl, token: authToken }
           });
         } else {
           throw new Error(data.error || `Failed to fetch profile (Status: ${response.status}) - ${data.message || 'No additional details'}`);
@@ -111,10 +118,12 @@ const ProfilePage = () => {
 
     console.log('File selected:', file.name, file.type, file.size);
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const userId = storedUserInfo?.userId;
+    const userId = storedUserInfo?.userId || localStorage.getItem('userId');
+    const authToken = localStorage.getItem('authToken') || '';
+    console.log('Attempting upload with userId:', userId, 'authToken:', authToken);
     if (!userId) {
-      console.error('userId is undefined');
-      alert('Failed to upload photo: userId is undefined');
+      console.error('userId is undefined or missing');
+      alert('Failed to upload photo: userId is undefined or missing');
       return;
     }
 
@@ -124,20 +133,26 @@ const ProfilePage = () => {
         'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-presigned-url-for-photo-RBRmain',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${authToken}` 
+          },
           body: JSON.stringify({ userId }),
         }
       );
+      console.log('Presigned URL fetch response status:', response.status, 'Headers:', Object.fromEntries(response.headers));
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
       }
       const { presignedUrl, photoUrl: newPhotoUrl } = await response.json();
+      console.log('Presigned URL received:', presignedUrl, 'New photo URL:', newPhotoUrl);
       const uploadResponse = await fetch(presignedUrl, {
         method: 'PUT',
         body: file,
         headers: { 'Content-Type': file.type },
       });
+      console.log('S3 upload response status:', uploadResponse.status);
       if (!uploadResponse.ok) {
         const uploadErrorText = await uploadResponse.text();
         throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
