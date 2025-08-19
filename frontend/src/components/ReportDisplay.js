@@ -20,14 +20,13 @@ const ReportsDisplay = () => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { isLogin = false, name, status, email, userId } = state.userInfo || {};
-  console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId); // Enhanced logging
+  console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId);
 
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
 
-  // Monitor isLogin changes to force re-render
   useEffect(() => {
     console.log("isLogin updated to:", isLogin);
   }, [isLogin]);
@@ -43,12 +42,20 @@ const ReportsDisplay = () => {
     }
   };
 
+  const handleLoginClose = (loggedIn) => {
+    setOpenModel(false);
+    if (loggedIn) {
+      console.log("Login successful, navigating to payment");
+      navigate("/payment", { state: { reportId, amount, file_key } });
+    }
+  };
+
   const changeStatus = () => {
     setOpenModel(false);
     if (isLogin && status) {
       navigate("/payment", { state: { reportId, amount, file_key } });
     } else {
-      cxtDispatch({ type: 'SET_REPORT_STATUS' }); // Toggle status
+      cxtDispatch({ type: 'SET_REPORT_STATUS' });
       console.log("changeStatus - isLogin:", isLogin, "status:", status);
     }
   };
@@ -160,7 +167,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => { setOpenModel(false); changeStatus(); }} />
+          <Login onClose={(loggedIn) => handleLoginClose(loggedIn)} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
