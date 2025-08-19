@@ -56,7 +56,7 @@ const ReportsDisplay = () => {
         setIsLoading(false);
         return;
       }
-      console.log("Fetching presigned URL for file_key:", file_key);
+      console.log("Fetching presigned URL for file_key:", file_key, "isLogin:", isLogin);
       setIsLoading(true);
       try {
         const headers = { 'Content-Type': 'application/json' };
@@ -69,20 +69,28 @@ const ReportsDisplay = () => {
           headers,
           body: JSON.stringify({ file_key, userId: isLogin ? state.userId : null }),
         });
+        console.log("Presigned URL response status:", response.status);
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-        }
-        const data = await response.json();
-        console.log('API Response:', data);
-        if (data.presigned_url) {
-          setPdfUrl(data.presigned_url);
+          if (response.status === 401 || response.status === 403) {
+            setError('Please log in to view the full report.');
+          } else {
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+          }
         } else {
-          throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
+          const data = await response.json();
+          console.log('API Response:', data);
+          if (data.presigned_url) {
+            setPdfUrl(data.presigned_url);
+          } else {
+            throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
+          }
         }
       } catch (error) {
         console.error('Error fetching presigned URL:', error.message, error.stack);
-        setError(`Failed to load report: ${error.message}`);
+        if (!error.message.includes('Please log in')) {
+          setError(`Failed to load report: ${error.message}`);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -106,7 +114,7 @@ const ReportsDisplay = () => {
                   {file_key ? file_key.replace(/_/g, ' ').replace(/\.[^.]+$/, '') : "Paper Industry In India"}
                 </p>
                 <p className='report-display-desc' style={{ marginTop: "-10px", width: "70%" }}>
-                  {file_key ? "Generated report based on selected filters" : "Candy production is a seasonal business, with the majority of those involved in market normally doubling their staffs during the winter months"}
+                  {file_key ? "Generated report based on selected filters (Preview)" : "Candy production is a seasonal business, with the majority of those involved in market normally doubling their staffs during the winter months"}
                 </p>
               </div>
             </div>
