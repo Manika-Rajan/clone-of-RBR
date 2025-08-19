@@ -59,7 +59,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/" element={<Reports />} />
             <Route path='/contact' element={<Contact />} />
-            <Route path='/report-display' element={userInfo?.isLogin ? <ReportsDisplay /> : <Navigate to="/login" />} />
+            <Route path='/report-display' element={<ReportsDisplay />} /> {/* Removed isLogin check */}
             <Route path='/payment' element={userInfo?.isLogin ? <Payment /> : <Navigate to="/login" />} />
             <Route path='/commingSoon' element={<CommingSoon />} />
             <Route path='/not-found' element={<Invalid />} />
