@@ -18,14 +18,19 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state, dispatch: cxtDispatch } = useContext(Store); // Added cxtDispatch
-  const { isLogin = false, name, status, email, userId } = state.userInfo || {}; // Included userId for debugging
+  const { state, dispatch: cxtDispatch } = useContext(Store);
+  const { isLogin = false, name, status, email, userId } = state.userInfo || {};
   console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId); // Enhanced logging
 
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
+
+  // Monitor isLogin changes to force re-render
+  useEffect(() => {
+    console.log("isLogin updated to:", isLogin);
+  }, [isLogin]);
 
   const handlePayment = () => {
     console.log("handlePayment - isLogin:", isLogin, "reportId:", reportId, "amount:", amount);
@@ -43,7 +48,8 @@ const ReportsDisplay = () => {
     if (isLogin && status) {
       navigate("/payment", { state: { reportId, amount, file_key } });
     } else {
-      cxtDispatch({ type: 'SET_REPORT_STATUS' }); // Now defined
+      cxtDispatch({ type: 'SET_REPORT_STATUS' }); // Toggle status
+      console.log("changeStatus - isLogin:", isLogin, "status:", status);
     }
   };
 
