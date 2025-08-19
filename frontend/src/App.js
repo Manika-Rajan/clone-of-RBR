@@ -59,11 +59,11 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/" element={<Reports />} />
             <Route path='/contact' element={<Contact />} />
-            <Route path='/report-display' element={<ReportsDisplay />} /> {/* Removed isLogin check */}
+            <Route path='/report-display' element={<ReportsDisplay />} />
             <Route path='/payment' element={userInfo?.isLogin ? <Payment /> : <Navigate to="/login" />} />
             <Route path='/commingSoon' element={<CommingSoon />} />
             <Route path='/not-found' element={<Invalid />} />
-            <Route path="/profile" element={<ProfilePage />} /> {/* Removed isLogin check */}
+            <Route path="/profile" element={userInfo?.isLogin ? <ProfilePage /> : <Navigate to="/login" />} /> {/* Added isLogin check */}
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
