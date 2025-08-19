@@ -18,9 +18,9 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state } = useContext(Store); // Simplified to debug
-  const { isLogin = false, name, status, email } = state.userInfo || {}; // Fallback to false if undefined
-  console.log("ReportsDisplay - state:", state, "isLogin:", isLogin); // Debug full state
+  const { state, dispatch: cxtDispatch } = useContext(Store); // Added cxtDispatch
+  const { isLogin = false, name, status, email, userId } = state.userInfo || {}; // Included userId for debugging
+  console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId); // Enhanced logging
 
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +43,7 @@ const ReportsDisplay = () => {
     if (isLogin && status) {
       navigate("/payment", { state: { reportId, amount, file_key } });
     } else {
-      cxtDispatch({ type: 'SET_REPORT_STATUS' });
+      cxtDispatch({ type: 'SET_REPORT_STATUS' }); // Now defined
     }
   };
 
@@ -55,7 +55,7 @@ const ReportsDisplay = () => {
         setIsLoading(false);
         return;
       }
-      console.log("Fetching presigned URL for file_key:", file_key, "isLogin:", isLogin);
+      console.log("Fetching presigned URL for file_key:", file_key, "isLogin:", isLogin, "userId:", userId);
       setIsLoading(true);
       try {
         const headers = { 'Content-Type': 'application/json' };
@@ -66,7 +66,7 @@ const ReportsDisplay = () => {
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
           headers,
-          body: JSON.stringify({ file_key, userId: isLogin ? state.userInfo.userId : null }),
+          body: JSON.stringify({ file_key, userId: isLogin ? userId : null }),
         });
         console.log("Presigned URL response status:", response.status);
         if (!response.ok) {
@@ -95,7 +95,7 @@ const ReportsDisplay = () => {
       }
     };
     fetchPresignedUrl();
-  }, [file_key, isLogin, state.userInfo?.userId]);
+  }, [file_key, isLogin, userId]);
 
   return (
     <>
