@@ -13,8 +13,8 @@ import { Modal, ModalBody } from "reactstrap";
 
 const ReportsDisplay = () => {
   const location = useLocation();
-  const { file_key, reportId, amount = 400 } = location.state || {}; // Match casing with Reports.jsx
-  console.log("Received file_key:", file_key, "reportId:", reportId, "amount:", amount);
+  const { file_key, reportId, amount = 400 } = location.state || {};
+  console.log("Received file_key:", file_key, "reportId:", reportId, "amount:", amount, "location.state:", location.state);
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
@@ -41,7 +41,11 @@ const ReportsDisplay = () => {
 
   const changeStatus = () => {
     setOpenModel(false);
-    cxtDispatch({ type: 'SET_REPORT_STATUS' });
+    if (isLogin && status) {
+      navigate("/payment", { state: { reportId, amount, file_key } });
+    } else {
+      cxtDispatch({ type: 'SET_REPORT_STATUS' });
+    }
   };
 
   useEffect(() => {
@@ -143,7 +147,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => { setOpenModel(false); if (isLogin) handlePayment(); }} />
+          <Login onClose={() => { setOpenModel(false); changeStatus(); }} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
