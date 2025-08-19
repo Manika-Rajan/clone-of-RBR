@@ -16,7 +16,7 @@ const Login = ({ onClose }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [requireDetails, setRequireDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(true); // Modal starts open
+  const [isModalOpen, setIsModalOpen] = useState(true);
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -24,7 +24,6 @@ const Login = ({ onClose }) => {
   }, []);
 
   useEffect(() => {
-    // Auto-trigger continue for existing users after verification
     if (isVerified && !requireDetails && !isLoading) {
       console.log('useEffect triggered, calling handleContinue');
       handleContinue();
@@ -58,7 +57,6 @@ const Login = ({ onClose }) => {
 
   const completeLogin = (phoneNumber, name, email) => {
     const token = localStorage.getItem('authToken') || 'temp-token';
-    // Store login details in localStorage
     localStorage.setItem('userInfo', JSON.stringify({ isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }));
     cxtDispatch({
       type: 'USER_LOGIN',
@@ -66,14 +64,12 @@ const Login = ({ onClose }) => {
     });
     console.log('completeLogin called with:', { phoneNumber, name, email });
     setResponseMessage('Login successful');
-    setTimeout(() => {
-      if (onClose) {
-        console.log('Calling onClose from completeLogin');
-        onClose();
-      }
-      setIsModalOpen(false); // Update local state
-      navigate('/profile', { replace: true }); // Redirect to profile after login
-    }, 2000);
+    if (onClose) {
+      console.log('Calling onClose from completeLogin with loggedIn: true');
+      onClose(true); // Pass loggedIn status
+    }
+    setIsModalOpen(false);
+    // Removed navigate('/profile') to let parent handle navigation
   };
 
   const handleKeyPress = (event) => {
@@ -177,8 +173,8 @@ const Login = ({ onClose }) => {
     console.log('handleContinue triggered, isVerified:', isVerified, 'requireDetails:', requireDetails);
     if (isVerified && !requireDetails) {
       const phoneNumber = `+91${number}`;
-      const fetchedName = name || number; // Fallback to phone if no name
-      const fetchedEmail = email || ''; // Fallback to empty if no email
+      const fetchedName = name || number;
+      const fetchedEmail = email || '';
       completeLogin(phoneNumber, fetchedName, fetchedEmail);
     }
   };
