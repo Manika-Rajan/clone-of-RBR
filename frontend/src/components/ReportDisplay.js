@@ -18,13 +18,14 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { isLogin = false, name, status, email, userId } = state.userInfo || {};
-  console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId);
+  const { state } = useContext(Store); // Simplified to state for debugging
+  const userInfo = state?.userInfo || {};
+  const isLogin = userInfo.isLogin || false; // Default to false if undefined
+  console.log("ReportsDisplay - state:", state, "userInfo:", userInfo, "isLogin:", isLogin);
 
-  // Use location.state to check if login occurred
-  const loggedInFromState = location.state?.loggedIn || false;
-  const [localIsLogin, setLocalIsLogin] = useState(isLogin || loggedInFromState);
+  // Fallback to localStorage if context fails
+  const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  const [localIsLogin, setLocalIsLogin] = useState(isLogin || storedUserInfo.isLogin || false);
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
@@ -32,11 +33,10 @@ const ReportsDisplay = () => {
 
   useEffect(() => {
     console.log("isLogin updated to:", isLogin, "localIsLogin updated to:", localIsLogin);
-    setLocalIsLogin(isLogin || loggedInFromState); // Sync with context and location
-  }, [isLogin, loggedInFromState]);
+    setLocalIsLogin(isLogin || storedUserInfo.isLogin || false); // Sync with context or localStorage
+  }, [isLogin, storedUserInfo.isLogin]);
 
   useEffect(() => {
-    console.log("ReportsDisplay unmounted"); // This won't log, but helps debug if added elsewhere
     return () => console.log("ReportsDisplay unmounted"); // Log on unmount
   }, []);
 
@@ -48,7 +48,7 @@ const ReportsDisplay = () => {
         setIsLoading(false);
         return;
       }
-      console.log("Fetching presigned URL for file_key:", file_key, "isLogin:", isLogin, "userId:", userId);
+      console.log("Fetching presigned URL for file_key:", file_key, "isLogin:", isLogin, "userId:", userInfo.userId);
       setIsLoading(true);
       try {
         const headers = { 'Content-Type': 'application/json' };
@@ -59,7 +59,7 @@ const ReportsDisplay = () => {
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
           headers,
-          body: JSON.stringify({ file_key, userId: isLogin ? userId : null }),
+          body: JSON.stringify({ file_key, userId: isLogin ? userInfo.userId : null }),
         });
         console.log("Presigned URL response status:", response.status);
         if (!response.ok) {
@@ -88,7 +88,7 @@ const ReportsDisplay = () => {
       }
     };
     fetchPresignedUrl();
-  }, [file_key, isLogin, userId]);
+  }, [file_key, isLogin, userInfo.userId]);
 
   const handlePayment = () => {
     console.log("handlePayment - localIsLogin:", localIsLogin, "reportId:", reportId, "amount:", amount);
@@ -107,7 +107,6 @@ const ReportsDisplay = () => {
     if (loggedIn) {
       setLocalIsLogin(true); // Update local state
       console.log("Updating localIsLogin to true");
-      // Navigate back to self with updated state to force re-mount
       navigate("/report-display", {
         state: { file_key, reportId, amount, loggedIn: true },
         replace: true,
@@ -121,12 +120,12 @@ const ReportsDisplay = () => {
       navigate("/payment", { state: { reportId, amount, file_key } });
     } else {
       cxtDispatch({ type: 'SET_REPORT_STATUS' });
-      console.log("changeStatus - isLogin:", isLogin, "status:", status);
+      console.log("changeStatus - isLogin:", isLogin, "status:", userInfo.status);
     }
   };
 
   return (
-    <div key={`${file_key}-${localIsLogin}`}> {/* Unique key to force re-mount */}
+    <div key={`${file_key}-${localIsLogin}`}>
       <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
@@ -183,7 +182,7 @@ const ReportsDisplay = () => {
       >
         <ModalBody>
           <Login onClose={(loggedIn) => handleLoginClose(loggedIn)} />
-          {status && (
+          {userInfo.status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
               <p className='success-email'>{email}</p>
