@@ -52,6 +52,7 @@ const reducer = (state, action) => {
 
 export function StoreProvider(props) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  console.log("StoreProvider rendering with state:", state); // Add this line
   const value = { state, dispatch };
   return <Store.Provider value={value}>{props.children}</Store.Provider>;
 }
