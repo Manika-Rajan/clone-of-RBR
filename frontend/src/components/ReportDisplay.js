@@ -22,6 +22,7 @@ const ReportsDisplay = () => {
   const { isLogin = false, name, status, email, userId } = state.userInfo || {};
   console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId);
 
+  const [refreshKey, setRefreshKey] = useState(0); // Force re-render
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
@@ -43,10 +44,15 @@ const ReportsDisplay = () => {
   };
 
   const handleLoginClose = (loggedIn) => {
+    console.log("handleLoginClose - loggedIn:", loggedIn);
     setOpenModel(false);
     if (loggedIn) {
-      console.log("Login successful, navigating to payment");
-      navigate("/payment", { state: { reportId, amount, file_key } });
+      // Force re-render to pick up updated context
+      setRefreshKey(prev => prev + 1);
+      console.log("Forcing re-render, navigating to payment");
+      setTimeout(() => {
+        navigate("/payment", { state: { reportId, amount, file_key } });
+      }, 0); // Allow re-render before navigation
     }
   };
 
@@ -108,10 +114,10 @@ const ReportsDisplay = () => {
       }
     };
     fetchPresignedUrl();
-  }, [file_key, isLogin, userId]);
+  }, [file_key, isLogin, userId, refreshKey]); // Added refreshKey to re-run on state change
 
   return (
-    <>
+    <div key={refreshKey}> {/* Force re-render with key */}
       <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
@@ -177,7 +183,7 @@ const ReportsDisplay = () => {
           )}
         </ModalBody>
       </Modal>
-    </>
+    </div>
   );
 };
 
