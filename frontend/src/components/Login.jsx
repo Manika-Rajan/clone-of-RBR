@@ -1,286 +1,185 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
 import './Login.css';
 import { Store } from '../Store';
+import { Modal, ModalBody, ModalHeader } from "reactstrap";
+import OtpInput from 'react-otp-input';
 
 const Login = ({ onClose }) => {
   const navigate = useNavigate();
+  const location = useLocation(); // Use hook for location
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const [number, setNumber] = useState('');
-  const [otpInput, setOtpInput] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [responseMessage, setResponseMessage] = useState('');
-  const [error, setError] = useState('');
+  const { userInfo } = state;
+
+  const [phone, setPhone] = useState(userInfo.phone || ''); // Default to userInfo.phone or empty
+  const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [requireDetails, setRequireDetails] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const storedPhone = localStorage.getItem('userPhone');
-    if (storedPhone) setNumber(storedPhone.replace('+91', ''));
-  }, []);
+    console.log("useEffect triggered, calling handleContinue");
+    if (isVerified && !requireDetails) handleContinue();
+  }, [isVerified, requireDetails]);
 
-  useEffect(() => {
-    if (isVerified && !requireDetails && !isLoading) {
-      console.log('useEffect triggered, calling handleContinue');
-      handleContinue();
-    }
-  }, [isVerified, requireDetails, isLoading]);
-
-  const saveUserDetails = async (phoneNumber, name, email) => {
-    if (!phoneNumber || !name || !email) {
-      throw new Error('Missing required fields for saving user details');
-    }
-    const requestBody = { action: 'update', phone_number: phoneNumber, name, email };
-    console.log('saveUserDetails request:', requestBody);
-    try {
-      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
-      console.log('saveUserDetails status:', response.status);
-      const data = await response.json();
-      console.log('saveUserDetails response:', data);
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP error ${response.status}`);
-      }
-      return true;
-    } catch (err) {
-      console.error('saveUserDetails exception:', err.message, err.stack);
-      throw new Error(`Failed to save user details: ${err.message}`);
-    }
-  };
-
-const completeLogin = async (data) => {
-  console.log("completeLogin called with:", data);
-  const userInfo = {
-    isLogin: true,
-    userId: data.userId || phone,
-    name: data.name,
-    email: data.email,
-    phone: phone,
-  };
-  cxtDispatch({ type: 'USER_LOGIN', payload: userInfo });
-  localStorage.setItem('userInfo', JSON.stringify(userInfo));
-  if (onClose) {
-    console.log("Calling onClose from completeLogin with loggedIn: true");
-    onClose(true); // Close modal and signal login success
-    // Navigate back to ReportsDisplay with updated state
-    navigate("/report-display", {
-      state: { loggedIn: true, file_key: location.state?.file_key, reportId: location.state?.reportId, amount: location.state?.amount },
-      replace: true,
-    });
-  }
-};
-  
-
-  const handleKeyPress = (event) => {
-    if (event.key === 'Enter' && !isLoading) {
-      event.preventDefault();
-      handleSubmit(event);
-    }
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (isLoading) return;
-    setIsLoading(true);
-    console.log('handleSubmit triggered, otpSent:', otpSent, 'isVerified:', isVerified, 'requireDetails:', requireDetails);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("handleSubmit triggered, otpSent:", otpSent, "isVerified:", isVerified, "requireDetails:", requireDetails);
+    setLoading(true);
+    setError('');
 
     try {
       if (!otpSent) {
-        if (number.length !== 10 || !/^\d+$/.test(number)) {
-          setError('Please enter a valid 10-digit mobile number');
-          return;
-        }
-        setError('');
-        setResponseMessage('');
-        setOtpInput('');
-        const phoneNumber = `+91${number}`;
-        const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
+        const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/send-otp-RBRmain-APIgateway', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone_number: phoneNumber })
+          body: JSON.stringify({ phone }),
         });
-        console.log('send-otp status:', response.status, 'at', new Date().toISOString());
+        console.log("send-otp status:", response.status, "at", new Date().toISOString());
         const data = await response.json();
-        console.log('send-otp response:', data);
+        console.log("send-otp response:", data);
         if (response.ok) {
-          setResponseMessage('OTP sent! Enter it below:');
-          cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
-          localStorage.setItem('userPhone', phoneNumber);
           setOtpSent(true);
         } else {
-          setError(`Error: ${data.error || data.message || 'Unknown error'}`);
+          setError(data.message || 'Failed to send OTP');
         }
-      } else if (!isVerified) {
-        if (otpInput.length !== 6 || !/^\d+$/.test(otpInput)) {
-          setError('Please enter a valid 6-digit OTP');
-          return;
-        }
-        setError('');
-        setResponseMessage('');
-        const phoneNumber = `+91${number}`;
-        const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp', {
+      } else {
+        const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/verify-otp-RBRmain-APIgateway', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone_number: phoneNumber, otp: otpInput })
+          body: JSON.stringify({ phone, otp }),
         });
-        console.log('verify-otp status:', response.status, 'at', new Date().toISOString());
-        const rawData = await response.json();
-        console.log('verify-otp raw response:', rawData);
-        let data = rawData;
-        if (rawData.body && typeof rawData.body === 'string') {
-          data = JSON.parse(rawData.body);
-        }
-        console.log('verify-otp parsed data:', data);
-        if (response.status === 200) {
-          setResponseMessage('OTP verified successfully');
+        console.log("verify-otp status:", response.status, "at", new Date().toISOString());
+        const rawResponse = await response.text();
+        console.log("verify-otp raw response:", rawResponse);
+        const data = JSON.parse(rawResponse);
+        console.log("verify-otp parsed data:", data);
+        if (response.ok) {
           setIsVerified(true);
-          const fetchedName = data.user?.name || '';
-          const fetchedEmail = data.user?.email || '';
-          const isExistingUser = data.isExistingUser || false;
-          setName(fetchedName && fetchedName !== phoneNumber && fetchedName.trim() !== '' ? fetchedName : '');
-          setEmail(fetchedEmail);
-          setRequireDetails(
-            !isExistingUser ||
-            !fetchedName ||
-            fetchedName.trim() === '' ||
-            !fetchedEmail ||
-            fetchedEmail.trim() === ''
-          );
+          if (!data.name || !data.email) {
+            setRequireDetails(true);
+          }
         } else {
-          setError(`Error: ${data.error || 'Invalid OTP'}`);
+          setError(data.message || 'Invalid OTP');
         }
-      } else if (requireDetails) {
-        if (!name.trim() || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          setError('Please enter a valid name and email');
-          return;
-        }
-        setError('');
-        setResponseMessage('');
-        const phoneNumber = `+91${number}`;
-        await saveUserDetails(phoneNumber, name, email);
-        completeLogin(phoneNumber, name, email);
       }
-    } catch (err) {
-      console.error('handleSubmit error:', err.message, err.stack, 'at', new Date().toISOString());
-      setError(`An error occurred: ${err.message}`);
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An error occurred. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleContinue = () => {
-    console.log('handleContinue triggered, isVerified:', isVerified, 'requireDetails:', requireDetails);
+  const handleContinue = async () => {
+    console.log("handleContinue triggered, isVerified:", isVerified, "requireDetails:", requireDetails);
     if (isVerified && !requireDetails) {
-      const phoneNumber = `+91${number}`;
-      const fetchedName = name || number;
-      const fetchedEmail = email || '';
-      completeLogin(phoneNumber, fetchedName, fetchedEmail);
+      const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: phone }),
+      });
+      const data = await response.json();
+      completeLogin(data);
+    }
+  };
+
+  const completeLogin = async (data) => {
+    console.log("completeLogin called with:", data);
+    const userInfo = {
+      isLogin: true,
+      userId: data.userId || phone, // Use phone as fallback
+      name: data.name,
+      email: data.email,
+      phone: phone,
+    };
+    cxtDispatch({ type: 'USER_LOGIN', payload: userInfo });
+    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+    if (onClose) {
+      console.log("Calling onClose from completeLogin with loggedIn: true");
+      onClose(true); // Close modal and signal login success
+      // Navigate back to ReportsDisplay with updated state
+      navigate("/report-display", {
+        state: { 
+          loggedIn: true, 
+          file_key: location.state?.file_key, 
+          reportId: location.state?.reportId, 
+          amount: location.state?.amount 
+        },
+        replace: true,
+      });
     }
   };
 
   return (
-    <div className={`login-popup-container ${responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
-      <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
-        {responseMessage !== 'Login successful' && (
-          <div className="login-title">
-            <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
-          </div>
-        )}
-        <div className="login-paragraph">
-          {!otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
-        </div>
-        {!otpSent ? (
-          <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
-            <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%' }}>
-              <select className="form-select" aria-label="Default select example">
-                <option selected>+91</option>
-                <option value="2">+11</option>
-              </select>
-            </div>
-            <div className="input-group mb-3">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter Your 10 digit Mobile Number"
-                style={{ textAlign: 'center' }}
-                value={number}
-                onChange={(event) => setNumber(event.target.value)}
-                onKeyPress={handleKeyPress}
-                maxLength={10}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-        ) : !isVerified ? (
-          <div className="otp-fields">
-            <input
-              type="text"
-              placeholder="Enter 6-digit OTP"
-              value={otpInput}
-              onChange={(e) => setOtpInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              maxLength={6}
-              disabled={isLoading}
-            />
-          </div>
-        ) : requireDetails ? (
-          <div className="user-details" style={{ width: '70%', margin: 'auto', marginBottom: '20px' }}>
-            <div className="input-group mb-3">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="input-group mb-3">
-              <input
-                type="email"
-                className="form-control"
-                placeholder="Enter Your Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-        ) : null}
-        <div>
-          {responseMessage === 'Login successful' ? (
-            <div className="success-message">
-              <svg
-                className="checkmark"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 52 52"
-              >
-                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
-                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
-              </svg>
-              <p>Login Successful!</p>
-            </div>
-          ) : (
-            <button type="submit" className="login-button" onClick={handleSubmit} disabled={isLoading}>
-              {isVerified && requireDetails ? 'Submit' : isVerified && !requireDetails ? 'CONTINUE' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
-            </button>
-          )}
-        </div>
-        {responseMessage && responseMessage !== 'Login successful' && (
-          <p style={{ color: 'green', textAlign: 'center' }}>{responseMessage}</p>
-        )}
-        {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-        {isLoading && <p className="loading-message">Processing...</p>}
-      </div>
+    <div>
+      <Modal isOpen={true} toggle={onClose} style={{ maxWidth: '650px', width: '100%', marginTop: "15%" }} size="lg">
+        <ModalHeader toggle={onClose}>Login</ModalHeader>
+        <ModalBody>
+          <form onSubmit={handleSubmit}>
+            {!otpSent && !isVerified && (
+              <>
+                <div className="form-group">
+                  <label>Phone Number</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Enter phone number"
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary mt-3" disabled={loading}>
+                  {loading ? 'Sending...' : 'Send OTP'}
+                </button>
+              </>
+            )}
+            {otpSent && !isVerified && (
+              <>
+                <div className="form-group">
+                  <label>Enter OTP</label>
+                  <OtpInput
+                    value={otp}
+                    onChange={setOtp}
+                    numInputs={6}
+                    renderInput={(props) => <input {...props} />}
+                    inputStyle={{
+                      width: '40px',
+                      height: '40px',
+                      margin: '0 5px',
+                      borderRadius: '4px',
+                      border: '1px solid #ccc',
+                    }}
+                    shouldAutoFocus
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary mt-3" disabled={loading}>
+                  {loading ? 'Verifying...' : 'Verify OTP'}
+                </button>
+              </>
+            )}
+            {requireDetails && isVerified && (
+              <>
+                <div className="form-group">
+                  <label>Name</label>
+                  <input type="text" className="form-control" />
+                </div>
+                <div className="form-group">
+                  <label>Email</label>
+                  <input type="email" className="form-control" />
+                </div>
+                <button type="submit" className="btn btn-primary mt-3" disabled={loading}>
+                  Submit Details
+                </button>
+              </>
+            )}
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+          </form>
+        </ModalBody>
+      </Modal>
     </div>
   );
 };
