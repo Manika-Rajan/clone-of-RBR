@@ -14,7 +14,7 @@ import { Modal, ModalBody } from "reactstrap";
 const ReportsDisplay = () => {
   const location = useLocation();
   const { file_key, reportId, amount = 400 } = location.state || {};
-  console.log("Received file_key:", file_key, "reportId:", reportId, "amount:", amount, "location.state:", location.state);
+  console.log("ReportsDisplay mounted - location.state:", location.state);
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
@@ -22,17 +22,23 @@ const ReportsDisplay = () => {
   const { isLogin = false, name, status, email, userId } = state.userInfo || {};
   console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId);
 
-  const [localIsLogin, setLocalIsLogin] = useState(isLogin); // Local state to force re-render
-  const [refreshKey, setRefreshKey] = useState(0); // Forces re-render
+  // Use location.state to check if login occurred
+  const loggedInFromState = location.state?.loggedIn || false;
+  const [localIsLogin, setLocalIsLogin] = useState(isLogin || loggedInFromState);
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    console.log("isLogin updated to:", isLogin, "localIsLogin updated to:", localIsLogin); // Debug both values
-    setLocalIsLogin(isLogin); // Sync local state with context
-  }, [isLogin]);
+    console.log("isLogin updated to:", isLogin, "localIsLogin updated to:", localIsLogin);
+    setLocalIsLogin(isLogin || loggedInFromState); // Sync with context and location
+  }, [isLogin, loggedInFromState]);
+
+  useEffect(() => {
+    console.log("ReportsDisplay unmounted"); // This won't log, but helps debug if added elsewhere
+    return () => console.log("ReportsDisplay unmounted"); // Log on unmount
+  }, []);
 
   useEffect(() => {
     const fetchPresignedUrl = async () => {
@@ -82,7 +88,7 @@ const ReportsDisplay = () => {
       }
     };
     fetchPresignedUrl();
-  }, [file_key, isLogin, userId, refreshKey]);
+  }, [file_key, isLogin, userId]);
 
   const handlePayment = () => {
     console.log("handlePayment - localIsLogin:", localIsLogin, "reportId:", reportId, "amount:", amount);
@@ -99,10 +105,13 @@ const ReportsDisplay = () => {
     console.log("handleLoginClose - loggedIn:", loggedIn);
     setOpenModel(false);
     if (loggedIn) {
-      setRefreshKey(prev => prev + 1); // Force re-render
       setLocalIsLogin(true); // Update local state
-      console.log("Forcing re-render and updating localIsLogin to true");
-      navigate("/payment", { state: { reportId, amount, file_key } }); // Navigate immediately
+      console.log("Updating localIsLogin to true");
+      // Navigate back to self with updated state to force re-mount
+      navigate("/report-display", {
+        state: { file_key, reportId, amount, loggedIn: true },
+        replace: true,
+      });
     }
   };
 
@@ -117,7 +126,7 @@ const ReportsDisplay = () => {
   };
 
   return (
-    <div key={refreshKey}>
+    <div key={`${file_key}-${localIsLogin}`}> {/* Unique key to force re-mount */}
       <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
