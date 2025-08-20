@@ -18,10 +18,11 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state, dispatch: cxtDispatch } = useContext(Store); // Access Store context
-  const { isLogin = false, name, status, email, userId } = state.userInfo || {}; // Default to false if undefined
+  const { state, dispatch: cxtDispatch } = useContext(Store);
+  const { isLogin = false, name, status, email, userId } = state.userInfo || {};
   console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId);
 
+  const [localIsLogin, setLocalIsLogin] = useState(isLogin); // Local state to force re-render
   const [refreshKey, setRefreshKey] = useState(0); // Forces re-render
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,8 +30,9 @@ const ReportsDisplay = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    console.log("isLogin updated to:", isLogin); // Log to verify updates
-  }, [isLogin]); // Re-run when isLogin changes
+    console.log("isLogin updated to:", isLogin, "localIsLogin updated to:", localIsLogin); // Debug both values
+    setLocalIsLogin(isLogin); // Sync local state with context
+  }, [isLogin]);
 
   useEffect(() => {
     const fetchPresignedUrl = async () => {
@@ -83,8 +85,8 @@ const ReportsDisplay = () => {
   }, [file_key, isLogin, userId, refreshKey]);
 
   const handlePayment = () => {
-    console.log("handlePayment - isLogin:", isLogin, "reportId:", reportId, "amount:", amount);
-    if (!isLogin) {
+    console.log("handlePayment - localIsLogin:", localIsLogin, "reportId:", reportId, "amount:", amount);
+    if (!localIsLogin) {
       setOpenModel(true);
     } else if (!reportId) {
       setError('Please generate a report first');
@@ -97,12 +99,10 @@ const ReportsDisplay = () => {
     console.log("handleLoginClose - loggedIn:", loggedIn);
     setOpenModel(false);
     if (loggedIn) {
-      setRefreshKey(prev => prev + 1); // Trigger re-render
-      console.log("Forcing re-render");
-      setTimeout(() => {
-        console.log("Navigating to payment after re-render");
-        navigate("/payment", { state: { reportId, amount, file_key } });
-      }, 0); // Allow re-render before navigation
+      setRefreshKey(prev => prev + 1); // Force re-render
+      setLocalIsLogin(true); // Update local state
+      console.log("Forcing re-render and updating localIsLogin to true");
+      navigate("/payment", { state: { reportId, amount, file_key } }); // Navigate immediately
     }
   };
 
@@ -117,7 +117,7 @@ const ReportsDisplay = () => {
   };
 
   return (
-    <div key={refreshKey}> {/* Key forces re-render when refreshKey changes */}
+    <div key={refreshKey}>
       <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
