@@ -55,22 +55,28 @@ const Login = ({ onClose }) => {
     }
   };
 
-  const completeLogin = (phoneNumber, name, email) => {
-    const token = localStorage.getItem('authToken') || 'temp-token';
-    localStorage.setItem('userInfo', JSON.stringify({ isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }));
-    cxtDispatch({
-      type: 'USER_LOGIN',
-      payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
-    });
-    console.log('completeLogin called with:', { phoneNumber, name, email });
-    setResponseMessage('Login successful');
-    if (onClose) {
-      console.log('Calling onClose from completeLogin with loggedIn: true');
-      onClose(true); // Pass loggedIn status
-    }
-    setIsModalOpen(false);
-    // Removed navigate('/profile') to let parent handle navigation
+const completeLogin = async (data) => {
+  console.log("completeLogin called with:", data);
+  const userInfo = {
+    isLogin: true,
+    userId: data.userId || phone,
+    name: data.name,
+    email: data.email,
+    phone: phone,
   };
+  cxtDispatch({ type: 'USER_LOGIN', payload: userInfo });
+  localStorage.setItem('userInfo', JSON.stringify(userInfo));
+  if (onClose) {
+    console.log("Calling onClose from completeLogin with loggedIn: true");
+    onClose(true); // Close modal and signal login success
+    // Navigate back to ReportsDisplay with updated state
+    navigate("/report-display", {
+      state: { loggedIn: true, file_key: location.state?.file_key, reportId: location.state?.reportId, amount: location.state?.amount },
+      replace: true,
+    });
+  }
+};
+  
 
   const handleKeyPress = (event) => {
     if (event.key === 'Enter' && !isLoading) {
