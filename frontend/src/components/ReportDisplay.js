@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import logo from '../assets/logo.svg';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './ReportDisplay.css';
@@ -18,21 +18,19 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { isLogin = false, name, status, email, userId } = state.userInfo || {};
-  const prevIsLogin = useRef(isLogin);
+  const { state, dispatch: cxtDispatch } = useContext(Store); // Access Store context
+  const { isLogin = false, name, status, email, userId } = state.userInfo || {}; // Default to false if undefined
   console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId);
 
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0); // Forces re-render
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    console.log("isLogin updated to:", isLogin, "prevIsLogin:", prevIsLogin.current);
-    prevIsLogin.current = isLogin;
-  }, [isLogin]);
+    console.log("isLogin updated to:", isLogin); // Log to verify updates
+  }, [isLogin]); // Re-run when isLogin changes
 
   useEffect(() => {
     const fetchPresignedUrl = async () => {
@@ -99,12 +97,12 @@ const ReportsDisplay = () => {
     console.log("handleLoginClose - loggedIn:", loggedIn);
     setOpenModel(false);
     if (loggedIn) {
-      setRefreshKey(prev => prev + 1);
+      setRefreshKey(prev => prev + 1); // Trigger re-render
       console.log("Forcing re-render");
       setTimeout(() => {
         console.log("Navigating to payment after re-render");
         navigate("/payment", { state: { reportId, amount, file_key } });
-      }, 0);
+      }, 0); // Allow re-render before navigation
     }
   };
 
@@ -119,7 +117,7 @@ const ReportsDisplay = () => {
   };
 
   return (
-    <div key={refreshKey}>
+    <div key={refreshKey}> {/* Key forces re-render when refreshKey changes */}
       <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
