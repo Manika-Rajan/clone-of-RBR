@@ -16,6 +16,7 @@ import React from 'react';
 import { StoreProvider } from './Store';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './components/Login';
+import { useStore } from './Store'; // Added missing import
 
 function App() {
   return (
