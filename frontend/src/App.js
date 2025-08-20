@@ -16,11 +16,11 @@ import React from 'react';
 import { StoreProvider } from './Store';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './components/Login';
-import { useStore } from './Store'; // Added missing import
+import { useStore } from './Store'; // Ensure this import is present
 
 function App() {
   return (
-    <StoreProvider>
+    <StoreProvider> {/* This wraps everything, making Store available to all components */}
       <Router>
         <div className="App">
           {window.location.pathname !== "/report-display" && <Navbar />}
@@ -46,9 +46,9 @@ function App() {
   );
 }
 
-// Protected Route Component
+// Protected Route Component (checks if user is logged in)
 const ProtectedRoute = ({ children }) => {
-  const { state } = useStore();
+  const { state } = useStore(); // Safely access Store within StoreProvider
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
 
