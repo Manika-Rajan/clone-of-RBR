@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import logo from '../assets/logo.svg';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './ReportDisplay.css';
@@ -20,51 +20,19 @@ const ReportsDisplay = () => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { isLogin = false, name, status, email, userId } = state.userInfo || {};
+  const prevIsLogin = useRef(isLogin); // Track previous isLogin value
   console.log("ReportsDisplay - state:", state, "isLogin:", isLogin, "userId:", userId);
 
-  const [refreshKey, setRefreshKey] = useState(0); // Force re-render
+  const [refreshKey, setRefreshKey] = useState(0);
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    console.log("isLogin updated to:", isLogin);
+    console.log("isLogin updated to:", isLogin, "prevIsLogin:", prevIsLogin.current);
+    prevIsLogin.current = isLogin; // Update ref after log
   }, [isLogin]);
-
-  const handlePayment = () => {
-    console.log("handlePayment - isLogin:", isLogin, "reportId:", reportId, "amount:", amount);
-    if (!isLogin) {
-      setOpenModel(true);
-    } else if (!reportId) {
-      setError('Please generate a report first');
-    } else {
-      navigate("/payment", { state: { reportId, amount, file_key } });
-    }
-  };
-
-  const handleLoginClose = (loggedIn) => {
-    console.log("handleLoginClose - loggedIn:", loggedIn);
-    setOpenModel(false);
-    if (loggedIn) {
-      // Force re-render to pick up updated context
-      setRefreshKey(prev => prev + 1);
-      console.log("Forcing re-render, navigating to payment");
-      setTimeout(() => {
-        navigate("/payment", { state: { reportId, amount, file_key } });
-      }, 0); // Allow re-render before navigation
-    }
-  };
-
-  const changeStatus = () => {
-    setOpenModel(false);
-    if (isLogin && status) {
-      navigate("/payment", { state: { reportId, amount, file_key } });
-    } else {
-      cxtDispatch({ type: 'SET_REPORT_STATUS' });
-      console.log("changeStatus - isLogin:", isLogin, "status:", status);
-    }
-  };
 
   useEffect(() => {
     const fetchPresignedUrl = async () => {
@@ -114,10 +82,44 @@ const ReportsDisplay = () => {
       }
     };
     fetchPresignedUrl();
-  }, [file_key, isLogin, userId, refreshKey]); // Added refreshKey to re-run on state change
+  }, [file_key, isLogin, userId, refreshKey]);
+
+  const handlePayment = () => {
+    console.log("handlePayment - isLogin:", isLogin, "reportId:", reportId, "amount:", amount);
+    if (!isLogin) {
+      setOpenModel(true);
+    } else if (!reportId) {
+      setError('Please generate a report first');
+    } else {
+      navigate("/payment", { state: { reportId, amount, file_key } });
+    }
+  };
+
+  const handleLoginClose = (loggedIn) => {
+    console.log("handleLoginClose - loggedIn:", loggedIn);
+    setOpenModel(false);
+    if (loggedIn) {
+      setRefreshKey(prev => prev + 1); // Force re-render
+      console.log("Forcing re-render");
+      setTimeout(() => {
+        console.log("Navigating to payment after re-render");
+        navigate("/payment", { state: { reportId, amount, file_key } });
+      }, 0); // Allow re-render before navigation
+    }
+  };
+
+  const changeStatus = () => {
+    setOpenModel(false);
+    if (isLogin && status) {
+      navigate("/payment", { state: { reportId, amount, file_key } });
+    } else {
+      cxtDispatch({ type: 'SET_REPORT_STATUS' });
+      console.log("changeStatus - isLogin:", isLogin, "status:", status);
+    }
+  };
 
   return (
-    <div key={refreshKey}> {/* Force re-render with key */}
+    <div key={refreshKey}>
       <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
