@@ -22,14 +22,13 @@ const ReportsDisplay = () => {
   const { userInfo = {} } = state || {}; // Destructure userInfo with fallback
   console.log("ReportsDisplay - initial context state:", state, "userInfo:", userInfo);
 
-  // Destructure other properties and force isLogin to true for testing
+  // Destructure other properties
   const { name, status, email } = state.userInfo || {};
-  const isLogin = true; // Forced to true for testing
 
-  // Sync with context and localStorage
+  // Sync with context and localStorage, forcing localIsLogin to true for testing
   const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
   const isLoginFromContext = userInfo.isLogin || false;
-  const [localIsLogin, setLocalIsLogin] = useState(isLoginFromContext || storedUserInfo.isLogin || false);
+  const [localIsLogin, setLocalIsLogin] = useState(true); // Forced to true for testing
   const [contextKey, setContextKey] = useState(Date.now()); // State to force re-render
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,17 +37,18 @@ const ReportsDisplay = () => {
 
   useEffect(() => {
     console.log("ReportsDisplay - state updated:", state, "userInfo:", userInfo, "isLoginFromContext:", isLoginFromContext, "storedUserInfo.isLogin:", storedUserInfo.isLogin);
-    const updatedIsLogin = userInfo.isLogin || storedUserInfo.isLogin || false;
-    if (localIsLogin !== updatedIsLogin) {
-      console.log("Updating localIsLogin to:", updatedIsLogin);
-      setLocalIsLogin(updatedIsLogin);
-    }
+    // Temporarily commented out to isolate test
+    // const updatedIsLogin = userInfo.isLogin || storedUserInfo.isLogin || false;
+    // if (localIsLogin !== updatedIsLogin) {
+    //   console.log("Updating localIsLogin to:", updatedIsLogin);
+    //   setLocalIsLogin(updatedIsLogin);
+    // }
     setContextKey(Date.now()); // Update key to force re-render
-    // Force context sync if missing
-    if (!userInfo.isLogin && storedUserInfo.isLogin) {
-      console.log("Forcing context sync with localStorage data:", storedUserInfo);
-      cxtDispatch({ type: 'USER_LOGIN', payload: storedUserInfo });
-    }
+    // Force context sync if missing (commented for test)
+    // if (!userInfo.isLogin && storedUserInfo.isLogin) {
+    //   console.log("Forcing context sync with localStorage data:", storedUserInfo);
+    //   cxtDispatch({ type: 'USER_LOGIN', payload: storedUserInfo });
+    // }
   }, [state, userInfo, cxtDispatch, storedUserInfo.isLogin]);
 
   useEffect(() => {
@@ -121,7 +121,7 @@ const ReportsDisplay = () => {
     console.log("handleLoginClose - loggedIn:", loggedIn);
     setOpenModel(false);
     if (loggedIn) {
-      setLocalIsLogin(true); // Update local state
+      setLocalIsLogin(true); // Update local state (redundant with initial state for test)
       console.log("Updating localIsLogin to true");
       navigate("/report-display", {
         state: { file_key, reportId, amount },
