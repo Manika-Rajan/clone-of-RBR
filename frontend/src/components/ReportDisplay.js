@@ -19,8 +19,9 @@ const ReportsDisplay = () => {
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { userInfo = {} } = state || {}; // Destructure userInfo with fallback
-  console.log("ReportsDisplay - initial context state:", state, "userInfo:", userInfo);
+  const { userInfo = {} } = state || {};
+  const isLogin = userInfo?.isLogin || false; // Moved before console.log
+  console.log("ReportsDisplay - initial context state:", state, "userInfo:", userInfo, "isLogin:", isLogin);
 
   // Destructure other properties
   const { name, status, email } = state.userInfo || {};
