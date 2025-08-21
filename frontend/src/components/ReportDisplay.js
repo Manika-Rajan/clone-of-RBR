@@ -22,7 +22,7 @@ const ReportsDisplay = () => {
   const { userInfo = {} } = state || {};
   //const isLogin = userInfo?.isLogin || false; // Moved before console.log
   const isLogin = true;
-  console.log("ReportsDisplay - initial context state:", state, "userInfo:", userInfo, "isLogin:", true);
+  console.log("ReportsDisplay - initial context state:", state, "userInfo:", userInfo, "isLogin1:", true);
 
   // Destructure other properties
   const { name, status, email } = state.userInfo || {};
