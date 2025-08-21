@@ -171,7 +171,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login key={`login-${loginPhase}`} onClose={() => { setOpenModel(false); changeStatus(); }} onPhaseChange={updateLoginPhase} />
+          <Login key={`login-${loginPhase}-${openModel}`} openModel={openModel} onClose={() => { setOpenModel(false); changeStatus(); }} onPhaseChange={updateLoginPhase} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
