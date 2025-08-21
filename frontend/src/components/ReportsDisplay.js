@@ -25,6 +25,7 @@ const ReportsDisplay = () => {
   console.log("ReportsDisplay - isLogin:", isLogin); // Debug
 
   const [openModel, setOpenModel] = useState(false);
+  const [loginPhase, setLoginPhase] = useState(0); // 0: initial, 1: otp
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState(''); // Added to track errors
@@ -34,6 +35,7 @@ const ReportsDisplay = () => {
     if (!isLogin) {
       console.log("Triggering login modal - setting openModel to true");
       setOpenModel(true); // Ensure modal opens
+      setLoginPhase(0); // Reset phase
     } else if (!reportId) {
       setError('Please generate a report first');
     } else {
@@ -43,6 +45,7 @@ const ReportsDisplay = () => {
 
   const changeStatus = () => {
     setOpenModel(false);
+    setLoginPhase(0); // Reset phase
     if (isLogin && status) {
       navigate("/payment", { state: { reportId, amount, file_key } });
     } else {
@@ -102,8 +105,8 @@ const ReportsDisplay = () => {
 
   useEffect(() => {
     setContextKey(Date.now()); // Re-render on state change
-    console.log("ReportsDisplay - openModel updated to:", openModel); // Debug modal state
-  }, [state, openModel]);
+    console.log("ReportsDisplay - openModel updated to:", openModel, "loginPhase:", loginPhase); // Debug modal state
+  }, [state, openModel, loginPhase]);
 
   return (
     <div key={contextKey}>
@@ -162,7 +165,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => { setOpenModel(false); changeStatus(); }} />
+          <Login key={`login-${loginPhase}`} onClose={() => { setOpenModel(false); changeStatus(); }} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
