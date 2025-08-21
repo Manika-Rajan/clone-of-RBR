@@ -8,7 +8,7 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import Login from './Login';
-import { useStore } from '../Store'; // Updated import
+import { useStore } from '../Store'; // Corrected import
 import { Modal, ModalBody } from "reactstrap";
 
 const ReportsDisplay = () => {
