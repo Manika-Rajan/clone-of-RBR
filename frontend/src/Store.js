@@ -11,7 +11,7 @@ const reducer = (state, action) => {
     case 'USER_LOGIN':
       const newUserInfo = { ...state.userInfo, ...action.payload, isLogin: true };
       localStorage.setItem('userInfo', JSON.stringify(newUserInfo));
-      console.log("Store reducer - USER_LOGIN updated state:", newUserInfo);
+      console.log("Store reducer - USER_LOGIN updated state:", newUserInfo, "full state:", { ...state, userInfo: newUserInfo });
       return { ...state, userInfo: newUserInfo };
     case 'SET_PHONE':
       return { ...state, userInfo: { ...state.userInfo, phone: action.payload } };
@@ -22,7 +22,7 @@ const reducer = (state, action) => {
     case 'SET_PHOTO_URL':
       const updatedUserInfo = { ...state.userInfo, photo_url: action.payload };
       localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
-      console.log("Store reducer - SET_PHOTO_URL updated state:", updatedUserInfo);
+      console.log("Store reducer - SET_PHOTO_URL updated state:", updatedUserInfo, "full state:", { ...state, userInfo: updatedUserInfo });
       return { ...state, userInfo: updatedUserInfo };
     default:
       return state;
@@ -35,7 +35,7 @@ export const Store = createContext(); // Reverted to original export
 // Provider
 export const StoreProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  console.log("StoreProvider rendering with state:", state);
+  console.log("StoreProvider rendering with state:", state); // Debug
   return (
     <Store.Provider value={{ state, dispatch }}>
       {children}
