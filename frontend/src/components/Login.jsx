@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'; // Added for naviga
 import './Login.css';
 import { Store } from '../Store';
 
-const Login = ({ onClose, onPhaseChange }) => {
+const Login = ({ onClose, onPhaseChange, openModel }) => {
   const navigate = useNavigate();
   const location = useLocation(); // Added to preserve state
   const { state, dispatch: cxtDispatch } = useContext(Store);
@@ -17,7 +17,12 @@ const Login = ({ onClose, onPhaseChange }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [requireDetails, setRequireDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(true); // Revert to original
+  const [isModalOpen, setIsModalOpen] = useState(openModel); // Sync with parent
+
+  useEffect(() => {
+    setIsModalOpen(openModel); // Update when parent modal state changes
+    console.log("Login - isModalOpen updated to:", isModalOpen, "openModel:", openModel, "otpSent:", otpSent);
+  }, [openModel, otpSent]);
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
