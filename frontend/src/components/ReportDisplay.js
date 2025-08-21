@@ -22,7 +22,7 @@ const ReportsDisplay = () => {
   const userInfo = state?.userInfo || {};
   console.log("ReportsDisplay - initial context state:", state, "userInfo:", userInfo);
 
-  // Sync with localStorage and context, removing loggedInFromState
+  // Sync with context and localStorage
   const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
   const isLoginFromContext = userInfo.isLogin || false;
   const [localIsLogin, setLocalIsLogin] = useState(isLoginFromContext || storedUserInfo.isLogin || false);
@@ -30,7 +30,7 @@ const ReportsDisplay = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
-  const [renderKey, setRenderKey] = useState(`${Date.now()}-${isLoginFromContext}`); // Dynamic key
+  const [renderKey, setRenderKey] = useState(`${Date.now()}-${userInfo.isLogin || false}`); // Key based on userInfo.isLogin
 
   useEffect(() => {
     console.log("ReportsDisplay - state updated:", state, "userInfo:", userInfo, "isLoginFromContext:", isLoginFromContext, "storedUserInfo.isLogin:", storedUserInfo.isLogin);
