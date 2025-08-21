@@ -8,7 +8,7 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import Login from './Login';
-import { Store } from '../Store';
+import { useStore } from '../Store'; // Updated to use custom hook
 import { Modal, ModalBody } from "reactstrap";
 
 const ReportsDisplay = () => {
@@ -18,7 +18,7 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state, dispatch: cxtDispatch } = useContext(Store); // Added dispatch for potential updates
+  const { state, dispatch: cxtDispatch } = useStore(); // Using custom hook
   const userInfo = state?.userInfo || {};
   console.log("ReportsDisplay - initial state:", state, "userInfo:", userInfo);
 
@@ -31,6 +31,7 @@ const ReportsDisplay = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
+  const [renderKey, setRenderKey] = useState(Date.now()); // Force re-render
 
   useEffect(() => {
     console.log("ReportsDisplay - state updated:", state, "userInfo:", userInfo, "isLoginFromContext:", isLoginFromContext, "loggedInFromState:", loggedInFromState, "storedUserInfo.isLogin:", storedUserInfo.isLogin);
@@ -38,6 +39,7 @@ const ReportsDisplay = () => {
     if (localIsLogin !== updatedIsLogin) {
       console.log("Updating localIsLogin to:", updatedIsLogin);
       setLocalIsLogin(updatedIsLogin);
+      setRenderKey(Date.now()); // Force re-render
     }
     // Ensure context is updated if localStorage has newer data
     if (!userInfo.isLogin && storedUserInfo.isLogin) {
@@ -134,7 +136,7 @@ const ReportsDisplay = () => {
   };
 
   return (
-    <div key={`${file_key}-${localIsLogin}`}>
+    <div key={`${renderKey}-${file_key}-${localIsLogin}`}>
       <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
