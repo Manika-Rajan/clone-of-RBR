@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'; // Added for naviga
 import './Login.css';
 import { Store } from '../Store';
 
-const Login = ({ onClose }) => {
+const Login = ({ onClose, onPhaseChange }) => {
   const navigate = useNavigate();
   const location = useLocation(); // Added to preserve state
   const { state, dispatch: cxtDispatch } = useContext(Store);
@@ -123,6 +123,7 @@ const Login = ({ onClose }) => {
           localStorage.setItem('userPhone', phoneNumber);
           setOtpSent(true);
           console.log('OTP sent, updating UI to OTP input phase');
+          if (onPhaseChange) onPhaseChange(1); // Update loginPhase to 1 for OTP phase
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
