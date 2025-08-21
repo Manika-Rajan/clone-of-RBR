@@ -30,18 +30,18 @@ const reducer = (state, action) => {
 };
 
 // Context
-const StoreContext = createContext();
+export const Store = createContext(); // Reverted to original export
 
 // Provider
 export const StoreProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   console.log("StoreProvider rendering with state:", state);
   return (
-    <StoreContext.Provider value={{ state, dispatch }}>
+    <Store.Provider value={{ state, dispatch }}>
       {children}
-    </StoreContext.Provider>
+    </Store.Provider>
   );
 };
 
-// Custom Hook
-export const useStore = () => useContext(StoreContext);
+// Custom Hook (optional, but not used if reverting)
+export const useStore = () => useContext(Store);
