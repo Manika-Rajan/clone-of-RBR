@@ -70,7 +70,7 @@ const Login = ({ onClose }) => {
     setTimeout(() => {
       if (onClose) {
         console.log('Calling onClose from completeLogin');
-        onClose();
+        onClose(); // This should sync with parent
       }
       setIsModalOpen(false); // Update local state
       // Redirect to report-display with preserved state
