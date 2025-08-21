@@ -1,17 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { Store } from '../Store';
 import { Modal, ModalBody, ModalHeader } from "reactstrap";
-import OtpInput from 'react-otp-input';
 
 const Login = ({ onClose }) => {
   const navigate = useNavigate();
-  const location = useLocation(); // Use hook for location
+  const location = useLocation();
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
 
-  const [phone, setPhone] = useState(userInfo.phone || ''); // Default to userInfo.phone or empty
+  const [phone, setPhone] = useState(userInfo.phone || '');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -90,7 +89,7 @@ const Login = ({ onClose }) => {
     console.log("completeLogin called with:", data);
     const userInfo = {
       isLogin: true,
-      userId: data.userId || phone, // Use phone as fallback
+      userId: data.userId || phone,
       name: data.name,
       email: data.email,
       phone: phone,
@@ -99,8 +98,7 @@ const Login = ({ onClose }) => {
     localStorage.setItem('userInfo', JSON.stringify(userInfo));
     if (onClose) {
       console.log("Calling onClose from completeLogin with loggedIn: true");
-      onClose(true); // Close modal and signal login success
-      // Navigate back to ReportsDisplay with updated state
+      onClose(true);
       navigate("/report-display", {
         state: { 
           loggedIn: true, 
@@ -141,19 +139,14 @@ const Login = ({ onClose }) => {
               <>
                 <div className="form-group">
                   <label>Enter OTP</label>
-                  <OtpInput
+                  <input
+                    type="text"
+                    className="form-control"
                     value={otp}
-                    onChange={setOtp}
-                    numInputs={6}
-                    renderInput={(props) => <input {...props} />}
-                    inputStyle={{
-                      width: '40px',
-                      height: '40px',
-                      margin: '0 5px',
-                      borderRadius: '4px',
-                      border: '1px solid #ccc',
-                    }}
-                    shouldAutoFocus
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter 6-digit OTP"
+                    maxLength="6"
+                    required
                   />
                 </div>
                 <button type="submit" className="btn btn-primary mt-3" disabled={loading}>
