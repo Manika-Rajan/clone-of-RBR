@@ -20,9 +20,10 @@ const ReportsDisplay = () => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const [contextKey, setContextKey] = useState(Date.now()); // Force re-render
-  const { isLogin = false, name, status, email } = state || {}; // Fallback to false
+  const { userInfo = { isLogin: false, name: '', status: false, email: '' } } = state || {}; // Destructure userInfo
+  const { isLogin, name, status, email } = userInfo; // Extract nested properties
 
-  console.log("ReportsDisplay - isLogin:", isLogin); // Debug
+  console.log("ReportsDisplay - isLogin:", isLogin, "state:", state); // Debug
 
   const [openModel, setOpenModel] = useState(false);
   const [loginPhase, setLoginPhase] = useState(0); // 0: initial, 1: otp
@@ -72,7 +73,7 @@ const ReportsDisplay = () => {
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
           headers,
-          body: JSON.stringify({ file_key, userId: isLogin ? state.userId : null }),
+          body: JSON.stringify({ file_key, userId: isLogin ? userInfo.userId : null }),
         });
         console.log("Presigned URL response status:", response.status);
         if (!response.ok) {
@@ -101,7 +102,7 @@ const ReportsDisplay = () => {
       }
     };
     fetchPresignedUrl();
-  }, [file_key, isLogin, state.userId]);
+  }, [file_key, isLogin, userInfo.userId]);
 
   useEffect(() => {
     setContextKey(Date.now()); // Re-render on state change
