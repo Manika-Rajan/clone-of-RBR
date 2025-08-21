@@ -19,18 +19,22 @@ const ReportsDisplay = () => {
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const userInfo = state?.userInfo || {};
+  const { userInfo = {} } = state || {}; // Destructure userInfo with fallback
   console.log("ReportsDisplay - initial context state:", state, "userInfo:", userInfo);
+
+  // Destructure other properties and set isLogin
+  const { name, status, email } = state.userInfo || {};
+  const isLogin = userInfo?.isLogin || false;
 
   // Sync with context and localStorage
   const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
   const isLoginFromContext = userInfo.isLogin || false;
   const [localIsLogin, setLocalIsLogin] = useState(isLoginFromContext || storedUserInfo.isLogin || false);
+  const [contextKey, setContextKey] = useState(Date.now()); // State to force re-render
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
-  const [renderKey, setRenderKey] = useState(`${Date.now()}-${userInfo.isLogin || false}`); // Key based on userInfo.isLogin
 
   useEffect(() => {
     console.log("ReportsDisplay - state updated:", state, "userInfo:", userInfo, "isLoginFromContext:", isLoginFromContext, "storedUserInfo.isLogin:", storedUserInfo.isLogin);
@@ -38,8 +42,8 @@ const ReportsDisplay = () => {
     if (localIsLogin !== updatedIsLogin) {
       console.log("Updating localIsLogin to:", updatedIsLogin);
       setLocalIsLogin(updatedIsLogin);
-      setRenderKey(`${Date.now()}-${updatedIsLogin}`); // Force re-render
     }
+    setContextKey(Date.now()); // Update key to force re-render
     // Force context sync if missing
     if (!userInfo.isLogin && storedUserInfo.isLogin) {
       console.log("Forcing context sync with localStorage data:", storedUserInfo);
@@ -137,7 +141,7 @@ const ReportsDisplay = () => {
   };
 
   return (
-    <div key={renderKey}>
+    <div key={contextKey}>
       <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
