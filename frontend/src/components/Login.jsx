@@ -17,7 +17,6 @@ const Login = ({ onClose }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [requireDetails, setRequireDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(true); // Modal starts open
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -72,7 +71,6 @@ const Login = ({ onClose }) => {
         console.log('Calling onClose from completeLogin');
         onClose();
       }
-      setIsModalOpen(false); // Update local state
       // Redirect to report-display with preserved state
       navigate("/report-display", {
         state: { 
@@ -122,6 +120,7 @@ const Login = ({ onClose }) => {
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
           setOtpSent(true);
+          console.log('OTP sent, updating UI to OTP input phase');
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
@@ -161,6 +160,7 @@ const Login = ({ onClose }) => {
             !fetchedEmail ||
             fetchedEmail.trim() === ''
           );
+          console.log('OTP verified, requireDetails:', requireDetails);
         } else {
           setError(`Error: ${data.error || 'Invalid OTP'}`);
         }
@@ -195,7 +195,7 @@ const Login = ({ onClose }) => {
 
   return (
     <div className={`login-popup-container ${responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
-      <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
+      <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`}>
         {responseMessage !== 'Login successful' && (
           <div className="login-title">
             <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
