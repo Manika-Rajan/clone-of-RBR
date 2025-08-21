@@ -20,21 +20,21 @@ const ReportsDisplay = () => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state } = useContext(Store); // Simplified to state for debugging
   const userInfo = state?.userInfo || {};
-  const isLogin = userInfo.isLogin || false; // Default to false if undefined
-  console.log("ReportsDisplay - state:", state, "userInfo:", userInfo, "isLogin:", isLogin);
+  const isLoginFromContext = userInfo.isLogin || false; // Default to false if undefined
+  console.log("ReportsDisplay - state:", state, "userInfo:", userInfo, "isLoginFromContext:", isLoginFromContext);
 
-  // Fallback to localStorage if context fails
-  const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-  const [localIsLogin, setLocalIsLogin] = useState(isLogin || storedUserInfo.isLogin || false);
+  // Use location.state as a fallback and sync with context
+  const loggedInFromState = location.state?.loggedIn || false;
+  const [localIsLogin, setLocalIsLogin] = useState(isLoginFromContext || loggedInFromState);
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    console.log("isLogin updated to:", isLogin, "localIsLogin updated to:", localIsLogin);
-    setLocalIsLogin(isLogin || storedUserInfo.isLogin || false); // Sync with context or localStorage
-  }, [isLogin, storedUserInfo.isLogin]);
+    console.log("isLogin updated to:", isLoginFromContext, "localIsLogin updated to:", localIsLogin, "loggedInFromState:", loggedInFromState);
+    setLocalIsLogin(isLoginFromContext || loggedInFromState); // Sync with context and location
+  }, [isLoginFromContext, loggedInFromState]);
 
   useEffect(() => {
     return () => console.log("ReportsDisplay unmounted"); // Log on unmount
@@ -48,18 +48,18 @@ const ReportsDisplay = () => {
         setIsLoading(false);
         return;
       }
-      console.log("Fetching presigned URL for file_key:", file_key, "isLogin:", isLogin, "userId:", userInfo.userId);
+      console.log("Fetching presigned URL for file_key:", file_key, "isLogin:", isLoginFromContext, "userId:", userInfo.userId);
       setIsLoading(true);
       try {
         const headers = { 'Content-Type': 'application/json' };
-        if (isLogin) {
+        if (isLoginFromContext) {
           const token = localStorage.getItem('token');
           if (token) headers['Authorization'] = `Bearer ${token}`;
         }
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
           headers,
-          body: JSON.stringify({ file_key, userId: isLogin ? userInfo.userId : null }),
+          body: JSON.stringify({ file_key, userId: isLoginFromContext ? userInfo.userId : null }),
         });
         console.log("Presigned URL response status:", response.status);
         if (!response.ok) {
@@ -88,7 +88,7 @@ const ReportsDisplay = () => {
       }
     };
     fetchPresignedUrl();
-  }, [file_key, isLogin, userInfo.userId]);
+  }, [file_key, isLoginFromContext, userInfo.userId]);
 
   const handlePayment = () => {
     console.log("handlePayment - localIsLogin:", localIsLogin, "reportId:", reportId, "amount:", amount);
@@ -116,11 +116,11 @@ const ReportsDisplay = () => {
 
   const changeStatus = () => {
     setOpenModel(false);
-    if (isLogin && status) {
+    if (isLoginFromContext && userInfo.status) {
       navigate("/payment", { state: { reportId, amount, file_key } });
     } else {
       cxtDispatch({ type: 'SET_REPORT_STATUS' });
-      console.log("changeStatus - isLogin:", isLogin, "status:", userInfo.status);
+      console.log("changeStatus - isLogin:", isLoginFromContext, "status:", userInfo.status);
     }
   };
 
@@ -185,7 +185,7 @@ const ReportsDisplay = () => {
           {userInfo.status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
-              <p className='success-email'>{email}</p>
+              <p className='success-email'>{userInfo.email}</p>
               <button className='btn btn-primary' onClick={changeStatus}>Ok</button>
             </div>
           )}
