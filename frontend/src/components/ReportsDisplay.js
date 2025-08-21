@@ -21,7 +21,7 @@ const ReportsDisplay = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { isLogin, name, status, email } = state;
 
-  console.log("ReportsDisplay - isLogin:", isLogin); // Debug
+  console.log("ReportsDisplay - isLogin1:", isLogin); // Debug
 
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
