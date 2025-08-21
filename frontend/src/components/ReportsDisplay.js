@@ -162,7 +162,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => { setOpenModel(false); changeStatus(); }} />
+          <Login key={otpSent ? 'otp' : 'phone'} onClose={() => { setOpenModel(false); changeStatus(); }} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
