@@ -8,7 +8,7 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import Login from './Login';
-import { useStore } from '../Store'; // Corrected import
+import { Store } from '../Store'; // Reverted to original import
 import { Modal, ModalBody } from "reactstrap";
 
 const ReportsDisplay = () => {
@@ -18,7 +18,7 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state, dispatch: cxtDispatch } = useStore(); // Using custom hook
+  const { state, dispatch: cxtDispatch } = useContext(Store); // Using useContext with Store
   const userInfo = state?.userInfo || {};
   console.log("ReportsDisplay - initial state:", state, "userInfo:", userInfo);
 
