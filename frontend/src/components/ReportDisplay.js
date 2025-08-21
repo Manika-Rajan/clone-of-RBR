@@ -22,9 +22,9 @@ const ReportsDisplay = () => {
   const { userInfo = {} } = state || {}; // Destructure userInfo with fallback
   console.log("ReportsDisplay - initial context state:", state, "userInfo:", userInfo);
 
-  // Destructure other properties and set isLogin
+  // Destructure other properties and force isLogin to true for testing
   const { name, status, email } = state.userInfo || {};
-  const isLogin = userInfo?.isLogin || false;
+  const isLogin = true; // Forced to true for testing
 
   // Sync with context and localStorage
   const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
