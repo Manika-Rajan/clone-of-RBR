@@ -18,23 +18,32 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state } = useContext(Store); // Simplified to state for debugging
+  const { state, dispatch: cxtDispatch } = useContext(Store); // Added dispatch for potential updates
   const userInfo = state?.userInfo || {};
-  const isLoginFromContext = userInfo.isLogin || false; // Default to false if undefined
-  console.log("ReportsDisplay - state:", state, "userInfo:", userInfo, "isLoginFromContext:", isLoginFromContext);
+  console.log("ReportsDisplay - initial state:", state, "userInfo:", userInfo);
 
-  // Use location.state as a fallback and sync with context
+  // Sync with localStorage and context
+  const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  const isLoginFromContext = userInfo.isLogin || false;
   const loggedInFromState = location.state?.loggedIn || false;
-  const [localIsLogin, setLocalIsLogin] = useState(isLoginFromContext || loggedInFromState);
+  const [localIsLogin, setLocalIsLogin] = useState(isLoginFromContext || loggedInFromState || storedUserInfo.isLogin || false);
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    console.log("isLogin updated to:", isLoginFromContext, "localIsLogin updated to:", localIsLogin, "loggedInFromState:", loggedInFromState);
-    setLocalIsLogin(isLoginFromContext || loggedInFromState); // Sync with context and location
-  }, [isLoginFromContext, loggedInFromState]);
+    console.log("ReportsDisplay - state updated:", state, "userInfo:", userInfo, "isLoginFromContext:", isLoginFromContext, "loggedInFromState:", loggedInFromState, "storedUserInfo.isLogin:", storedUserInfo.isLogin);
+    const updatedIsLogin = userInfo.isLogin || storedUserInfo.isLogin || loggedInFromState;
+    if (localIsLogin !== updatedIsLogin) {
+      console.log("Updating localIsLogin to:", updatedIsLogin);
+      setLocalIsLogin(updatedIsLogin);
+    }
+    // Ensure context is updated if localStorage has newer data
+    if (!userInfo.isLogin && storedUserInfo.isLogin) {
+      cxtDispatch({ type: 'USER_LOGIN', payload: storedUserInfo });
+    }
+  }, [state, userInfo, loggedInFromState, cxtDispatch, storedUserInfo.isLogin]);
 
   useEffect(() => {
     return () => console.log("ReportsDisplay unmounted"); // Log on unmount
