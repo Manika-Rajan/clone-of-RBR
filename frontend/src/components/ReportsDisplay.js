@@ -19,7 +19,8 @@ const ReportsDisplay = () => {
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { isLogin, name, status, email } = state;
+  const [contextKey, setContextKey] = useState(Date.now()); // Force re-render
+  const { isLogin = false, name, status, email } = state || {}; // Fallback to false
 
   console.log("ReportsDisplay - isLogin:", isLogin); // Debug
 
@@ -98,8 +99,12 @@ const ReportsDisplay = () => {
     fetchPresignedUrl();
   }, [file_key, isLogin, state.userId]);
 
+  useEffect(() => {
+    setContextKey(Date.now()); // Re-render on state change
+  }, [state]);
+
   return (
-    <>
+    <div key={contextKey}>
       <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
@@ -165,7 +170,7 @@ const ReportsDisplay = () => {
           )}
         </ModalBody>
       </Modal>
-    </>
+    </div>
   );
 };
 
