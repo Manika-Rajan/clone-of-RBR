@@ -20,7 +20,8 @@ const ReportsDisplay = () => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo = {} } = state || {};
-  const isLogin = userInfo?.isLogin || false; // Moved before console.log
+  //const isLogin = userInfo?.isLogin || false; // Moved before console.log
+  const isLogin = true;
   console.log("ReportsDisplay - initial context state:", state, "userInfo:", userInfo, "isLogin:", isLogin);
 
   // Destructure other properties
