@@ -32,7 +32,8 @@ const ReportsDisplay = () => {
   const handlePayment = () => {
     console.log("handlePayment - isLogin:", isLogin, "reportId:", reportId, "amount:", amount);
     if (!isLogin) {
-      setOpenModel(true);
+      console.log("Triggering login modal - setting openModel to true");
+      setOpenModel(true); // Ensure modal opens
     } else if (!reportId) {
       setError('Please generate a report first');
     } else {
@@ -101,7 +102,8 @@ const ReportsDisplay = () => {
 
   useEffect(() => {
     setContextKey(Date.now()); // Re-render on state change
-  }, [state]);
+    console.log("ReportsDisplay - openModel updated to:", openModel); // Debug modal state
+  }, [state, openModel]);
 
   return (
     <div key={contextKey}>
