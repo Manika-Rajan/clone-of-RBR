@@ -54,6 +54,11 @@ const ReportsDisplay = () => {
     }
   };
 
+  const updateLoginPhase = (phase) => {
+    console.log("Updating loginPhase to:", phase);
+    setLoginPhase(phase);
+  };
+
   useEffect(() => {
     const fetchPresignedUrl = async () => {
       if (!file_key) {
@@ -166,7 +171,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login key={`login-${loginPhase}`} onClose={() => { setOpenModel(false); changeStatus(); }} />
+          <Login key={`login-${loginPhase}`} onClose={() => { setOpenModel(false); changeStatus(); }} onPhaseChange={updateLoginPhase} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
