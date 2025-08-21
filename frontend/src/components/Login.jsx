@@ -17,6 +17,7 @@ const Login = ({ onClose }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [requireDetails, setRequireDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true); // Revert to original
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -71,6 +72,7 @@ const Login = ({ onClose }) => {
         console.log('Calling onClose from completeLogin');
         onClose();
       }
+      setIsModalOpen(false); // Update local state
       // Redirect to report-display with preserved state
       navigate("/report-display", {
         state: { 
@@ -195,7 +197,7 @@ const Login = ({ onClose }) => {
 
   return (
     <div className={`login-popup-container ${responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
-      <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`}>
+      <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {responseMessage !== 'Login successful' && (
           <div className="login-title">
             <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
