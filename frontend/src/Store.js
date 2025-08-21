@@ -1,60 +1,47 @@
-import { createContext, useReducer, useContext } from "react";
+import React, { createContext, useReducer, useContext } from 'react';
 
-export const Store = createContext();
-
+// Initial State
 const initialState = {
-  userInfo: localStorage.getItem("userInfo")
-    ? JSON.parse(localStorage.getItem("userInfo"))
-    : { isLogin: false, userId: '', name: '', phone: '', email: '' },
-  totalPrice: 0,
-  status: false,
+  userInfo: JSON.parse(localStorage.getItem('userInfo')) || { isLogin: false },
 };
 
+// Reducer
 const reducer = (state, action) => {
   switch (action.type) {
-    case 'SET_PRICE':
-      return { ...state, totalPrice: action.payload };
     case 'USER_LOGIN':
-      const userInfo = {
-        isLogin: true,
-        userId: action.payload.userId || state.userInfo.userId,
-        name: action.payload.name || state.userInfo.name,
-        email: action.payload.email || state.userInfo.email,
-        phone: action.payload.phone || state.userInfo.phone,
-      };
-      localStorage.setItem("userInfo", JSON.stringify(userInfo));
-      return { ...state, userInfo };
-    case 'SET_USER_ID':
-      const updatedUserInfo = { ...state.userInfo, userId: action.payload };
-      localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
-      return { ...state, userInfo: updatedUserInfo };
-    case 'SET_NAME':
-      const updatedNameInfo = { ...state.userInfo, name: action.payload };
-      localStorage.setItem("userInfo", JSON.stringify(updatedNameInfo));
-      return { ...state, userInfo: updatedNameInfo };
+      const newUserInfo = { ...state.userInfo, ...action.payload, isLogin: true };
+      localStorage.setItem('userInfo', JSON.stringify(newUserInfo));
+      console.log("Store reducer - USER_LOGIN updated state:", newUserInfo);
+      return { ...state, userInfo: newUserInfo };
     case 'SET_PHONE':
-      const updatedPhoneInfo = { ...state.userInfo, phone: action.payload };
-      localStorage.setItem("userInfo", JSON.stringify(updatedPhoneInfo));
-      return { ...state, userInfo: updatedPhoneInfo };
-    case 'SET_EMAIL':
-      const updatedEmailInfo = { ...state.userInfo, email: action.payload };
-      localStorage.setItem("userInfo", JSON.stringify(updatedEmailInfo));
-      return { ...state, userInfo: updatedEmailInfo };
+      return { ...state, userInfo: { ...state.userInfo, phone: action.payload } };
+    case 'SET_USER_ID':
+      return { ...state, userInfo: { ...state.userInfo, userId: action.payload } };
     case 'SET_REPORT_STATUS':
-      return { ...state, status: !state.status };
-    case 'LOGOUT':
-      localStorage.removeItem("userInfo");
-      return { ...state, userInfo: { isLogin: false, userId: '', name: '', phone: '', email: '' } };
+      return { ...state, userInfo: { ...state.userInfo, status: !state.userInfo.status } };
+    case 'SET_PHOTO_URL':
+      const updatedUserInfo = { ...state.userInfo, photo_url: action.payload };
+      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
+      console.log("Store reducer - SET_PHOTO_URL updated state:", updatedUserInfo);
+      return { ...state, userInfo: updatedUserInfo };
     default:
       return state;
   }
 };
 
-export function StoreProvider(props) {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  console.log("StoreProvider rendering with state:", state); // Add this line
-  const value = { state, dispatch };
-  return <Store.Provider value={value}>{props.children}</Store.Provider>;
-}
+// Context
+const StoreContext = createContext();
 
-export const useStore = () => useContext(Store);
+// Provider
+export const StoreProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  console.log("StoreProvider rendering with state:", state);
+  return (
+    <StoreContext.Provider value={{ state, dispatch }}>
+      {children}
+    </StoreContext.Provider>
+  );
+};
+
+// Custom Hook
+export const useStore = () => useContext(StoreContext);
