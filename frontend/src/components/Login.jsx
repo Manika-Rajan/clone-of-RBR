@@ -14,8 +14,6 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   const [responseMessage, setResponseMessage] = useState('');
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [requireDetails, setRequireDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(openModel); // Sync with parent
 
@@ -29,42 +27,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
     if (storedPhone) setNumber(storedPhone.replace('+91', ''));
   }, []);
 
-  useEffect(() => {
-    // Auto-trigger continue for existing users after verification
-    if (isVerified && !requireDetails && !isLoading) {
-      console.log('useEffect triggered, calling handleContinue');
-      handleContinue();
-    }
-  }, [isVerified, requireDetails, isLoading]);
-
-  const saveUserDetails = async (phoneNumber, name, email) => {
-    if (!phoneNumber || !name || !email) {
-      throw new Error('Missing required fields for saving user details');
-    }
-    const requestBody = { action: 'update', phone_number: phoneNumber, name, email };
-    console.log('saveUserDetails request:', requestBody);
-    try {
-      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
-      console.log('saveUserDetails status:', response.status);
-      const data = await response.json();
-      console.log('saveUserDetails response:', data);
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP error ${response.status}`);
-      }
-      return true;
-    } catch (err) {
-      console.error('saveUserDetails exception:', err.message, err.stack);
-      throw new Error(`Failed to save user details: ${err.message}`);
-    }
-  };
-
   const completeLogin = (phoneNumber, name, email) => {
-    const token = localStorage.getItem('authToken') || 'temp-token';
-    // Store login details in localStorage
     localStorage.setItem('userInfo', JSON.stringify({ isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }));
     cxtDispatch({
       type: 'USER_LOGIN',
@@ -78,7 +41,6 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         onClose(); // This should sync with parent
       }
       setIsModalOpen(false); // Update local state
-      // Redirect to report-display with preserved state
       navigate("/report-display", {
         state: { 
           loggedIn: true, 
@@ -91,18 +53,11 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
     }, 2000);
   };
 
-  const handleKeyPress = (event) => {
-    if (event.key === 'Enter' && !isLoading) {
-      event.preventDefault();
-      handleSubmit(event);
-    }
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (isLoading) return;
     setIsLoading(true);
-    console.log('handleSubmit triggered, otpSent:', otpSent, 'isVerified:', isVerified, 'requireDetails:', requireDetails);
+    console.log('handleSubmit triggered, otpSent:', otpSent);
 
     try {
       if (!otpSent) {
@@ -126,13 +81,12 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
           setResponseMessage('OTP sent! Enter it below:');
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
-          setOtpSent(true);
-          console.log('OTP sent, updating UI to OTP input phase');
+          setOtpSent(true); // Move outside try to ensure update
           if (onPhaseChange) onPhaseChange(1); // Update loginPhase to 1 for OTP phase
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
-      } else if (!isVerified) {
+      } else {
         if (otpInput.length !== 6 || !/^\d+$/.test(otpInput)) {
           setError('Please enter a valid 6-digit OTP');
           return;
@@ -155,33 +109,12 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         console.log('verify-otp parsed data:', data);
         if (response.status === 200) {
           setResponseMessage('OTP verified successfully');
-          setIsVerified(true);
-          const fetchedName = data.user?.name || '';
+          const fetchedName = data.user?.name || phoneNumber;
           const fetchedEmail = data.user?.email || '';
-          const isExistingUser = data.isExistingUser || false;
-          setName(fetchedName && fetchedName !== phoneNumber && fetchedName.trim() !== '' ? fetchedName : '');
-          setEmail(fetchedEmail);
-          setRequireDetails(
-            !isExistingUser ||
-            !fetchedName ||
-            fetchedName.trim() === '' ||
-            !fetchedEmail ||
-            fetchedEmail.trim() === ''
-          );
-          console.log('OTP verified, requireDetails:', requireDetails);
+          completeLogin(phoneNumber, fetchedName, fetchedEmail);
         } else {
           setError(`Error: ${data.error || 'Invalid OTP'}`);
         }
-      } else if (requireDetails) {
-        if (!name.trim() || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          setError('Please enter a valid name and email');
-          return;
-        }
-        setError('');
-        setResponseMessage('');
-        const phoneNumber = `+91${number}`;
-        await saveUserDetails(phoneNumber, name, email);
-        completeLogin(phoneNumber, name, email);
       }
     } catch (err) {
       console.error('handleSubmit error:', err.message, err.stack, 'at', new Date().toISOString());
@@ -191,13 +124,10 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
     }
   };
 
-  const handleContinue = () => {
-    console.log('handleContinue triggered, isVerified:', isVerified, 'requireDetails:', requireDetails);
-    if (isVerified && !requireDetails) {
-      const phoneNumber = `+91${number}`;
-      const fetchedName = name || number; // Fallback to phone if no name
-      const fetchedEmail = email || ''; // Fallback to empty if no email
-      completeLogin(phoneNumber, fetchedName, fetchedEmail);
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter' && !isLoading) {
+      event.preventDefault();
+      handleSubmit(event);
     }
   };
 
@@ -206,7 +136,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
       <div className={`login-popup ${responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {responseMessage !== 'Login successful' && (
           <div className="login-title">
-            <h3>{isVerified && requireDetails ? 'Enter Your Details' : otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
+            <h3>{otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
           </div>
         )}
         <div className="login-paragraph">
@@ -234,7 +164,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
               />
             </div>
           </div>
-        ) : !isVerified ? (
+        ) : (
           <div className="otp-fields">
             <input
               type="text"
@@ -246,32 +176,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
               disabled={isLoading}
             />
           </div>
-        ) : requireDetails ? (
-          <div className="user-details" style={{ width: '70%', margin: 'auto', marginBottom: '20px' }}>
-            <div className="input-group mb-3">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="input-group mb-3">
-              <input
-                type="email"
-                className="form-control"
-                placeholder="Enter Your Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-        ) : null}
+        )}
         <div>
           {responseMessage === 'Login successful' ? (
             <div className="success-message">
@@ -287,7 +192,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
             </div>
           ) : (
             <button type="submit" className="login-button" onClick={handleSubmit} disabled={isLoading}>
-              {isVerified && requireDetails ? 'Submit' : isVerified && !requireDetails ? 'CONTINUE' : otpSent ? 'VERIFY OTP' : 'SEND OTP'}
+              {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
         </div>
