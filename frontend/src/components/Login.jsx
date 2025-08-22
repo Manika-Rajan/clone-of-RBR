@@ -39,15 +39,15 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   }, []);
 
   useEffect(() => {
-    if (loginState.otpSent && updateTrigger > 0) {
-      console.log('Effect triggered - State updated to otpSent:', loginState.otpSent);
-      if (onPhaseChange) {
+    if (updateTrigger > 0) {
+      console.log('Effect triggered - updateTrigger:', updateTrigger, 'otpSent:', loginState.otpSent);
+      if (loginState.otpSent && onPhaseChange) {
         console.log('Calling updateLoginPhase(1)');
         onPhaseChange(1); // Trigger phase change
       }
       forceUpdate(); // Force re-render after state update
     }
-  }, [loginState.otpSent, updateTrigger, onPhaseChange]);
+  }, [updateTrigger, loginState.otpSent, onPhaseChange]);
 
   const forceUpdate = () => {
     renderTrigger.current += 1;
@@ -97,8 +97,11 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         const data = await response.json();
         console.log('send-otp response:', data);
         if (response.ok) {
-          dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSent: true } });
-          setUpdateTrigger(prev => prev + 1); // Trigger effect
+          await new Promise(resolve => {
+            dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSent: true } });
+            setUpdateTrigger(prev => prev + 1); // Trigger effect after state update
+            resolve();
+          });
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
         } else {
