@@ -23,7 +23,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   const [loginState, dispatch] = useReducer(loginReducer, initialState);
   const [isModalOpen, setIsModalOpen] = useState(openModel);
   const renderTrigger = useRef(0);
-  const [updateTrigger, setUpdateTrigger] = useState(0); // Revert to state for trigger
+  const [updateTrigger, setUpdateTrigger] = useState(0); // State for trigger
 
   useEffect(() => {
     setIsModalOpen(openModel);
@@ -87,7 +87,9 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
           dispatch({ type: 'SET_STATE', payload: { error: 'Please enter a valid 10-digit mobile number', isLoading: false } });
           return;
         }
-        dispatch({ type: 'SET_STATE', payload: { error: '', responseMessage: '', otpInput: '' } });
+        dispatch({ type: 'SET_STATE', payload: { error: '', responseMessage: '', otpInput: '', otpSent: true } }); // Combine state updates
+        setUpdateTrigger(prev => prev + 1); // Immediate trigger update
+        console.log('State updated to otpSent:', true, 'Update trigger set to:', updateTrigger + 1);
         const phoneNumber = `+91${loginState.number}`;
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
           method: 'POST',
@@ -97,17 +99,11 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         console.log('send-otp status:', response.status, 'at', new Date().toISOString());
         const data = await response.json();
         console.log('send-otp response:', data);
-        if (response.ok) {
-          dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSent: true } });
-          console.log('State updated to otpSent:', true);
-          setTimeout(() => {
-            setUpdateTrigger(prev => prev + 1); // Trigger effect after state update
-            console.log('Update trigger set to:', updateTrigger + 1);
-          }, 0);
+        if (!response.ok) {
+          dispatch({ type: 'SET_STATE', payload: { error: `Error: ${data.error || data.message || 'Unknown error'}`, isLoading: false, otpSent: false } });
+        } else {
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
-        } else {
-          dispatch({ type: 'SET_STATE', payload: { error: `Error: ${data.error || data.message || 'Unknown error'}`, isLoading: false } });
         }
       } else {
         if (loginState.otpInput.length !== 6 || !/^\d+$/.test(loginState.otpInput)) {
