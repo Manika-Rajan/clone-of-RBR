@@ -165,6 +165,7 @@ const ReportsDisplay = () => {
         </div>
       </div>
       <Modal
+        key={`modal-${loginPhase}-${Date.now()}`} // Force re-mount on phase change
         isOpen={openModel}
         toggle={() => setOpenModel(!openModel)}
         style={{ maxWidth: '650px', width: '100%', marginTop: "15%" }}
