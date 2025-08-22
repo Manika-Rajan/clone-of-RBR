@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Store } from '../Store';
 import Login from './Login';
-import './ReportsDisplay.css'; // Add CSS for modal styling
+import './ReportsDisplay.css';
 
 const ReportsDisplay = () => {
   const navigate = useNavigate();
@@ -66,17 +66,25 @@ const ReportsDisplay = () => {
 
   return (
     <div className="reports-display">
-      <button onClick={handlePayment}>BUY NOW</button>
-      {reportData && <iframe src={reportData} title="Report" style={{ width: '100%', height: '600px' }} />}
+      <div className="report-display-title">Report Display</div>
+      <div className="report-display-desc">View your generated report details here.</div>
+      <button className="buy-btn" onClick={handlePayment}>BUY NOW</button>
+      {reportData && (
+        <div className="viewer">
+          <div className="pdf-div">
+            <iframe src={reportData} title="Report" style={{ width: '100%', height: '100%', border: 'none' }} />
+          </div>
+        </div>
+      )}
       {openModel && (
         <div className="modal-overlay">
           <div className="modal-content">
             <Login onClose={handleClose} onPhaseChange={updateLoginPhase} openModel={openModel} />
-            <button onClick={handleClose}>Close</button>
+            <button className="buy-btn" onClick={handleClose}>Close</button>
           </div>
         </div>
       )}
-      {location.state?.loggedIn && <div>Logged in successfully, redirecting...</div>}
+      {location.state?.loggedIn && <div className="success-message">Logged in successfully, redirecting...</div>}
     </div>
   );
 };
