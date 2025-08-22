@@ -27,9 +27,9 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
 
   useEffect(() => {
     setIsModalOpen(openModel);
-    console.log("Login - isModalOpen updated to:", isModalOpen, "openModel:", openModel, "otpSent:", loginState.otpSent, "renderTrigger:", renderTrigger.current);
+    console.log("Login - isModalOpen updated to:", isModalOpen, "openModel:", openModel, "loginState:", loginState, "renderTrigger:", renderTrigger.current);
     renderTrigger.current += 1; // Track render count
-  }, [openModel, loginState.otpSent]);
+  }, [openModel]); // Removed loginState.otpSent to prevent reset
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -156,13 +156,13 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
       <div className={`login-popup ${loginState.responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {loginState.responseMessage !== 'Login successful' && (
           <div className="login-title">
-            <h3>{loginState.otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
+            <h3>{loginState.otpSent || (openModel && state.loginPhase === 1) ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
           </div>
         )}
         <div className="login-paragraph">
-          {!loginState.otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
+          {!loginState.otpSent && !(openModel && state.loginPhase === 1) && <p>We will send you a <strong>One Time Password</strong></p>}
         </div>
-        {!loginState.otpSent ? (
+        {!loginState.otpSent && !(openModel && state.loginPhase === 1) ? (
           <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
             <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%' }}>
               <select className="form-select" aria-label="Default select example">
@@ -212,7 +212,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
             </div>
           ) : (
             <button type="submit" className="login-button" onClick={handleSubmit} disabled={loginState.isLoading}>
-              {loginState.otpSent ? 'VERIFY OTP' : 'SEND OTP'}
+              {loginState.otpSent || (openModel && state.loginPhase === 1) ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
         </div>
