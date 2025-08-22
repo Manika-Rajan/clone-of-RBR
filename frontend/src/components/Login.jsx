@@ -23,7 +23,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   const [loginState, dispatch] = useReducer(loginReducer, initialState);
   const [isModalOpen, setIsModalOpen] = useState(openModel);
   const renderTrigger = useRef(0);
-  const updateTriggerRef = useRef(0); // Use ref to track trigger changes
+  const [updateTrigger, setUpdateTrigger] = useState(0); // Revert to state for trigger
 
   useEffect(() => {
     setIsModalOpen(openModel);
@@ -39,16 +39,16 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   }, []);
 
   useEffect(() => {
-    console.log('Effect checking - updateTriggerRef:', updateTriggerRef.current, 'otpSent:', loginState.otpSent, 'onPhaseChange:', !!onPhaseChange);
-    if (updateTriggerRef.current > 0) {
-      console.log('Effect triggered - updateTriggerRef:', updateTriggerRef.current, 'otpSent:', loginState.otpSent);
+    console.log('Effect checking - updateTrigger:', updateTrigger, 'otpSent:', loginState.otpSent, 'onPhaseChange:', !!onPhaseChange);
+    if (updateTrigger > 0) {
+      console.log('Effect triggered - updateTrigger:', updateTrigger, 'otpSent:', loginState.otpSent);
       if (loginState.otpSent && onPhaseChange) {
         console.log('Calling updateLoginPhase(1)');
         onPhaseChange(1); // Trigger phase change
       }
       forceUpdate(); // Force re-render after state update
     }
-  }, [loginState.otpSent, onPhaseChange]); // Depend on otpSent and onPhaseChange, update via ref
+  }, [updateTrigger, loginState.otpSent, onPhaseChange]);
 
   const forceUpdate = useCallback(() => {
     renderTrigger.current += 1;
@@ -101,8 +101,8 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
           dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSent: true } });
           console.log('State updated to otpSent:', true);
           setTimeout(() => {
-            updateTriggerRef.current += 1; // Update ref to trigger effect
-            console.log('Update trigger set to:', updateTriggerRef.current);
+            setUpdateTrigger(prev => prev + 1); // Trigger effect after state update
+            console.log('Update trigger set to:', updateTrigger + 1);
           }, 0);
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
