@@ -27,6 +27,14 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
     if (storedPhone) setNumber(storedPhone.replace('+91', ''));
   }, []);
 
+  useEffect(() => {
+    if (responseMessage === 'OTP sent! Enter it below:') {
+      setOtpSent(true);
+      if (onPhaseChange) onPhaseChange(1); // Update loginPhase to 1 for OTP phase
+      console.log("useEffect - otpSent updated to true due to responseMessage");
+    }
+  }, [responseMessage, onPhaseChange]);
+
   const completeLogin = (phoneNumber, name, email) => {
     localStorage.setItem('userInfo', JSON.stringify({ isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }));
     cxtDispatch({
@@ -81,8 +89,6 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
           setResponseMessage('OTP sent! Enter it below:');
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
-          setOtpSent(true); // Move outside try to ensure update
-          if (onPhaseChange) onPhaseChange(1); // Update loginPhase to 1 for OTP phase
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
@@ -170,7 +176,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
               type="text"
               placeholder="Enter 6-digit OTP"
               value={otpInput}
-              onChange={(e) => setOtpInput(e.target.value)}
+              onChange={(e) => setOtpSent(e.target.value)}
               onKeyPress={handleKeyPress}
               maxLength={6}
               disabled={isLoading}
