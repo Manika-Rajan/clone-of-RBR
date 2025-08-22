@@ -11,6 +11,7 @@ const ReportsDisplay = () => {
   const [openModel, setOpenModel] = useState(false);
   const [loginPhase, setLoginPhase] = useState(0);
   const [reportData, setReportData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     console.log('ReportsDisplay.js:17 Received file_key:', location.state?.file_key, 'reportId:', location.state?.reportId, 'amount:', location.state?.amount, 'location.state:', location.state);
@@ -26,7 +27,7 @@ const ReportsDisplay = () => {
     if (location.state?.file_key && cxtState.isLogin) {
       console.log('ReportsDisplay.js:70 Fetching presigned URL for file_key:', location.state.file_key, 'isLogin:', cxtState.isLogin);
       try {
-        const response = await fetch(`https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/get-presigned-url?file_key=${location.state.file_key}`, {
+        const response = await fetch(`https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL?file_key=${location.state.file_key}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -35,11 +36,13 @@ const ReportsDisplay = () => {
           const data = await response.json();
           console.log('ReportsDisplay.js:93 API Response:', data);
           setReportData(data.url); // Assuming the URL is in data.url
+          setError(null);
         } else {
-          throw new Error('Failed to fetch presigned URL');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
       } catch (error) {
         console.error('ReportsDisplay.js:33 Error fetching presigned URL:', error);
+        setError('Failed to load report due to a server issue. Please try again later.');
       }
     }
   };
@@ -69,6 +72,7 @@ const ReportsDisplay = () => {
       <div className="report-display-title">Report Display</div>
       <div className="report-display-desc">View your generated report details here.</div>
       <button className="buy-btn" onClick={handlePayment}>BUY NOW</button>
+      {error && <div className="error-message">{error}</div>}
       {reportData && (
         <div className="viewer">
           <div className="pdf-div">
