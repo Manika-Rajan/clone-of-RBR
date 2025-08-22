@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { Store } from '../Store';
 
-const initialState = { number: '', otpInput: '', name: '', email: '', responseMessage: '', error: '', otpSent: false, isLoading: false, otpSentFlag: false };
+const initialState = { number: '', otpInput: '', name: '', email: '', responseMessage: '', error: '', otpSent: false, isLoading: false };
 
 const loginReducer = (state, action) => {
   switch (action.type) {
@@ -23,6 +23,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   const [loginState, dispatch] = useReducer(loginReducer, initialState);
   const [isModalOpen, setIsModalOpen] = useState(openModel);
   const renderTrigger = useRef(0);
+  const [updateTrigger, setUpdateTrigger] = useState(0); // Unique trigger for effect
 
   useEffect(() => {
     setIsModalOpen(openModel);
@@ -38,16 +39,15 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   }, []);
 
   useEffect(() => {
-    if (loginState.otpSentFlag && !loginState.otpSent) {
-      dispatch({ type: 'SET_STATE', payload: { otpSent: true, otpSentFlag: false } });
-      console.log('State updated to otpSent:', true);
+    if (loginState.otpSent && updateTrigger > 0) {
+      console.log('Effect triggered - State updated to otpSent:', loginState.otpSent);
       if (onPhaseChange) {
         console.log('Calling updateLoginPhase(1)');
         onPhaseChange(1); // Trigger phase change
       }
       forceUpdate(); // Force re-render after state update
     }
-  }, [loginState.otpSentFlag, loginState.otpSent, onPhaseChange]);
+  }, [loginState.otpSent, updateTrigger, onPhaseChange]);
 
   const forceUpdate = () => {
     renderTrigger.current += 1;
@@ -97,7 +97,8 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         const data = await response.json();
         console.log('send-otp response:', data);
         if (response.ok) {
-          dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSentFlag: true } });
+          dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSent: true } });
+          setUpdateTrigger(prev => prev + 1); // Trigger effect
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
         } else {
