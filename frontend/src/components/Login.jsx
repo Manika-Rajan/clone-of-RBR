@@ -47,17 +47,15 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
     });
     console.log('completeLogin called with:', { phoneNumber, name, email });
     cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { responseMessage: 'Login successful', isLoading: false } });
-    setTimeout(() => {
-      if (onClose) {
-        console.log('Calling onClose from completeLogin');
-        onClose();
-      }
-      setIsModalOpen(false);
-      navigate("/report-display", {
-        state: { loggedIn: true, file_key: location.state?.file_key, reportId: location.state?.reportId, amount: location.state?.amount },
-        replace: true,
-      });
-    }, 2000);
+    if (onClose) {
+      console.log('Calling onClose from completeLogin');
+      onClose();
+    }
+    setIsModalOpen(false);
+    navigate("/report-display", {
+      state: { loggedIn: true, file_key: location.state?.file_key, reportId: location.state?.reportId, amount: location.state?.amount },
+      replace: true,
+    });
   };
 
   const handleSubmit = async (event) => {
@@ -121,12 +119,12 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
       console.error('handleSubmit error:', err.message, err.stack, 'at', new Date().toISOString());
       cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: `An error occurred: ${err.message}`, isLoading: false } });
     } finally {
-      cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { isLoading: false } }); // Ensure loading clears
+      cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { isLoading: false } });
     }
   };
 
   const handleChange = (field) => (event) => {
-    event.preventDefault(); // Prevent form submission on input
+    event.preventDefault();
     cxtDispatch({ type: 'UPDATE_LOGIN_FIELD', field, value: event.target.value });
   };
 
@@ -138,7 +136,7 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`login-popup-container ${state.loginState.responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
+    <div className={`login-popup-container ${state.loginState.responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
       <div className={`login-popup ${state.loginState.responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {state.loginState.responseMessage !== 'Login successful' && (
           <div className="login-title">
@@ -197,7 +195,7 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
               <p>Login Successful!</p>
             </div>
           ) : (
-            <button type="submit" className="login-button" disabled={state.loginState.isLoading}>
+            <button onClick={handleSubmit} className="login-button" disabled={state.loginState.isLoading}>
               {state.loginState.otpSent || (openModel && state.loginPhase === 1) ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
@@ -208,7 +206,7 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
         {state.loginState.error && <p style={{ color: 'red', textAlign: 'center' }}>{state.loginState.error}</p>}
         {state.loginState.isLoading && <p className="loading-message">Processing...</p>}
       </div>
-    </form>
+    </div>
   );
 });
 
