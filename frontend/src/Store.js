@@ -6,7 +6,7 @@ const initialState = {
   name: '',
   email: '',
   phone: '',
-  loginState: { number: '', otpInput: '', name: '', email: '', responseMessage: '', error: '', otpSent: false, isLoading: false },
+  loginState: { number: '', otpInput: '', name: '', email: '', responseMessage: '', error: '', otpSent: false, isLoading: false, updateTrigger: 0 },
   loginPhase: 0,
 };
 
