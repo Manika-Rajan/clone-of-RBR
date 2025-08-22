@@ -39,6 +39,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   }, []);
 
   useEffect(() => {
+    console.log('Effect checking - updateTrigger:', updateTrigger, 'otpSent:', loginState.otpSent, 'onPhaseChange:', !!onPhaseChange);
     if (updateTrigger > 0) {
       console.log('Effect triggered - updateTrigger:', updateTrigger, 'otpSent:', loginState.otpSent);
       if (loginState.otpSent && onPhaseChange) {
@@ -100,7 +101,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
           dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSent: true } });
           console.log('State updated to otpSent:', true);
           setTimeout(() => {
-            setUpdateTrigger(prev => prev + 1); // Trigger effect after a short delay
+            setUpdateTrigger(prev => prev + 1); // Trigger effect after state update
             console.log('Update trigger set to:', updateTrigger + 1);
           }, 0);
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
