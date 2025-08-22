@@ -3,20 +3,19 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { Store } from '../Store';
 
-const Login = ({ onClose, onPhaseChange, openModel }) => {
+const Login = React.memo(({ onClose, onPhaseChange, openModel }) => { // Memoize to prevent re-mounting
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const [isModalOpen, setIsModalOpen] = useState(openModel);
   const renderTrigger = useRef(0);
-  const [updateTrigger, setUpdateTrigger] = useState(0); // Local trigger state
   const componentId = useRef(Date.now().toString()); // Unique ID for debugging
 
   useEffect(() => {
     setIsModalOpen(openModel);
     console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "openModel:", openModel, "state:", state, "renderTrigger:", renderTrigger.current);
     renderTrigger.current += 1; // Track render count
-  }, [openModel, state.loginPhase]); // Depend on loginPhase to sync with context
+  }, [openModel, state.loginPhase]); // Sync with loginPhase
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -26,16 +25,14 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   }, [state.loginState.number]);
 
   useEffect(() => {
-    console.log(`Effect checking [ID: ${componentId.current}] - updateTrigger:`, updateTrigger, 'otpSent:', state.loginState.otpSent, 'onPhaseChange:', !!onPhaseChange);
-    if (updateTrigger > 0) {
-      console.log(`Effect triggered [ID: ${componentId.current}] - updateTrigger:`, updateTrigger, 'otpSent:', state.loginState.otpSent);
-      if (state.loginState.otpSent && onPhaseChange) {
-        console.log(`Calling updateLoginPhase(1) [ID: ${componentId.current}]`);
-        onPhaseChange(1); // Trigger phase change
-      }
+    console.log(`Effect checking [ID: ${componentId.current}] - updateTrigger:`, state.loginState.updateTrigger, 'otpSent:', state.loginState.otpSent, 'onPhaseChange:', !!onPhaseChange);
+    if (state.loginState.updateTrigger > 0 && state.loginState.otpSent && onPhaseChange) {
+      console.log(`Effect triggered [ID: ${componentId.current}] - updateTrigger:`, state.loginState.updateTrigger, 'otpSent:', state.loginState.otpSent);
+      console.log(`Calling updateLoginPhase(1) [ID: ${componentId.current}]`);
+      onPhaseChange(1); // Trigger phase change
       forceUpdate(); // Force re-render after state update
     }
-  }, [updateTrigger, state.loginState.otpSent, onPhaseChange]);
+  }, [state.loginState.updateTrigger, state.loginState.otpSent, onPhaseChange]); // Use state.loginState.updateTrigger
 
   const forceUpdate = useCallback(() => {
     renderTrigger.current += 1;
@@ -74,9 +71,8 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
           cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: 'Please enter a valid 10-digit mobile number', isLoading: false } });
           return;
         }
-        cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: '', responseMessage: '', otpInput: '', otpSent: true } }); // Combine state updates
-        setUpdateTrigger(prev => prev + 1); // Immediate trigger update
-        console.log(`State updated to otpSent: true Update trigger set to: ${updateTrigger + 1} [ID: ${componentId.current}]`);
+        cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: '', responseMessage: '', otpInput: '', otpSent: true, updateTrigger: state.loginState.updateTrigger + 1 } }); // Include updateTrigger
+        console.log(`State updated to otpSent: true Update trigger set to: ${state.loginState.updateTrigger + 1} [ID: ${componentId.current}]`);
         const phoneNumber = `+91${state.loginState.number}`;
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
           method: 'POST',
@@ -86,11 +82,11 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         console.log('send-otp status:', response.status, 'at', new Date().toISOString());
         const data = await response.json();
         console.log('send-otp response:', data);
-        if (!response.ok) {
-          cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: `Error: ${data.error || data.message || 'Unknown error'}`, isLoading: false, otpSent: false } });
-        } else {
+        if (response.ok) {
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
+        } else {
+          cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: `Error: ${data.error || data.message || 'Unknown error'}`, isLoading: false, otpSent: false, updateTrigger: 0 } });
         }
       } else {
         if (state.loginState.otpInput.length !== 6 || !/^\d+$/.test(state.loginState.otpInput)) {
@@ -211,6 +207,6 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
       </div>
     </div>
   );
-};
+});
 
 export default Login;
