@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom'; // Added for navigation
 import './Login.css';
 import { Store } from '../Store';
@@ -16,24 +16,18 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(openModel); // Sync with parent
+  const renderTrigger = useRef(0);
 
   useEffect(() => {
     setIsModalOpen(openModel); // Update when parent modal state changes
-    console.log("Login - isModalOpen updated to:", isModalOpen, "openModel:", openModel, "otpSent:", otpSent);
+    console.log("Login - isModalOpen updated to:", isModalOpen, "openModel:", openModel, "otpSent:", otpSent, "renderTrigger:", renderTrigger.current);
+    renderTrigger.current += 1; // Force re-render check
   }, [openModel, otpSent]);
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
     if (storedPhone) setNumber(storedPhone.replace('+91', ''));
   }, []);
-
-  useEffect(() => {
-    if (responseMessage === 'OTP sent! Enter it below:') {
-      setOtpSent(true);
-      if (onPhaseChange) onPhaseChange(1); // Update loginPhase to 1 for OTP phase
-      console.log("useEffect - otpSent updated to true due to responseMessage");
-    }
-  }, [responseMessage, onPhaseChange]);
 
   const completeLogin = (phoneNumber, name, email) => {
     localStorage.setItem('userInfo', JSON.stringify({ isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }));
@@ -89,6 +83,11 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
           setResponseMessage('OTP sent! Enter it below:');
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
+          setOtpSent(true); // Update state
+          if (onPhaseChange) {
+            console.log('Calling updateLoginPhase(1)');
+            onPhaseChange(1); // Trigger phase change
+          }
         } else {
           setError(`Error: ${data.error || data.message || 'Unknown error'}`);
         }
@@ -176,7 +175,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
               type="text"
               placeholder="Enter 6-digit OTP"
               value={otpInput}
-              onChange={(e) => setOtpSent(e.target.value)}
+              onChange={(e) => setOtpInput(e.target.value)}
               onKeyPress={handleKeyPress}
               maxLength={6}
               disabled={isLoading}
