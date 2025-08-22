@@ -72,15 +72,16 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         const data = await response.json();
         console.log('send-otp response:', data);
         if (response.ok) {
-          setLoginState(prev => ({ ...prev, responseMessage: 'OTP sent! Enter it below:' }));
+          setLoginState(prev => ({ ...prev, responseMessage: 'OTP sent! Enter it below:', otpSent: true }), () => {
+            console.log('State updated to otpSent:', true);
+            if (onPhaseChange) {
+              console.log('Calling updateLoginPhase(1)');
+              onPhaseChange(1); // Trigger phase change
+            }
+            forceUpdate(); // Force re-render after state update
+          });
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
-          setLoginState(prev => ({ ...prev, otpSent: true })); // Update otpSent
-          if (onPhaseChange) {
-            console.log('Calling updateLoginPhase(1)');
-            onPhaseChange(1); // Trigger phase change
-          }
-          forceUpdate(); // Force re-render
         } else {
           setLoginState(prev => ({ ...prev, error: `Error: ${data.error || data.message || 'Unknown error'}`, isLoading: false }));
         }
@@ -132,7 +133,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
 
   return (
     <div className={`login-popup-container ${loginState.responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
-      <div className={`login-popup ${loginState.responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
+      <div className={`login-popup ${loginState.responseMessage === 'success-popup' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {loginState.responseMessage !== 'Login successful' && (
           <div className="login-title">
             <h3>{loginState.otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
