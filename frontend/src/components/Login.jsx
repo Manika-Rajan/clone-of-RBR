@@ -203,7 +203,7 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
         {state.loginState.responseMessage && state.loginState.responseMessage !== 'Login successful' && (
           <p style={{ color: 'green', textAlign: 'center' }}>{state.loginState.responseMessage}</p>
         )}
-        {state.loginState.error && <p style={{ color: 'red', textAlign: 'center' }}>{state.loginState.error}</p>}
+        {state.loginState.error && <p className="error-message">{state.loginState.error}</p>}
         {state.loginState.isLoading && <p className="loading-message">Processing...</p>}
       </div>
     </div>
