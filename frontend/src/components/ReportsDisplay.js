@@ -1,187 +1,67 @@
-import React, { useContext, useState, useEffect } from 'react';
-import logo from '../assets/logo.svg';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import './ReportDisplay.css';
-import { Worker } from '@react-pdf-viewer/core';
-import { Viewer } from '@react-pdf-viewer/core';
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
-import Login from './Login';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Store } from '../Store';
-import { Modal, ModalBody } from "reactstrap";
+import Login from './Login'; // Ensure this import is stable
 
 const ReportsDisplay = () => {
-  const location = useLocation();
-  const { file_key, reportId, amount = 400 } = location.state || {};
-  console.log("Received file_key:", file_key, "reportId:", reportId, "amount:", amount, "location.state:", location.state);
-
   const navigate = useNavigate();
-  const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state, dispatch: cxtDispatch } = useContext(Store);
-  const [contextKey, setContextKey] = useState(Date.now()); // Force re-render
-  const { userInfo = { isLogin: false, name: '', status: false, email: '' } } = state || {}; // Destructure userInfo
-  const { isLogin, name, status, email } = userInfo; // Extract nested properties
-
-  console.log("ReportsDisplay - isLogin:", isLogin, "state:", state); // Debug
-
+  const location = useLocation();
+  const { state: cxtState, dispatch: cxtDispatch } = useContext(Store);
   const [openModel, setOpenModel] = useState(false);
-  const [loginPhase, setLoginPhase] = useState(0); // 0: initial, 1: otp
-  const [isLoading, setIsLoading] = useState(true);
-  const [pdfUrl, setPdfUrl] = useState('');
-  const [error, setError] = useState(''); // Added to track errors
+  const [loginPhase, setLoginPhase] = useState(0);
+
+  useEffect(() => {
+    console.log('ReportsDisplay.js:17 Received file_key:', location.state?.file_key, 'reportId:', location.state?.reportId, 'amount:', location.state?.amount, 'location.state:', location.state);
+    if (location.state?.file_key) {
+      console.log('ReportsDisplay.js:26 ReportsDisplay - isLogin:', cxtState.isLogin, 'state:', cxtState);
+    }
+  }, [location.state, cxtState.isLogin]);
+
+  useEffect(() => {
+    const fetchPresignedUrl = async () => {
+      if (location.state?.file_key && !cxtState.isLogin) {
+        console.log('ReportsDisplay.js:70 Fetching presigned URL for file_key:', location.state.file_key, 'isLogin:', cxtState.isLogin);
+        try {
+          const response = await fetch(`https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/get-presigned-url?file_key=${location.state.file_key}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          console.log('ReportsDisplay.js:83 Presigned URL response status:', response.status);
+          const data = await response.json();
+          console.log('ReportsDisplay.js:93 API Response:', data);
+        } catch (error) {
+          console.error('Error fetching presigned URL:', error);
+        }
+      }
+    };
+    fetchPresignedUrl();
+  }, [location.state?.file_key, cxtState.isLogin]);
 
   const handlePayment = () => {
-    console.log("handlePayment - isLogin:", isLogin, "reportId:", reportId, "amount:", amount);
-    if (!isLogin) {
-      console.log("Triggering login modal - setting openModel to true");
-      setOpenModel(true); // Ensure modal opens
-      setLoginPhase(0); // Reset phase
-    } else if (!reportId) {
-      setError('Please generate a report first');
+    console.log('ReportsDisplay.js:35 handlePayment - isLogin:', cxtState.isLogin, 'reportId:', location.state?.reportId, 'amount:', location.state?.amount);
+    if (!cxtState.isLogin) {
+      console.log('ReportsDisplay.js:37 Triggering login modal - setting openModel to true');
+      setOpenModel(true);
     } else {
-      navigate("/payment", { state: { reportId, amount, file_key } });
-    }
-  };
-
-  const changeStatus = () => {
-    setOpenModel(false);
-    setLoginPhase(0); // Reset phase
-    if (isLogin && status) {
-      navigate("/payment", { state: { reportId, amount, file_key } });
-    } else {
-      cxtDispatch({ type: 'SET_REPORT_STATUS' });
+      // Payment logic here
     }
   };
 
   const updateLoginPhase = (phase) => {
-    console.log("Updating loginPhase to:", phase);
+    console.log('ReportsDisplay.js:58 Updating loginPhase to:', phase);
     setLoginPhase(phase);
   };
 
-  useEffect(() => {
-    const fetchPresignedUrl = async () => {
-      if (!file_key) {
-        console.error("No file_key found. Skipping API request.");
-        setError('No report selected. Please generate a report first.');
-        setIsLoading(false);
-        return;
-      }
-      console.log("Fetching presigned URL for file_key:", file_key, "isLogin:", isLogin);
-      setIsLoading(true);
-      try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (isLogin) {
-          const token = localStorage.getItem('token');
-          if (token) headers['Authorization'] = `Bearer ${token}`;
-        }
-        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ file_key, userId: isLogin ? userInfo.userId : null }),
-        });
-        console.log("Presigned URL response status:", response.status);
-        if (!response.ok) {
-          const errorText = await response.text();
-          if (response.status === 401 || response.status === 403) {
-            setError('Please log in to view the full report.');
-          } else {
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-          }
-        } else {
-          const data = await response.json();
-          console.log('API Response:', data);
-          if (data.presigned_url) {
-            setPdfUrl(data.presigned_url);
-          } else {
-            throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching presigned URL:', error.message, error.stack);
-        if (!error.message.includes('Please log in')) {
-          setError(`Failed to load report: ${error.message}`);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchPresignedUrl();
-  }, [file_key, isLogin, userInfo.userId]);
-
-  useEffect(() => {
-    setContextKey(Date.now()); // Re-render on state change
-    console.log("ReportsDisplay - openModel updated to:", openModel, "loginPhase:", loginPhase); // Debug modal state
-  }, [state, openModel, loginPhase]);
+  const handleClose = () => {
+    setOpenModel(false);
+    setLoginPhase(0);
+  };
 
   return (
-    <div key={contextKey}>
-      <div className='report-display'>
-        <nav className="navbar navbar-expand-lg bg-light">
-          <div className="container-fluid">
-            <div className="nav-left">
-              <div className="logo">
-                <Link to="/" className="navbar-brand">
-                  <img src={logo} alt="" style={{ width: "60px", height: "60px" }} />
-                </Link>
-              </div>
-              <div className="text">
-                <p className='nav-title report-display-title' style={{ fontSize: "28px" }}>
-                  {file_key ? file_key.replace(/_/g, ' ').replace(/\.[^.]+$/, '') : "Paper Industry In India"}
-                </p>
-                <p className='report-display-desc' style={{ marginTop: "-10px", width: "70%" }}>
-                  {file_key ? "Generated report based on selected filters (Preview)" : "Candy production is a seasonal business, with the majority of those involved in market normally doubling their staffs during the winter months"}
-                </p>
-              </div>
-            </div>
-            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-              <span className="navbar-toggler-icon"></span>
-            </button>
-            <div className="collapse navbar-collapse" id="navbarSupportedContent">
-              <ul className="navbar-nav ms-auto">
-                <li className="nav-item">
-                  <button className="buy-btn" onClick={handlePayment} style={{ color: "white" }} disabled={!reportId}>
-                    BUY NOW (₹{amount})
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </nav>
-        <div className='viewer col-md-11 col-sm-11 col-11'>
-          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-            {isLoading ? (
-              <div className="spinner-border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            ) : error ? (
-              <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>
-            ) : pdfUrl ? (
-              <Viewer fileUrl={pdfUrl} plugins={[defaultLayoutPluginInstance]} />
-            ) : (
-              <p>No report available. Please generate a report first.</p>
-            )}
-          </Worker>
-        </div>
-      </div>
-      <Modal
-        key={`modal-${loginPhase}-${Date.now()}`} // Force re-mount on phase change
-        isOpen={openModel}
-        toggle={() => setOpenModel(!openModel)}
-        style={{ maxWidth: '650px', width: '100%', marginTop: "15%" }}
-        size="lg"
-      >
-        <ModalBody>
-          <Login key={`login-${loginPhase}-${openModel}-${Date.now()}`} openModel={openModel} onClose={() => { setOpenModel(false); changeStatus(); }} onPhaseChange={updateLoginPhase} />
-          {status && (
-            <div className='' style={{ textAlign: "center" }}>
-              <p className='success-head'>The Report has been successfully sent to</p>
-              <p className='success-email'>{email}</p>
-              <button className='btn btn-primary' onClick={changeStatus}>Ok</button>
-            </div>
-          )}
-        </ModalBody>
-      </Modal>
+    <div>
+      <button onClick={handlePayment}>BUY NOW</button>
+      {openModel && <Login onClose={handleClose} onPhaseChange={updateLoginPhase} openModel={openModel} />}
+      {location.state?.loggedIn && <div>Logged in successfully, redirecting...</div>}
     </div>
   );
 };
