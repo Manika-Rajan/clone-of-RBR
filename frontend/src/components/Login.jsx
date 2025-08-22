@@ -1,13 +1,26 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useReducer, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { Store } from '../Store';
+
+const initialState = { number: '', otpInput: '', name: '', email: '', responseMessage: '', error: '', otpSent: false, isLoading: false };
+
+const loginReducer = (state, action) => {
+  switch (action.type) {
+    case 'UPDATE_FIELD':
+      return { ...state, [action.field]: action.value };
+    case 'SET_STATE':
+      return { ...state, ...action.payload };
+    default:
+      return state;
+  }
+};
 
 const Login = ({ onClose, onPhaseChange, openModel }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const [loginState, setLoginState] = useState({ number: '', otpInput: '', name: '', email: '', responseMessage: '', error: '', otpSent: false, isLoading: false });
+  const [loginState, dispatch] = useReducer(loginReducer, initialState);
   const [isModalOpen, setIsModalOpen] = useState(openModel);
   const renderTrigger = useRef(0);
 
@@ -20,7 +33,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
     if (storedPhone) {
-      setLoginState(prev => ({ ...prev, number: storedPhone.replace('+91', '') }));
+      dispatch({ type: 'UPDATE_FIELD', field: 'number', value: storedPhone.replace('+91', '') });
     }
   }, []);
 
@@ -36,7 +49,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
       payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
     });
     console.log('completeLogin called with:', { phoneNumber, name, email });
-    setLoginState(prev => ({ ...prev, responseMessage: 'Login successful', isLoading: false }));
+    dispatch({ type: 'SET_STATE', payload: { responseMessage: 'Login successful', isLoading: false } });
     setTimeout(() => {
       if (onClose) {
         console.log('Calling onClose from completeLogin');
@@ -52,16 +65,16 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setLoginState(prev => ({ ...prev, isLoading: true }));
+    dispatch({ type: 'SET_STATE', payload: { isLoading: true } });
     console.log('handleSubmit triggered, otpSent:', loginState.otpSent);
 
     try {
       if (!loginState.otpSent) {
         if (loginState.number.length !== 10 || !/^\d+$/.test(loginState.number)) {
-          setLoginState(prev => ({ ...prev, error: 'Please enter a valid 10-digit mobile number', isLoading: false }));
+          dispatch({ type: 'SET_STATE', payload: { error: 'Please enter a valid 10-digit mobile number', isLoading: false } });
           return;
         }
-        setLoginState(prev => ({ ...prev, error: '', responseMessage: '', otpInput: '' }));
+        dispatch({ type: 'SET_STATE', payload: { error: '', responseMessage: '', otpInput: '' } });
         const phoneNumber = `+91${loginState.number}`;
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
           method: 'POST',
@@ -72,25 +85,29 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         const data = await response.json();
         console.log('send-otp response:', data);
         if (response.ok) {
-          setLoginState(prev => ({ ...prev, responseMessage: 'OTP sent! Enter it below:', otpSent: true }), () => {
+          dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSent: true } }, () => {
             console.log('State updated to otpSent:', true);
-            if (onPhaseChange) {
-              console.log('Calling updateLoginPhase(1)');
-              onPhaseChange(1); // Trigger phase change
+            try {
+              if (onPhaseChange) {
+                console.log('Calling updateLoginPhase(1)');
+                onPhaseChange(1); // Trigger phase change
+              }
+              forceUpdate(); // Force re-render after state update
+            } catch (err) {
+              console.error('Error in callback:', err);
             }
-            forceUpdate(); // Force re-render after state update
           });
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
         } else {
-          setLoginState(prev => ({ ...prev, error: `Error: ${data.error || data.message || 'Unknown error'}`, isLoading: false }));
+          dispatch({ type: 'SET_STATE', payload: { error: `Error: ${data.error || data.message || 'Unknown error'}`, isLoading: false } });
         }
       } else {
         if (loginState.otpInput.length !== 6 || !/^\d+$/.test(loginState.otpInput)) {
-          setLoginState(prev => ({ ...prev, error: 'Please enter a valid 6-digit OTP', isLoading: false }));
+          dispatch({ type: 'SET_STATE', payload: { error: 'Please enter a valid 6-digit OTP', isLoading: false } });
           return;
         }
-        setLoginState(prev => ({ ...prev, error: '', responseMessage: '' }));
+        dispatch({ type: 'SET_STATE', payload: { error: '', responseMessage: '' } });
         const phoneNumber = `+91${loginState.number}`;
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp', {
           method: 'POST',
@@ -106,17 +123,17 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         }
         console.log('verify-otp parsed data:', data);
         if (response.status === 200) {
-          setLoginState(prev => ({ ...prev, responseMessage: 'OTP verified successfully' }));
+          dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP verified successfully' } });
           const fetchedName = data.user?.name || phoneNumber;
           const fetchedEmail = data.user?.email || '';
           completeLogin(phoneNumber, fetchedName, fetchedEmail);
         } else {
-          setLoginState(prev => ({ ...prev, error: `Error: ${data.error || 'Invalid OTP'}`, isLoading: false }));
+          dispatch({ type: 'SET_STATE', payload: { error: `Error: ${data.error || 'Invalid OTP'}`, isLoading: false } });
         }
       }
     } catch (err) {
       console.error('handleSubmit error:', err.message, err.stack, 'at', new Date().toISOString());
-      setLoginState(prev => ({ ...prev, error: `An error occurred: ${err.message}`, isLoading: false }));
+      dispatch({ type: 'SET_STATE', payload: { error: `An error occurred: ${err.message}`, isLoading: false } });
     }
   };
 
@@ -128,12 +145,12 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
   };
 
   const handleChange = (field) => (event) => {
-    setLoginState(prev => ({ ...prev, [field]: event.target.value }));
+    dispatch({ type: 'UPDATE_FIELD', field, value: event.target.value });
   };
 
   return (
     <div className={`login-popup-container ${loginState.responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
-      <div className={`login-popup ${loginState.responseMessage === 'success-popup' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
+      <div className={`login-popup ${loginState.responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {loginState.responseMessage !== 'Login successful' && (
           <div className="login-title">
             <h3>{loginState.otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
