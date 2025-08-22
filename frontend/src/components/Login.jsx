@@ -3,19 +3,19 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { Store } from '../Store';
 
-const Login = React.memo(({ onClose, onPhaseChange, openModel }) => { // Memoize to prevent re-mounting
+const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const [isModalOpen, setIsModalOpen] = useState(openModel);
   const renderTrigger = useRef(0);
-  const componentId = useRef(Date.now().toString()); // Unique ID for debugging
+  const componentId = useRef(Date.now().toString());
 
   useEffect(() => {
     setIsModalOpen(openModel);
     console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "openModel:", openModel, "state:", state, "renderTrigger:", renderTrigger.current);
-    renderTrigger.current += 1; // Track render count
-  }, [openModel, state.loginPhase]); // Sync with loginPhase
+    renderTrigger.current += 1;
+  }, [openModel, state.loginPhase]);
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -29,10 +29,10 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => { // Memoize
     if (state.loginState.updateTrigger > 0 && state.loginState.otpSent && onPhaseChange) {
       console.log(`Effect triggered [ID: ${componentId.current}] - updateTrigger:`, state.loginState.updateTrigger, 'otpSent:', state.loginState.otpSent);
       console.log(`Calling updateLoginPhase(1) [ID: ${componentId.current}]`);
-      onPhaseChange(1); // Trigger phase change
-      forceUpdate(); // Force re-render after state update
+      onPhaseChange(1);
+      forceUpdate();
     }
-  }, [state.loginState.updateTrigger, state.loginState.otpSent, onPhaseChange]); // Use state.loginState.updateTrigger
+  }, [state.loginState.updateTrigger, state.loginState.otpSent, onPhaseChange]);
 
   const forceUpdate = useCallback(() => {
     renderTrigger.current += 1;
@@ -71,7 +71,7 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => { // Memoize
           cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: 'Please enter a valid 10-digit mobile number', isLoading: false } });
           return;
         }
-        cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: '', responseMessage: '', otpInput: '', otpSent: true, updateTrigger: state.loginState.updateTrigger + 1 } }); // Include updateTrigger
+        cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: '', responseMessage: '', otpInput: '', otpSent: true, updateTrigger: state.loginState.updateTrigger + 1 } });
         console.log(`State updated to otpSent: true Update trigger set to: ${state.loginState.updateTrigger + 1} [ID: ${componentId.current}]`);
         const phoneNumber = `+91${state.loginState.number}`;
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
@@ -120,7 +120,14 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => { // Memoize
     } catch (err) {
       console.error('handleSubmit error:', err.message, err.stack, 'at', new Date().toISOString());
       cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: `An error occurred: ${err.message}`, isLoading: false } });
+    } finally {
+      cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { isLoading: false } }); // Ensure loading clears
     }
+  };
+
+  const handleChange = (field) => (event) => {
+    event.preventDefault(); // Prevent form submission on input
+    cxtDispatch({ type: 'UPDATE_LOGIN_FIELD', field, value: event.target.value });
   };
 
   const handleKeyPress = (event) => {
@@ -130,12 +137,8 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => { // Memoize
     }
   };
 
-  const handleChange = (field) => (event) => {
-    cxtDispatch({ type: 'UPDATE_LOGIN_FIELD', field, value: event.target.value });
-  };
-
   return (
-    <div className={`login-popup-container ${state.loginState.responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
+    <form onSubmit={handleSubmit} className={`login-popup-container ${state.loginState.responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
       <div className={`login-popup ${state.loginState.responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {state.loginState.responseMessage !== 'Login successful' && (
           <div className="login-title">
@@ -194,7 +197,7 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => { // Memoize
               <p>Login Successful!</p>
             </div>
           ) : (
-            <button type="submit" className="login-button" onClick={handleSubmit} disabled={state.loginState.isLoading}>
+            <button type="submit" className="login-button" disabled={state.loginState.isLoading}>
               {state.loginState.otpSent || (openModel && state.loginPhase === 1) ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
@@ -205,7 +208,7 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => { // Memoize
         {state.loginState.error && <p style={{ color: 'red', textAlign: 'center' }}>{state.loginState.error}</p>}
         {state.loginState.isLoading && <p className="loading-message">Processing...</p>}
       </div>
-    </div>
+    </form>
   );
 });
 
