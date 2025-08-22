@@ -10,7 +10,7 @@ const initialState = {
   loginPhase: 0,
 };
 
-const Store = createContext(initialState);
+export const Store = createContext(initialState);
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -35,4 +35,4 @@ export const StoreProvider = (props) => {
 };
 
 export const useStore = () => useContext(Store);
-export default Store;
+export default StoreProvider;
