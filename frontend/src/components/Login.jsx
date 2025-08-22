@@ -97,11 +97,12 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         const data = await response.json();
         console.log('send-otp response:', data);
         if (response.ok) {
-          await new Promise(resolve => {
-            dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSent: true } });
-            setUpdateTrigger(prev => prev + 1); // Trigger effect after state update
-            resolve();
-          });
+          dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP sent! Enter it below:', otpSent: true } });
+          console.log('State updated to otpSent:', true);
+          setTimeout(() => {
+            setUpdateTrigger(prev => prev + 1); // Trigger effect after a short delay
+            console.log('Update trigger set to:', updateTrigger + 1);
+          }, 0);
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
         } else {
