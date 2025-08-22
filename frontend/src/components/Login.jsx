@@ -1,58 +1,45 @@
-import React, { useState, useEffect, useContext, useReducer, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { Store } from '../Store';
-
-const initialState = { number: '', otpInput: '', name: '', email: '', responseMessage: '', error: '', otpSent: false, isLoading: false };
-
-const loginReducer = (state, action) => {
-  switch (action.type) {
-    case 'UPDATE_FIELD':
-      return { ...state, [action.field]: action.value };
-    case 'SET_STATE':
-      return { ...state, ...action.payload };
-    default:
-      return state;
-  }
-};
 
 const Login = ({ onClose, onPhaseChange, openModel }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const [loginState, dispatch] = useReducer(loginReducer, initialState);
   const [isModalOpen, setIsModalOpen] = useState(openModel);
   const renderTrigger = useRef(0);
-  const [updateTrigger, setUpdateTrigger] = useState(0); // State for trigger
+  const [updateTrigger, setUpdateTrigger] = useState(0); // Local trigger state
+  const componentId = useRef(Date.now().toString()); // Unique ID for debugging
 
   useEffect(() => {
     setIsModalOpen(openModel);
-    console.log("Login - isModalOpen updated to:", isModalOpen, "openModel:", openModel, "loginState:", loginState, "renderTrigger:", renderTrigger.current);
+    console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "openModel:", openModel, "state:", state, "renderTrigger:", renderTrigger.current);
     renderTrigger.current += 1; // Track render count
-  }, [openModel]); // Removed loginState.otpSent to prevent reset
+  }, [openModel, state.loginPhase]); // Depend on loginPhase to sync with context
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
-    if (storedPhone) {
-      dispatch({ type: 'UPDATE_FIELD', field: 'number', value: storedPhone.replace('+91', '') });
+    if (storedPhone && !state.loginState.number) {
+      cxtDispatch({ type: 'UPDATE_LOGIN_FIELD', field: 'number', value: storedPhone.replace('+91', '') });
     }
-  }, []);
+  }, [state.loginState.number]);
 
   useEffect(() => {
-    console.log('Effect checking - updateTrigger:', updateTrigger, 'otpSent:', loginState.otpSent, 'onPhaseChange:', !!onPhaseChange);
+    console.log(`Effect checking [ID: ${componentId.current}] - updateTrigger:`, updateTrigger, 'otpSent:', state.loginState.otpSent, 'onPhaseChange:', !!onPhaseChange);
     if (updateTrigger > 0) {
-      console.log('Effect triggered - updateTrigger:', updateTrigger, 'otpSent:', loginState.otpSent);
-      if (loginState.otpSent && onPhaseChange) {
-        console.log('Calling updateLoginPhase(1)');
+      console.log(`Effect triggered [ID: ${componentId.current}] - updateTrigger:`, updateTrigger, 'otpSent:', state.loginState.otpSent);
+      if (state.loginState.otpSent && onPhaseChange) {
+        console.log(`Calling updateLoginPhase(1) [ID: ${componentId.current}]`);
         onPhaseChange(1); // Trigger phase change
       }
       forceUpdate(); // Force re-render after state update
     }
-  }, [updateTrigger, loginState.otpSent, onPhaseChange]);
+  }, [updateTrigger, state.loginState.otpSent, onPhaseChange]);
 
   const forceUpdate = useCallback(() => {
     renderTrigger.current += 1;
-    console.log("Force update triggered, renderTrigger:", renderTrigger.current);
+    console.log(`Force update triggered [ID: ${componentId.current}], renderTrigger:`, renderTrigger.current);
   }, []);
 
   const completeLogin = (phoneNumber, name, email) => {
@@ -62,7 +49,7 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
       payload: { isLogin: true, userId: phoneNumber, name, email, phone: phoneNumber }
     });
     console.log('completeLogin called with:', { phoneNumber, name, email });
-    dispatch({ type: 'SET_STATE', payload: { responseMessage: 'Login successful', isLoading: false } });
+    cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { responseMessage: 'Login successful', isLoading: false } });
     setTimeout(() => {
       if (onClose) {
         console.log('Calling onClose from completeLogin');
@@ -78,19 +65,19 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    dispatch({ type: 'SET_STATE', payload: { isLoading: true } });
-    console.log('handleSubmit triggered, otpSent:', loginState.otpSent);
+    cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { isLoading: true } });
+    console.log(`handleSubmit [ID: ${componentId.current}] triggered, otpSent:`, state.loginState.otpSent);
 
     try {
-      if (!loginState.otpSent) {
-        if (loginState.number.length !== 10 || !/^\d+$/.test(loginState.number)) {
-          dispatch({ type: 'SET_STATE', payload: { error: 'Please enter a valid 10-digit mobile number', isLoading: false } });
+      if (!state.loginState.otpSent) {
+        if (state.loginState.number.length !== 10 || !/^\d+$/.test(state.loginState.number)) {
+          cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: 'Please enter a valid 10-digit mobile number', isLoading: false } });
           return;
         }
-        dispatch({ type: 'SET_STATE', payload: { error: '', responseMessage: '', otpInput: '', otpSent: true } }); // Combine state updates
+        cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: '', responseMessage: '', otpInput: '', otpSent: true } }); // Combine state updates
         setUpdateTrigger(prev => prev + 1); // Immediate trigger update
-        console.log('State updated to otpSent:', true, 'Update trigger set to:', updateTrigger + 1);
-        const phoneNumber = `+91${loginState.number}`;
+        console.log(`State updated to otpSent: true Update trigger set to: ${updateTrigger + 1} [ID: ${componentId.current}]`);
+        const phoneNumber = `+91${state.loginState.number}`;
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -100,22 +87,22 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         const data = await response.json();
         console.log('send-otp response:', data);
         if (!response.ok) {
-          dispatch({ type: 'SET_STATE', payload: { error: `Error: ${data.error || data.message || 'Unknown error'}`, isLoading: false, otpSent: false } });
+          cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: `Error: ${data.error || data.message || 'Unknown error'}`, isLoading: false, otpSent: false } });
         } else {
           cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
           localStorage.setItem('userPhone', phoneNumber);
         }
       } else {
-        if (loginState.otpInput.length !== 6 || !/^\d+$/.test(loginState.otpInput)) {
-          dispatch({ type: 'SET_STATE', payload: { error: 'Please enter a valid 6-digit OTP', isLoading: false } });
+        if (state.loginState.otpInput.length !== 6 || !/^\d+$/.test(state.loginState.otpInput)) {
+          cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: 'Please enter a valid 6-digit OTP', isLoading: false } });
           return;
         }
-        dispatch({ type: 'SET_STATE', payload: { error: '', responseMessage: '' } });
-        const phoneNumber = `+91${loginState.number}`;
+        cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: '', responseMessage: '' } });
+        const phoneNumber = `+91${state.loginState.number}`;
         const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone_number: phoneNumber, otp: loginState.otpInput })
+          body: JSON.stringify({ phone_number: phoneNumber, otp: state.loginState.otpInput })
         });
         console.log('verify-otp status:', response.status, 'at', new Date().toISOString());
         const rawData = await response.json();
@@ -126,43 +113,43 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
         }
         console.log('verify-otp parsed data:', data);
         if (response.status === 200) {
-          dispatch({ type: 'SET_STATE', payload: { responseMessage: 'OTP verified successfully' } });
+          cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { responseMessage: 'OTP verified successfully' } });
           const fetchedName = data.user?.name || phoneNumber;
           const fetchedEmail = data.user?.email || '';
           completeLogin(phoneNumber, fetchedName, fetchedEmail);
         } else {
-          dispatch({ type: 'SET_STATE', payload: { error: `Error: ${data.error || 'Invalid OTP'}`, isLoading: false } });
+          cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: `Error: ${data.error || 'Invalid OTP'}`, isLoading: false } });
         }
       }
     } catch (err) {
       console.error('handleSubmit error:', err.message, err.stack, 'at', new Date().toISOString());
-      dispatch({ type: 'SET_STATE', payload: { error: `An error occurred: ${err.message}`, isLoading: false } });
+      cxtDispatch({ type: 'SET_LOGIN_STATE', payload: { error: `An error occurred: ${err.message}`, isLoading: false } });
     }
   };
 
   const handleKeyPress = (event) => {
-    if (event.key === 'Enter' && !loginState.isLoading) {
+    if (event.key === 'Enter' && !state.loginState.isLoading) {
       event.preventDefault();
       handleSubmit(event);
     }
   };
 
   const handleChange = (field) => (event) => {
-    dispatch({ type: 'UPDATE_FIELD', field, value: event.target.value });
+    cxtDispatch({ type: 'UPDATE_LOGIN_FIELD', field, value: event.target.value });
   };
 
   return (
-    <div className={`login-popup-container ${loginState.responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
-      <div className={`login-popup ${loginState.responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
-        {loginState.responseMessage !== 'Login successful' && (
+    <div className={`login-popup-container ${state.loginState.responseMessage === 'Login successful' ? 'success-popup-container' : ''}`}>
+      <div className={`login-popup ${state.loginState.responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
+        {state.loginState.responseMessage !== 'Login successful' && (
           <div className="login-title">
-            <h3>{loginState.otpSent || (openModel && state.loginPhase === 1) ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
+            <h3>{state.loginState.otpSent || (openModel && state.loginPhase === 1) ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
           </div>
         )}
         <div className="login-paragraph">
-          {!loginState.otpSent && !(openModel && state.loginPhase === 1) && <p>We will send you a <strong>One Time Password</strong></p>}
+          {!state.loginState.otpSent && !(openModel && state.loginPhase === 1) && <p>We will send you a <strong>One Time Password</strong></p>}
         </div>
-        {!loginState.otpSent && !(openModel && state.loginPhase === 1) ? (
+        {!state.loginState.otpSent && !(openModel && state.loginPhase === 1) ? (
           <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
             <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%' }}>
               <select className="form-select" aria-label="Default select example">
@@ -176,11 +163,11 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
                 className="form-control"
                 placeholder="Enter Your 10 digit Mobile Number"
                 style={{ textAlign: 'center' }}
-                value={loginState.number}
+                value={state.loginState.number}
                 onChange={handleChange('number')}
                 onKeyPress={handleKeyPress}
                 maxLength={10}
-                disabled={loginState.isLoading}
+                disabled={state.loginState.isLoading}
               />
             </div>
           </div>
@@ -189,16 +176,16 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
             <input
               type="text"
               placeholder="Enter 6-digit OTP"
-              value={loginState.otpInput}
+              value={state.loginState.otpInput}
               onChange={handleChange('otpInput')}
               onKeyPress={handleKeyPress}
               maxLength={6}
-              disabled={loginState.isLoading}
+              disabled={state.loginState.isLoading}
             />
           </div>
         )}
         <div>
-          {loginState.responseMessage === 'Login successful' ? (
+          {state.loginState.responseMessage === 'Login successful' ? (
             <div className="success-message">
               <svg
                 className="checkmark"
@@ -211,16 +198,16 @@ const Login = ({ onClose, onPhaseChange, openModel }) => {
               <p>Login Successful!</p>
             </div>
           ) : (
-            <button type="submit" className="login-button" onClick={handleSubmit} disabled={loginState.isLoading}>
-              {loginState.otpSent || (openModel && state.loginPhase === 1) ? 'VERIFY OTP' : 'SEND OTP'}
+            <button type="submit" className="login-button" onClick={handleSubmit} disabled={state.loginState.isLoading}>
+              {state.loginState.otpSent || (openModel && state.loginPhase === 1) ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
         </div>
-        {loginState.responseMessage && loginState.responseMessage !== 'Login successful' && (
-          <p style={{ color: 'green', textAlign: 'center' }}>{loginState.responseMessage}</p>
+        {state.loginState.responseMessage && state.loginState.responseMessage !== 'Login successful' && (
+          <p style={{ color: 'green', textAlign: 'center' }}>{state.loginState.responseMessage}</p>
         )}
-        {loginState.error && <p style={{ color: 'red', textAlign: 'center' }}>{loginState.error}</p>}
-        {loginState.isLoading && <p className="loading-message">Processing...</p>}
+        {state.loginState.error && <p style={{ color: 'red', textAlign: 'center' }}>{state.loginState.error}</p>}
+        {state.loginState.isLoading && <p className="loading-message">Processing...</p>}
       </div>
     </div>
   );
