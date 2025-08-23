@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/logo.svg';
 import './ReportsDisplay.css';
@@ -8,7 +8,7 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import Login from './Login';
-import { Store } from '../Store';
+import { useStore } from '../Store'; // Updated to use useStore
 import { Modal, ModalBody } from "reactstrap";
 
 const ReportsDisplay = () => {
@@ -18,7 +18,7 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state, dispatch: cxtDispatch } = useContext(Store);
+  const { state, dispatch: cxtDispatch } = useStore(); // Use useStore hook
   const { isLogin, name, status, email } = state;
 
   console.log("ReportsDisplay - isLogin:", isLogin);
