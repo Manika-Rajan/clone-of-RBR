@@ -8,7 +8,7 @@ const Login = React.memo(({ onClose }) => {
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [phone, setPhone] = useState(state.phone || '');
+  const [phone, setPhone] = useState(state.phone.replace('+91', '') || '');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
@@ -71,10 +71,18 @@ const Login = React.memo(({ onClose }) => {
       if (response.status === 200) {
         const fetchedName = data.user?.name || phoneNumber;
         const fetchedEmail = data.user?.email || '';
-        cxtDispatch({ type: 'USER_LOGIN', payload: { isLogin: true, userId: phoneNumber, name: fetchedName, email: fetchedEmail, phone: phoneNumber } });
+        cxtDispatch({
+          type: 'USER_LOGIN',
+          payload: { isLogin: true, userId: phoneNumber, name: fetchedName, email: fetchedEmail, phone: phoneNumber }
+        });
         if (onClose) onClose();
         setIsModalOpen(false);
-        navigate("/report-display", { state: { loggedIn: true, fileKey: location.state?.fileKey, reportId: location.state?.reportId, amount: location.state?.amount }, replace: true });
+        // Redirect with current location state
+        const { fileKey, reportId, amount } = location.state || {};
+        navigate(fileKey ? '/report-display' : '/', { 
+          state: { loggedIn: true, fileKey, reportId, amount },
+          replace: true 
+        });
       } else {
         setError(`Error: ${data.error || 'Invalid OTP'}`);
       }
