@@ -30,11 +30,7 @@ function AppContent() {
         <Route path="/about" element={<About />} />
         <Route path="/" element={<Reports />} />
         <Route path='/contact' element={<Contact />} />
-        <Route path='/report-display' element={
-          <ProtectedRoute>
-            <ReportsDisplay />
-          </ProtectedRoute>
-        } />
+        <Route path='/report-display' element={<ReportsDisplay />} />
         <Route path='/payment' element={
           <ProtectedRoute>
             <Payment />
