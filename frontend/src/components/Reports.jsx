@@ -113,7 +113,7 @@ const Reports = () => {
         throw new Error('No file_key returned in API response');
       }
 
-      navigate('/report-display', { state: { file_key: data.file_key, reportId: nextReportId } });
+      navigate('/report-display', { state: { file_key: data.filekey, reportId: nextReportId } });
     } catch (error) {
       console.error('Error generating report:', error);
       console.error('Error stack:', error.stack);
