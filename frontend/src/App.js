@@ -23,9 +23,12 @@ function AppContent() {
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
 
+  const hideNavbarRoutes = ["/report-display", "/payment"];
+
   return (
     <div className="App">
-      {location.pathname !== "/report-display" && <Navbar />}
+      {!hideNavbarRoutes.includes(location.pathname) && <Navbar />}
+        
       <Routes>
         <Route path="/about" element={<About />} />
         <Route path="/" element={<Reports />} />
