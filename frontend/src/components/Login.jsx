@@ -20,7 +20,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
     setIsModalOpen(true);
     console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "state:", state, "renderTrigger:", renderTrigger.current, "returnTo:", returnTo);
     renderTrigger.current += 1;
-  }, [returnTo]); // Add returnTo to dependency array
+  }, [returnTo]);
 
   const sendOtp = async () => {
     if (!phone || phone.length !== 10 || !/^\d+$/.test(phone)) {
@@ -79,10 +79,11 @@ const Login = React.memo(({ onClose, returnTo }) => {
         console.log(`Post-dispatch state in Login:`, state);
         if (onClose) onClose();
         setIsModalOpen(false);
-        // Use returnTo prop for redirection
+        // Use returnTo with fallback
+        const redirectTo = returnTo || '/report-display'; // Fallback to /report-display
         const { fileKey, reportId, amount } = location.state || {};
-        console.log(`Navigating to ${returnTo} with state:`, { loggedIn: true, fileKey, reportId, amount });
-        navigate(returnTo || '/report-display', { 
+        console.log(`Navigating to ${redirectTo} with state:`, { loggedIn: true, fileKey, reportId, amount });
+        navigate(redirectTo, { 
           state: { loggedIn: true, fileKey, reportId, amount },
           replace: true 
         });
