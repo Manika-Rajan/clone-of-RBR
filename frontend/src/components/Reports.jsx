@@ -117,9 +117,10 @@ const Reports = () => {
       console.log('Navigating to /report-display with fileKey:', fileKey, 'and reportId:', nextReportId);
       navigate('/report-display', { state: { fileKey, reportId: nextReportId } });
     } catch (error) {
-      console.error('Error generating report:', error.message);
-      console.error('Error stack:', error.stack);
-      alert(`Failed to generate report: ${error.message}`);
+      console.error('Error generating report:', error.message, error.stack);
+      const errorMessage = error.response ? await error.response.text() : error.message;
+      console.error('Error details:', errorMessage);
+      alert(`Failed to generate report: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
