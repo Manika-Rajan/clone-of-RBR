@@ -12,7 +12,7 @@ const Navbar = (props) => {
   const [otp, sendOtp] = useState(false);
   const [verify, setVerify] = useState(false);
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { name, isLogin } = state;
+  const { name, isLogin } = state.userInfo;   // ✅ fixed: use userInfo
   console.log("Navbar - isLogin:", isLogin);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
