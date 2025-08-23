@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { useStore } from '../Store';
 
-const Login = React.memo(({ onClose }) => {
+const Login = React.memo(({ onClose, returnTo }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useStore();
@@ -18,9 +18,9 @@ const Login = React.memo(({ onClose }) => {
 
   useEffect(() => {
     setIsModalOpen(true);
-    console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "state:", state, "renderTrigger:", renderTrigger.current);
+    console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "state:", state, "renderTrigger:", renderTrigger.current, "returnTo:", returnTo);
     renderTrigger.current += 1;
-  }, []);
+  }, [returnTo]); // Add returnTo to dependency array
 
   const sendOtp = async () => {
     if (!phone || phone.length !== 10 || !/^\d+$/.test(phone)) {
@@ -76,13 +76,13 @@ const Login = React.memo(({ onClose }) => {
           type: 'USER_LOGIN',
           payload: { isLogin: true, userId: phoneNumber, name: fetchedName, email: fetchedEmail, phone: phoneNumber }
         });
-        console.log(`Post-dispatch state in Login:`, state); // Debug state after dispatch
+        console.log(`Post-dispatch state in Login:`, state);
         if (onClose) onClose();
         setIsModalOpen(false);
-        // Redirect with current location state
+        // Use returnTo prop for redirection
         const { fileKey, reportId, amount } = location.state || {};
-        console.log(`Navigating to ${fileKey ? '/report-display' : '/'} with state:`, { loggedIn: true, fileKey, reportId, amount });
-        navigate(fileKey ? '/report-display' : '/', { 
+        console.log(`Navigating to ${returnTo} with state:`, { loggedIn: true, fileKey, reportId, amount });
+        navigate(returnTo || '/report-display', { 
           state: { loggedIn: true, fileKey, reportId, amount },
           replace: true 
         });
