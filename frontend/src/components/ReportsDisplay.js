@@ -32,7 +32,7 @@ const ReportsDisplay = () => {
     if (isLogin) {
       navigate("/payment");
     } else {
-      setOpenModel(true); // Strictly modal toggle
+      setOpenModel(true); // Ensure modal opens
     }
   };
 
@@ -126,7 +126,7 @@ const ReportsDisplay = () => {
       </div>
       <Modal
         isOpen={openModel}
-        toggle={() => setOpenModel(false)} // Simplified toggle
+        toggle={() => setOpenModel(false)}
         style={{ maxWidth: '650px', width: '100%', marginTop: "15%" }}
         size="lg"
       >
