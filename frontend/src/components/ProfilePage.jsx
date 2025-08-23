@@ -296,9 +296,6 @@ const ProfilePage = () => {
               </button>
             </div>
           </div>
-          <button className="save-button" onClick={saveProfile} disabled={isSaving} style={{ display: 'none' }}>
-            {isSaving ? 'Saving...' : 'Save Profile'}
-          </button>
         </div>
 
         <div className="reports-section">
