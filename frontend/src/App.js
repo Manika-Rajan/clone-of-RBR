@@ -21,7 +21,7 @@ function AppContent() {
   const location = useLocation();
   const { state } = useStore();
   const { userInfo } = state;
-  const isLogin = userInfo?.isLogin || false;
+  const isLogin = state.isLogin || false;
 
   const hideNavbarRoutes = ["/report-display", "/payment"];
 
@@ -60,7 +60,7 @@ function AppContent() {
 const ProtectedRoute = ({ children }) => {
   const { state } = useStore();
   const { userInfo } = state;
-  const isLogin = userInfo?.isLogin || false;
+  const isLogin = state.isLogin || false;
   const location = useLocation();
 
   return isLogin ? children : <Navigate to="/" state={{ from: location }} replace />; // Redirect to home instead of /login
