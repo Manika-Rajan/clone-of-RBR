@@ -32,7 +32,7 @@ const ReportsDisplay = () => {
     if (isLogin) {
       navigate("/payment");
     } else {
-      setOpenModel(true);
+      setOpenModel(true); // Toggle modal instead of navigating
     }
   };
 
@@ -45,7 +45,7 @@ const ReportsDisplay = () => {
     const fetchPresignedUrl = async () => {
       if (!fileKey) {
         console.error("No fileKey found. Skipping API request.");
-        setIsLoading(false); // Set loading to false to show error
+        setIsLoading(false);
         return;
       }
       console.log("Fetching presigned URL for fileKey:", fileKey);
@@ -75,6 +75,10 @@ const ReportsDisplay = () => {
     };
     fetchPresignedUrl();
   }, [fileKey]);
+
+  useEffect(() => {
+    console.log("ReportsDisplay useEffect - isLogin updated to:", isLogin); // Debug state sync
+  }, [isLogin]);
 
   return (
     <>
