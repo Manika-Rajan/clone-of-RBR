@@ -28,11 +28,11 @@ const ReportsDisplay = () => {
   const [pdfUrl, setPdfUrl] = useState('');
 
   const handlePayment = () => {
-    console.log("handlePayment - isLogin:", isLogin);
+    console.log("handlePayment - isLogin:", isLogin, "Current path:", location.pathname);
     if (isLogin) {
       navigate("/payment");
     } else {
-      setOpenModel(true); // Toggle modal instead of navigating
+      setOpenModel(true); // Strictly modal toggle
     }
   };
 
@@ -77,8 +77,8 @@ const ReportsDisplay = () => {
   }, [fileKey]);
 
   useEffect(() => {
-    console.log("ReportsDisplay useEffect - isLogin updated to:", isLogin); // Debug state sync
-  }, [isLogin]);
+    console.log("ReportsDisplay useEffect - isLogin updated to:", isLogin, "Path:", location.pathname);
+  }, [isLogin, location.pathname]);
 
   return (
     <>
@@ -126,12 +126,12 @@ const ReportsDisplay = () => {
       </div>
       <Modal
         isOpen={openModel}
-        toggle={() => setOpenModel(!openModel)}
+        toggle={() => setOpenModel(false)} // Simplified toggle
         style={{ maxWidth: '650px', width: '100%', marginTop: "15%" }}
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => setOpenModel(false)} />
+          <Login onClose={() => setOpenModel(false)} returnTo={location.pathname} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
