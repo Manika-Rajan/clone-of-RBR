@@ -82,7 +82,7 @@ const Reports = () => {
         timestamp: timestamp,
         reportId: nextReportId // Include the new report ID
       };
-      console.log('Sending payload to Lambda:', payload);
+      console.log('Generate Report triggered - Sending payload to Lambda:', payload);
 
       const response = await fetch(
         'https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/RBR_report_create_from_filters_received',
@@ -107,15 +107,17 @@ const Reports = () => {
       }
 
       const data = await response.json();
-      console.log('API Response:', data);
+      console.log('API Response for report generation:', data);
 
       if (!data.file_key) {
         throw new Error('No file_key returned in API response');
       }
 
-      navigate('/report-display', { state: { fileKey: data.file_key, reportId: nextReportId } }); // Fixed variable and field name
+      const fileKey = data.file_key;
+      console.log('Navigating to /report-display with fileKey:', fileKey, 'and reportId:', nextReportId);
+      navigate('/report-display', { state: { fileKey, reportId: nextReportId } });
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error('Error generating report:', error.message);
       console.error('Error stack:', error.stack);
       alert(`Failed to generate report: ${error.message}`);
     } finally {
