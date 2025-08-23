@@ -26,13 +26,14 @@ const ReportsDisplay = () => {
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
+  const [localFileKey, setLocalFileKey] = useState(fileKey); // Store fileKey locally
 
   const handlePayment = () => {
-    console.log("handlePayment - isLogin:", isLogin, "Current path:", location.pathname);
+    console.log("handlePayment - isLogin:", isLogin, "Current path:", location.pathname, "fileKey:", fileKey);
     if (isLogin) {
       navigate("/payment");
     } else {
-      setOpenModel(true); // Ensure modal opens
+      setOpenModel(true); // Strictly modal toggle
     }
   };
 
@@ -43,18 +44,18 @@ const ReportsDisplay = () => {
 
   useEffect(() => {
     const fetchPresignedUrl = async () => {
-      if (!fileKey) {
+      if (!localFileKey) {
         console.error("No fileKey found. Skipping API request.");
         setIsLoading(false);
         return;
       }
-      console.log("Fetching presigned URL for fileKey:", fileKey);
+      console.log("Fetching presigned URL for fileKey:", localFileKey);
       setIsLoading(true);
       try {
         const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file_key: fileKey }),
+          body: JSON.stringify({ file_key: localFileKey }),
         });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -74,11 +75,12 @@ const ReportsDisplay = () => {
       }
     };
     fetchPresignedUrl();
-  }, [fileKey]);
+  }, [localFileKey]);
 
   useEffect(() => {
     console.log("ReportsDisplay useEffect - isLogin updated to:", isLogin, "Path:", location.pathname);
-  }, [isLogin, location.pathname]);
+    setLocalFileKey(fileKey); // Update localFileKey on location change
+  }, [isLogin, location.pathname, fileKey]);
 
   return (
     <>
@@ -131,7 +133,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => setOpenModel(false)} returnTo={location.pathname} />
+          <Login onClose={() => setOpenModel(false)} returnTo={location.pathname} fileKey={localFileKey} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
