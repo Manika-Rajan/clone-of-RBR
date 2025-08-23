@@ -20,7 +20,7 @@ import { useStore } from './Store'; // Ensure this import is present
 
 function App() {
   return (
-    <StoreProvider> {/* This wraps everything, making Store available to all components */}
+    <StoreProvider key={Date.now()}> {/* Force re-render on mount */} {/* This wraps everything, making Store available to all components */}
       <Router>
         <div className="App">
           {window.location.pathname !== "/report-display" && <Navbar />}
@@ -36,7 +36,7 @@ function App() {
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/login" element={<Login />} />
+            {/* <Route path="/login" element={<Login />} /> */}
             <Route path="*" element={<Navigate to="/not-found" />} />
           </Routes>
           <Footer />
