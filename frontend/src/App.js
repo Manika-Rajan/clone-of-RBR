@@ -14,48 +14,60 @@ import RefundPolicy from './components/RefundPolicy';
 import PrivacyPolicy from './components/PrivacyPolicy'; 
 import React from 'react';
 import { StoreProvider } from './Store';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import Login from './components/Login';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { useStore } from './Store'; // Ensure this import is present
 
-function App() {
-  return (
-    <StoreProvider key={Date.now()}> {/* Force re-render on mount */} {/* This wraps everything, making Store available to all components */}
-      <Router>
-        <div className="App">
-          {window.location.pathname !== "/report-display" && <Navbar />}
-          <Routes>
-            <Route path="/about" element={<About />} />
-            <Route path="/" element={<Reports />} />
-            <Route path='/contact' element={<Contact />} />
-            <Route path='/report-display' element={<ReportsDisplay />} />
-            <Route path='/payment' element={<ProtectedRoute><Payment /></ProtectedRoute>} />
-            <Route path='/commingSoon' element={<CommingSoon />} />
-            <Route path='/not-found' element={<Invalid />} />
-            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-            <Route path="/terms" element={<TermsAndConditions />} />
-            <Route path="/refund-policy" element={<RefundPolicy />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            {/* <Route path="/login" element={<Login />} /> */}
-            <Route path="*" element={<div>404 - Not Found</div>} /> {/* Catch-all for /not-found */}
-          </Routes>
-          <Footer />
-        </div>
-      </Router>
-    </StoreProvider>
-  );
-}
-
-// Protected Route Component (checks if user is logged in)
-const ProtectedRoute = ({ children }) => {
-  const { state } = useStore(); // Safely access Store within StoreProvider
+function AppContent() {
+  const location = useLocation();
+  const { state } = useStore();
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
 
-  return isLogin ? children : <Navigate to="/login" />;
+  return (
+    <div className="App">
+      {location.pathname !== "/report-display" && <Navbar />}
+      <Routes>
+        <Route path="/about" element={<About />} />
+        <Route path="/" element={<Reports />} />
+        <Route path='/contact' element={<Contact />} />
+        <Route path='/report-display' element={
+          <ProtectedRoute>
+            <ReportsDisplay />
+          </ProtectedRoute>
+        } />
+        <Route path='/payment' element={
+          <ProtectedRoute>
+            <Payment />
+          </ProtectedRoute>
+        } />
+        <Route path='/commingSoon' element={<CommingSoon />} />
+        <Route path='/not-found' element={<Invalid />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="*" element={<Navigate to="/not-found" />} /> {/* Catch-all */}
+      </Routes>
+      <Footer />
+    </div>
+  );
+}
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { state } = useStore();
+  const { userInfo } = state;
+  const isLogin = userInfo?.isLogin || false;
+  const location = useLocation();
+
+  return isLogin ? children : <Navigate to="/" state={{ from: location }} replace />;
 };
 
-const App = () => {
+function App() {
   return (
     <StoreProvider key={Date.now()}> {/* Force re-render on mount */}
       <Router>
@@ -63,6 +75,6 @@ const App = () => {
       </Router>
     </StoreProvider>
   );
-};
+}
 
 export default App;
