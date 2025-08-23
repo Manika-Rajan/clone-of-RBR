@@ -37,7 +37,7 @@ function App() {
             <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             {/* <Route path="/login" element={<Login />} /> */}
-            <Route path="*" element={<Navigate to="/not-found" />} />
+            <Route path="*" element={<div>404 - Not Found</div>} /> {/* Catch-all for /not-found */}
           </Routes>
           <Footer />
         </div>
@@ -53,6 +53,16 @@ const ProtectedRoute = ({ children }) => {
   const isLogin = userInfo?.isLogin || false;
 
   return isLogin ? children : <Navigate to="/login" />;
+};
+
+const App = () => {
+  return (
+    <StoreProvider key={Date.now()}> {/* Force re-render on mount */}
+      <Router>
+        <AppContent />
+      </Router>
+    </StoreProvider>
+  );
 };
 
 export default App;
