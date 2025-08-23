@@ -13,15 +13,14 @@ import Invalid from './components/Invalid';
 import RefundPolicy from './components/RefundPolicy'; 
 import PrivacyPolicy from './components/PrivacyPolicy'; 
 import React from 'react';
-import { StoreProvider } from './Store';
+import { StoreProvider, useStore } from './Store';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
-import { useStore } from './Store'; // Ensure this import is present
 
 function AppContent() {
   const location = useLocation();
   const { state } = useStore();
   const { userInfo } = state;
-  const isLogin = state.isLogin || false;
+  const isLogin = userInfo?.isLogin || false;
 
   const hideNavbarRoutes = ["/report-display", "/payment"];
 
@@ -49,7 +48,7 @@ function AppContent() {
         <Route path="/terms" element={<TermsAndConditions />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="*" element={<Navigate to="/not-found" />} /> {/* Catch-all without /login route */}
+        <Route path="*" element={<Navigate to="/not-found" />} /> {/* Catch-all */}
       </Routes>
       <Footer />
     </div>
@@ -60,10 +59,10 @@ function AppContent() {
 const ProtectedRoute = ({ children }) => {
   const { state } = useStore();
   const { userInfo } = state;
-  const isLogin = state.isLogin || false;
+  const isLogin = userInfo?.isLogin || false;
   const location = useLocation();
 
-  return isLogin ? children : <Navigate to="/" state={{ from: location }} replace />; // Redirect to home instead of /login
+  return isLogin ? children : <Navigate to="/" state={{ from: location }} replace />;
 };
 
 function App() {
