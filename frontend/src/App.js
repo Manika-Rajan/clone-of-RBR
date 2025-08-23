@@ -50,8 +50,7 @@ function AppContent() {
         <Route path="/terms" element={<TermsAndConditions />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/login" element={<Login />} /> {/* Restored login route */}
-        <Route path="*" element={<Navigate to="/not-found" />} /> {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/not-found" />} /> {/* Catch-all without /login route */}
       </Routes>
       <Footer />
     </div>
@@ -65,7 +64,7 @@ const ProtectedRoute = ({ children }) => {
   const isLogin = userInfo?.isLogin || false;
   const location = useLocation();
 
-  return isLogin ? children : <Navigate to="/login" state={{ from: location }} replace />;
+  return isLogin ? children : <Navigate to="/" state={{ from: location }} replace />; // Redirect to home instead of /login
 };
 
 function App() {
