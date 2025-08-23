@@ -1,48 +1,63 @@
-import { createContext, useReducer } from 'react';
+import { createContext, useReducer, useContext } from "react";
+
+export const Store = createContext();
 
 const initialState = {
-  isLogin: false,
-  userInfo: localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null,
-  loginState: {
-    number: '',
-    otpInput: '',
-    otpSent: false,
-    updateTrigger: 0,
-    isLoading: false,
-    error: '',
-    responseMessage: '',
-  },
+  isLogin: localStorage.getItem("isLogin") === "true",
+  userId: localStorage.getItem("userId") || '',
+  name: localStorage.getItem('userName') || '',
+  phone: localStorage.getItem('userPhone') || '',
+  email: localStorage.getItem('userEmail') || '',
+  totalPrice: 0,
   status: false,
-  name: '',
-  email: '',
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
+    case 'SET_PRICE':
+      return { ...state, totalPrice: action.payload };
     case 'USER_LOGIN':
-      return { ...state, isLogin: true, userInfo: action.payload, status: false };
-    case 'USER_LOGOUT':
-      return { ...state, isLogin: false, userInfo: null, loginState: initialState.loginState, status: false };
-    case 'UPDATE_LOGIN_FIELD':
-      return { ...state, loginState: { ...state.loginState, [action.field]: action.value } };
-    case 'SET_LOGIN_STATE':
-      return { ...state, loginState: { ...state.loginState, ...action.payload } };
+      localStorage.setItem("isLogin", action.payload.isLogin);
+      if (action.payload.userId) localStorage.setItem("userId", action.payload.userId);
+      return {
+        ...state,
+        isLogin: action.payload.isLogin,
+        userId: action.payload.userId || state.userId,
+        name: action.payload.name || state.name,
+        email: action.payload.email || state.email,
+        phone: action.payload.phone || state.phone
+      };
+    case 'SET_USER_ID':
+      localStorage.setItem("userId", action.payload);
+      return { ...state, userId: action.payload };
+    case 'SET_NAME':
+      localStorage.setItem('userName', action.payload);
+      return { ...state, name: action.payload };
     case 'SET_PHONE':
-      return { ...state, loginState: { ...state.loginState, number: action.payload.replace('+91', '') } };
+      localStorage.setItem('userPhone', action.payload);
+      return { ...state, phone: action.payload };
+    case 'SET_EMAIL':
+      localStorage.setItem('userEmail', action.payload);
+      return { ...state, email: action.payload };
     case 'SET_REPORT_STATUS':
-      return { ...state, status: true, name: state.userInfo?.name || '', email: state.userInfo?.email || '' };
+      return { ...state, status: !state.status };
+    case 'LOGOUT':
+      localStorage.setItem("isLogin", "false");
+      localStorage.removeItem("userId");
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userPhone');
+      return { ...state, isLogin: false, userId: '', name: '', phone: '', email: '' };
     default:
       return state;
   }
 };
 
-export const Store = createContext({
-  state: initialState,
-  dispatch: () => null,
-});
-
-export const StoreProvider = ({ children }) => {
+export function StoreProvider(props) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  console.log('Store.js:33 StoreProvider rendering with state:', state);
-  return <Store.Provider value={{ state, dispatch }}>{children}</Store.Provider>;
-};
+  const value = { state, dispatch };
+  return <Store.Provider value={value}>{props.children}</Store.Provider>;
+}
+
+export const useStore = () => useContext(Store);
