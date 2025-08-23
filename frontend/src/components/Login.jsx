@@ -8,7 +8,10 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [phone, setPhone] = useState(state.phone.replace('+91', '') || '');
+  // ✅ Fix: protect against undefined state.phone
+  const [phone, setPhone] = useState(
+    state.phone ? state.phone.replace('+91', '') : ''
+  );
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
@@ -18,7 +21,18 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
 
   useEffect(() => {
     setIsModalOpen(true);
-    console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "state:", state, "renderTrigger:", renderTrigger.current, "returnTo:", returnTo, "fileKey:", fileKey);
+    console.log(
+      `Login [ID: ${componentId.current}] - isModalOpen updated to:`,
+      isModalOpen,
+      'state:',
+      state,
+      'renderTrigger:',
+      renderTrigger.current,
+      'returnTo:',
+      returnTo,
+      'fileKey:',
+      fileKey
+    );
     renderTrigger.current += 1;
   }, [returnTo, fileKey]);
 
@@ -31,11 +45,14 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
     setError('');
     const phoneNumber = `+91${phone}`;
     try {
-      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: phoneNumber }),
-      });
+      const response = await fetch(
+        'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone_number: phoneNumber }),
+        }
+      );
       const data = await response.json();
       console.log('send-otp response:', data);
       if (response.ok) {
@@ -61,30 +78,44 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
     setError('');
     const phoneNumber = `+91${phone}`;
     try {
-      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: phoneNumber, otp }),
-      });
+      const response = await fetch(
+        'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone_number: phoneNumber, otp }),
+        }
+      );
       const data = await response.json();
       console.log('verify-otp response:', data);
       if (response.status === 200) {
         const fetchedName = data.user?.name || phoneNumber;
         const fetchedEmail = data.user?.email || '';
-        console.log(`Dispatching USER_LOGIN with isLogin: true, phone: ${phoneNumber}, name: ${fetchedName}, email: ${fetchedEmail}`);
+        console.log(
+          `Dispatching USER_LOGIN with isLogin: true, phone: ${phoneNumber}, name: ${fetchedName}, email: ${fetchedEmail}`
+        );
         cxtDispatch({
           type: 'USER_LOGIN',
-          payload: { isLogin: true, userId: phoneNumber, name: fetchedName, email: fetchedEmail, phone: phoneNumber }
+          payload: {
+            isLogin: true,
+            userId: phoneNumber,
+            name: fetchedName,
+            email: fetchedEmail,
+            phone: phoneNumber,
+          },
         });
         console.log(`Post-dispatch state in Login:`, state);
         if (onClose) onClose();
         setIsModalOpen(false);
         const redirectTo = returnTo || '/report-display';
         const { from } = location.state || {};
-        console.log(`Navigating to ${redirectTo || from} with state:`, { loggedIn: true, fileKey, reportId: null, amount: null });
-        navigate(redirectTo || from || '/report-display', { 
+        console.log(
+          `Navigating to ${redirectTo || from} with state:`,
+          { loggedIn: true, fileKey, reportId: null, amount: null }
+        );
+        navigate(redirectTo || from || '/report-display', {
           state: { loggedIn: true, fileKey, reportId: null, amount: null },
-          replace: true 
+          replace: true,
         });
       } else {
         setError(`Error: ${data.error || 'Invalid OTP'}`);
@@ -106,21 +137,42 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
   const handleChange = (setter) => (e) => setter(e.target.value);
 
   return (
-    <div className={`login-popup-container ${!error && !isLoading && 'success-popup-container'}`}>
-      <div className={`login-popup ${!error && !isLoading && 'success-popup'}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
+    <div
+      className={`login-popup-container ${
+        !error && !isLoading && 'success-popup-container'
+      }`}
+    >
+      <div
+        className={`login-popup ${!error && !isLoading && 'success-popup'}`}
+        style={{ display: isModalOpen ? 'block' : 'none' }}
+      >
         {!isLoading && !error && (
           <div className="login-title">
             <h3>{otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
           </div>
         )}
         <div className="login-paragraph">
-          {!otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
+          {!otpSent && (
+            <p>
+              We will send you a <strong>One Time Password</strong>
+            </p>
+          )}
         </div>
         {!otpSent ? (
-          <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
-            <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%' }}>
-              <select className="form-select" aria-label="Default select example" disabled>
-                <option selected>+91</option>
+          <div
+            className="login-phone-input"
+            style={{ width: '70%', textAlign: 'center', margin: 'auto' }}
+          >
+            <div
+              className="input-group mb-3"
+              style={{ marginRight: '20px', width: '23%' }}
+            >
+              <select
+                className="form-select"
+                aria-label="Default select example"
+                disabled
+              >
+                <option defaultValue>+91</option>
               </select>
             </div>
             <div className="input-group mb-3">
@@ -150,7 +202,11 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
         )}
         <div>
           {!isLoading && !error ? (
-            <button onClick={handleSubmit} className="login-btn" disabled={isLoading}>
+            <button
+              onClick={handleSubmit}
+              className="login-btn"
+              disabled={isLoading}
+            >
               {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           ) : error ? (
