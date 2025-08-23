@@ -8,7 +8,7 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import Login from './Login';
-import { useStore } from '../Store'; // Updated to use useStore
+import { useStore } from '../Store';
 import { Modal, ModalBody } from "reactstrap";
 
 const ReportsDisplay = () => {
@@ -18,7 +18,7 @@ const ReportsDisplay = () => {
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  const { state, dispatch: cxtDispatch } = useStore(); // Use useStore hook
+  const { state, dispatch: cxtDispatch } = useStore();
   const { isLogin, name, status, email } = state;
 
   console.log("ReportsDisplay - isLogin:", isLogin);
@@ -45,6 +45,7 @@ const ReportsDisplay = () => {
     const fetchPresignedUrl = async () => {
       if (!fileKey) {
         console.error("No fileKey found. Skipping API request.");
+        setIsLoading(false); // Set loading to false to show error
         return;
       }
       console.log("Fetching presigned URL for fileKey:", fileKey);
@@ -114,7 +115,7 @@ const ReportsDisplay = () => {
             ) : pdfUrl ? (
               <Viewer fileUrl={pdfUrl} plugins={[defaultLayoutPluginInstance]} />
             ) : (
-              <div className="error-message">Failed to load report. Please try again.</div>
+              <div className="error-message">Failed to load report. No fileKey or API issue.</div>
             )}
           </Worker>
         </div>
