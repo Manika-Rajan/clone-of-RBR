@@ -33,7 +33,7 @@ const ReportsDisplay = () => {
     if (isLogin) {
       navigate("/payment");
     } else {
-      setOpenModel(true); // Only toggle modal, no navigation
+      setOpenModel(true); // Only toggle modal
     }
   };
 
