@@ -30,17 +30,25 @@ const ProfilePage = () => {
 
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
     let storedUserId =
-      storedUserInfo?.userId ||
       storedUserInfo?.user_id ||
-      localStorage.getItem('userId') ||
-      localStorage.getItem('user_id');
+      storedUserInfo?.userId ||
+      localStorage.getItem('user_id') ||
+      localStorage.getItem('userId');
     let authToken = localStorage.getItem('authToken') || '';
-    console.log("Stored userId:", storedUserId, "Stored userInfo:", storedUserInfo, "authToken:", authToken);
+    console.log("Stored user_id:", storedUserId, "Stored userInfo:", storedUserInfo, "authToken:", authToken);
     if (!storedUserId) {
       console.warn('User ID missing.');
       setLoading(false);
       setError('User ID not found. Please log in again.');
       return;
+    }
+
+    // ensure normalized storage (always user_id)
+    localStorage.setItem('user_id', storedUserId);
+    if (storedUserInfo) {
+      storedUserInfo.user_id = storedUserId;
+      delete storedUserInfo.userId;
+      localStorage.setItem('userInfo', JSON.stringify(storedUserInfo));
     }
 
     // Set authToken if missing but present in userInfo
@@ -50,7 +58,7 @@ const ProfilePage = () => {
       console.log('Updated authToken from userInfo:', authToken);
     }
 
-    if (!userInfo?.userId) {
+    if (!userInfo?.user_id) {
       cxtDispatch({ type: 'SET_USER_ID', payload: storedUserId });
     }
 
@@ -74,12 +82,19 @@ const ProfilePage = () => {
           setNameInput(data.name || '');
           setEmailInput(data.email || '');
           const fetchedPhotoUrl = data.photo_url || null;
-          setPhotoUrl(fetchedPhotoUrl); // This will be a presigned URL from now on
+          setPhotoUrl(fetchedPhotoUrl);
           console.log('Fetched photoUrl:', fetchedPhotoUrl);
-          cxtDispatch({
-            type: 'USER_LOGIN',
-            payload: { isLogin: true, userId: storedUserId, name: data.name, email: data.email, phone: data.phone, photo_url: fetchedPhotoUrl, token: authToken }
-          });
+          const normalizedUserInfo = { 
+            isLogin: true, 
+            user_id: storedUserId, 
+            name: data.name, 
+            email: data.email, 
+            phone: data.phone, 
+            photo_url: fetchedPhotoUrl, 
+            token: authToken 
+          };
+          cxtDispatch({ type: 'USER_LOGIN', payload: normalizedUserInfo });
+          localStorage.setItem('userInfo', JSON.stringify(normalizedUserInfo));
         } else {
           throw new Error(data.error || `Failed to fetch profile (Status: ${response.status}) - ${data.message || 'No additional details'}`);
         }
@@ -92,7 +107,7 @@ const ProfilePage = () => {
     };
 
     fetchProfile();
-  }, [cxtDispatch, userInfo?.userId]);
+  }, [cxtDispatch, userInfo?.user_id]);
 
   const fetchPresignedUrl = async (fileKey) => {
     try {
@@ -122,16 +137,12 @@ const ProfilePage = () => {
 
     console.log('File selected:', file.name, file.type, file.size);
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const userId =
-      storedUserInfo?.userId ||
-      storedUserInfo?.user_id ||
-      localStorage.getItem('userId') ||
-      localStorage.getItem('user_id');
+    const user_id = storedUserInfo?.user_id || localStorage.getItem('user_id');
     const authToken = localStorage.getItem('authToken') || '';
-    console.log('Attempting upload with userId:', userId, 'authToken:', authToken);
-    if (!userId) {
-      console.error('userId is undefined or missing');
-      alert('Failed to upload photo: userId is undefined or missing');
+    console.log('Attempting upload with user_id:', user_id, 'authToken:', authToken);
+    if (!user_id) {
+      console.error('user_id is undefined or missing');
+      alert('Failed to upload photo: user_id is undefined or missing');
       return;
     }
 
@@ -145,7 +156,7 @@ const ProfilePage = () => {
             'Content-Type': 'application/json', 
             'Authorization': `Bearer ${authToken}` 
           },
-          body: JSON.stringify({ userId }),
+          body: JSON.stringify({ user_id }),
         }
       );
       console.log('Presigned URL fetch response status:', response.status, 'Headers:', Object.fromEntries(response.headers));
@@ -165,12 +176,13 @@ const ProfilePage = () => {
         const uploadErrorText = await uploadResponse.text();
         throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
       }
-      // Use the presigned GET URL directly
       setPhotoUrl(presignedGetUrl);
-      setNewPhoto(null); // Clear the new photo input after upload
+      setNewPhoto(null);
       console.log('Photo upload successful, photoUrl set to presigned GET URL:', presignedGetUrl);
       alert('Photo uploaded successfully!');
-      cxtDispatch({ type: 'SET_PHOTO_URL', payload: presignedGetUrl });
+      const updatedUserInfo = { ...storedUserInfo, user_id, photo_url: presignedGetUrl };
+      cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
+      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
     } catch (error) {
       console.error('Error uploading photo:', error.message, error.stack);
       alert(`Unable to upload photo: ${error.message}`);
@@ -181,9 +193,9 @@ const ProfilePage = () => {
 
   const handleRemovePhoto = async () => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const userId = storedUserInfo?.userId || storedUserInfo?.user_id;
+    const user_id = storedUserInfo?.user_id || localStorage.getItem('user_id');
     const authToken = localStorage.getItem('authToken') || '';
-    if (!userId) {
+    if (!user_id) {
       alert('User ID is missing.');
       return;
     }
@@ -191,11 +203,11 @@ const ProfilePage = () => {
     setIsSaving(true);
     try {
       const profileData = {
-        user_id: userId,
+        user_id,
         name: nameInput,
         email: emailInput,
         phone: storedUserInfo?.phone || '',
-        photo_url: null, // Set photo_url to null to remove
+        photo_url: null,
       };
       const response = await fetch(
         'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
@@ -207,10 +219,12 @@ const ProfilePage = () => {
       );
       if (!response.ok) throw new Error('Failed to remove photo');
       console.log("Remove photo response:", await response.json());
-      setPhotoUrl(null); // Revert to default
-      cxtDispatch({ type: 'USER_LOGIN', payload: { ...userInfo, photo_url: null } });
+      setPhotoUrl(null);
+      const updatedUserInfo = { ...userInfo, user_id, photo_url: null };
+      cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
+      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
       alert('Profile photo removed successfully!');
-      setShowEditModal(false); // Close the modal after removal
+      setShowEditModal(false);
     } catch (error) {
       console.error('Error removing photo:', error);
       alert('Failed to remove profile photo.');
@@ -221,14 +235,14 @@ const ProfilePage = () => {
 
   const saveProfile = async () => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const userId = storedUserInfo?.userId || storedUserInfo?.user_id;
-    if (!userId) {
+    const user_id = storedUserInfo?.user_id || localStorage.getItem('user_id');
+    if (!user_id) {
       alert('User ID is missing.');
       return;
     }
 
     const profileData = {
-      user_id: userId,
+      user_id,
       name: nameInput,
       email: emailInput,
       phone: storedUserInfo?.phone || '',
@@ -248,11 +262,10 @@ const ProfilePage = () => {
       if (!response.ok) throw new Error('Failed to save profile');
       console.log("Save profile response:", await response.json());
       alert('Profile saved successfully');
-      cxtDispatch({
-        type: 'USER_LOGIN',
-        payload: { isLogin: true, userId, name: nameInput, email: emailInput, phone: profileData.phone, photo_url: photoUrl }
-      });
-      setShowEditModal(false); // Close the modal after successful save
+      const updatedUserInfo = { ...storedUserInfo, user_id, name: nameInput, email: emailInput, phone: profileData.phone, photo_url: photoUrl };
+      cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
+      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
+      setShowEditModal(false);
     } catch (error) {
       console.error('Error saving profile:', error);
       alert('Failed to save profile.');
@@ -359,7 +372,7 @@ const ProfilePage = () => {
                   accept="image/*"
                   onChange={(e) => {
                     setNewPhoto(e.target.files[0]);
-                    handlePhotoUpload(e); // Trigger upload immediately
+                    handlePhotoUpload(e);
                   }}
                   className="form-control"
                   disabled={photoUploading}
