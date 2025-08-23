@@ -3,52 +3,57 @@ import { createContext, useReducer, useContext } from "react";
 export const Store = createContext();
 
 const initialState = {
-  isLogin: localStorage.getItem("isLogin") === "true",
-  userId: localStorage.getItem("userId") || '',
-  name: localStorage.getItem('userName') || '',
-  phone: localStorage.getItem('userPhone') || '',
-  email: localStorage.getItem('userEmail') || '',
+  userInfo: {
+    isLogin: localStorage.getItem("isLogin") === "true",
+    userId: localStorage.getItem("userId") || "",
+    name: localStorage.getItem("userName") || "",
+    phone: localStorage.getItem("userPhone") || "",
+    email: localStorage.getItem("userEmail") || "",
+  },
   totalPrice: 0,
   status: false,
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
-    case 'SET_PRICE':
+    case "SET_PRICE":
       return { ...state, totalPrice: action.payload };
-    case 'USER_LOGIN':
-      localStorage.setItem("isLogin", action.payload.isLogin);
-      if (action.payload.userId) localStorage.setItem("userId", action.payload.userId);
-      return {
-        ...state,
+
+    case "USER_LOGIN": {
+      const updatedUser = {
         isLogin: action.payload.isLogin,
-        userId: action.payload.userId || state.userId,
-        name: action.payload.name || state.name,
-        email: action.payload.email || state.email,
-        phone: action.payload.phone || state.phone
+        userId: action.payload.userId || state.userInfo.userId,
+        name: action.payload.name || state.userInfo.name,
+        email: action.payload.email || state.userInfo.email,
+        phone: action.payload.phone || state.userInfo.phone,
       };
-    case 'SET_USER_ID':
-      localStorage.setItem("userId", action.payload);
-      return { ...state, userId: action.payload };
-    case 'SET_NAME':
-      localStorage.setItem('userName', action.payload);
-      return { ...state, name: action.payload };
-    case 'SET_PHONE':
-      localStorage.setItem('userPhone', action.payload);
-      return { ...state, phone: action.payload };
-    case 'SET_EMAIL':
-      localStorage.setItem('userEmail', action.payload);
-      return { ...state, email: action.payload };
-    case 'SET_REPORT_STATUS':
-      return { ...state, status: !state.status };
-    case 'LOGOUT':
+
+      // persist to localStorage
+      localStorage.setItem("isLogin", updatedUser.isLogin);
+      localStorage.setItem("userId", updatedUser.userId || "");
+      localStorage.setItem("userName", updatedUser.name || "");
+      localStorage.setItem("userEmail", updatedUser.email || "");
+      localStorage.setItem("userPhone", updatedUser.phone || "");
+
+      return { ...state, userInfo: updatedUser };
+    }
+
+    case "LOGOUT":
       localStorage.setItem("isLogin", "false");
       localStorage.removeItem("userId");
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userPhone');
-      return { ...state, isLogin: false, userId: '', name: '', phone: '', email: '' };
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userPhone");
+
+      return {
+        ...state,
+        userInfo: { isLogin: false, userId: "", name: "", phone: "", email: "" },
+      };
+
+    case "SET_REPORT_STATUS":
+      return { ...state, status: !state.status };
+
     default:
       return state;
   }
