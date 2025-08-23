@@ -71,14 +71,17 @@ const Login = React.memo(({ onClose }) => {
       if (response.status === 200) {
         const fetchedName = data.user?.name || phoneNumber;
         const fetchedEmail = data.user?.email || '';
+        console.log(`Dispatching USER_LOGIN with isLogin: true, phone: ${phoneNumber}, name: ${fetchedName}, email: ${fetchedEmail}`);
         cxtDispatch({
           type: 'USER_LOGIN',
           payload: { isLogin: true, userId: phoneNumber, name: fetchedName, email: fetchedEmail, phone: phoneNumber }
         });
+        console.log(`Post-dispatch state in Login:`, state); // Debug state after dispatch
         if (onClose) onClose();
         setIsModalOpen(false);
         // Redirect with current location state
         const { fileKey, reportId, amount } = location.state || {};
+        console.log(`Navigating to ${fileKey ? '/report-display' : '/'} with state:`, { loggedIn: true, fileKey, reportId, amount });
         navigate(fileKey ? '/report-display' : '/', { 
           state: { loggedIn: true, fileKey, reportId, amount },
           replace: true 
