@@ -29,7 +29,11 @@ const ProfilePage = () => {
     console.log("ProfilePage mounted. State:", state);
 
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    let storedUserId = storedUserInfo?.userId || localStorage.getItem('userId');
+    let storedUserId =
+      storedUserInfo?.userId ||
+      storedUserInfo?.user_id ||
+      localStorage.getItem('userId') ||
+      localStorage.getItem('user_id');
     let authToken = localStorage.getItem('authToken') || '';
     console.log("Stored userId:", storedUserId, "Stored userInfo:", storedUserInfo, "authToken:", authToken);
     if (!storedUserId) {
@@ -118,7 +122,11 @@ const ProfilePage = () => {
 
     console.log('File selected:', file.name, file.type, file.size);
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const userId = storedUserInfo?.userId || localStorage.getItem('userId');
+    const userId =
+      storedUserInfo?.userId ||
+      storedUserInfo?.user_id ||
+      localStorage.getItem('userId') ||
+      localStorage.getItem('user_id');
     const authToken = localStorage.getItem('authToken') || '';
     console.log('Attempting upload with userId:', userId, 'authToken:', authToken);
     if (!userId) {
@@ -173,7 +181,7 @@ const ProfilePage = () => {
 
   const handleRemovePhoto = async () => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const userId = storedUserInfo?.userId;
+    const userId = storedUserInfo?.userId || storedUserInfo?.user_id;
     const authToken = localStorage.getItem('authToken') || '';
     if (!userId) {
       alert('User ID is missing.');
@@ -213,7 +221,7 @@ const ProfilePage = () => {
 
   const saveProfile = async () => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const userId = storedUserInfo?.userId;
+    const userId = storedUserInfo?.userId || storedUserInfo?.user_id;
     if (!userId) {
       alert('User ID is missing.');
       return;
