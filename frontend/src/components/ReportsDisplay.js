@@ -26,14 +26,14 @@ const ReportsDisplay = () => {
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
-  const [localFileKey, setLocalFileKey] = useState(fileKey); // Store fileKey locally
+  const [localFileKey, setLocalFileKey] = useState(fileKey); // Persist fileKey locally
 
   const handlePayment = () => {
-    console.log("handlePayment - isLogin:", isLogin, "Current path:", location.pathname, "fileKey:", fileKey);
+    console.log("handlePayment - isLogin:", isLogin, "Current path:", location.pathname, "fileKey:", localFileKey);
     if (isLogin) {
       navigate("/payment");
     } else {
-      setOpenModel(true); // Strictly modal toggle
+      setOpenModel(true); // Only toggle modal, no navigation
     }
   };
 
