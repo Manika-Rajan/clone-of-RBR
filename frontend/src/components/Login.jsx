@@ -20,7 +20,7 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
     setIsModalOpen(true);
     console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "state:", state, "renderTrigger:", renderTrigger.current, "returnTo:", returnTo, "fileKey:", fileKey);
     renderTrigger.current += 1;
-  }, [returnTo, fileKey]); // Depend on fileKey too
+  }, [returnTo, fileKey]);
 
   const sendOtp = async () => {
     if (!phone || phone.length !== 10 || !/^\d+$/.test(phone)) {
@@ -80,8 +80,9 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
         if (onClose) onClose();
         setIsModalOpen(false);
         const redirectTo = returnTo || '/report-display';
-        console.log(`Navigating to ${redirectTo} with state:`, { loggedIn: true, fileKey, reportId: null, amount: null });
-        navigate(redirectTo, { 
+        const { from } = location.state || {};
+        console.log(`Navigating to ${redirectTo || from} with state:`, { loggedIn: true, fileKey, reportId: null, amount: null });
+        navigate(redirectTo || from || '/report-display', { 
           state: { loggedIn: true, fileKey, reportId: null, amount: null },
           replace: true 
         });
@@ -149,7 +150,7 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
         )}
         <div>
           {!isLoading && !error ? (
-            <button onClick={handleSubmit} className="login-button" disabled={isLoading}>
+            <button onClick={handleSubmit} className="login-btn" disabled={isLoading}>
               {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           ) : error ? (
