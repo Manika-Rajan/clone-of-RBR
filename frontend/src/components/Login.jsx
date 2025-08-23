@@ -3,19 +3,19 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { Store } from '../Store';
 
-const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
+const Login = React.memo(({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const [isModalOpen, setIsModalOpen] = useState(openModel);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const renderTrigger = useRef(0);
   const componentId = useRef(Date.now().toString());
 
   useEffect(() => {
-    setIsModalOpen(openModel);
-    console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "openModel:", openModel, "state:", state, "renderTrigger:", renderTrigger.current);
+    setIsModalOpen(true);
+    console.log(`Login [ID: ${componentId.current}] - isModalOpen updated to:`, isModalOpen, "state:", state, "renderTrigger:", renderTrigger.current);
     renderTrigger.current += 1;
-  }, [openModel, state.loginPhase]);
+  }, [state.loginPhase]);
 
   useEffect(() => {
     const storedPhone = localStorage.getItem('userPhone');
@@ -25,14 +25,12 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
   }, [state.loginState.number]);
 
   useEffect(() => {
-    console.log(`Effect checking [ID: ${componentId.current}] - updateTrigger:`, state.loginState.updateTrigger, 'otpSent:', state.loginState.otpSent, 'onPhaseChange:', !!onPhaseChange);
-    if (state.loginState.updateTrigger > 0 && state.loginState.otpSent && onPhaseChange) {
+    console.log(`Effect checking [ID: ${componentId.current}] - updateTrigger:`, state.loginState.updateTrigger, 'otpSent:', state.loginState.otpSent);
+    if (state.loginState.updateTrigger > 0 && state.loginState.otpSent) {
       console.log(`Effect triggered [ID: ${componentId.current}] - updateTrigger:`, state.loginState.updateTrigger, 'otpSent:', state.loginState.otpSent);
-      console.log(`Calling updateLoginPhase(1) [ID: ${componentId.current}]`);
-      onPhaseChange(1);
       forceUpdate();
     }
-  }, [state.loginState.updateTrigger, state.loginState.otpSent, onPhaseChange]);
+  }, [state.loginState.updateTrigger, state.loginState.otpSent]);
 
   const forceUpdate = useCallback(() => {
     renderTrigger.current += 1;
@@ -53,7 +51,7 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
     }
     setIsModalOpen(false);
     navigate("/report-display", {
-      state: { loggedIn: true, file_key: location.state?.file_key, reportId: location.state?.reportId, amount: location.state?.amount },
+      state: { loggedIn: true, fileKey: location.state?.fileKey, reportId: location.state?.reportId, amount: location.state?.amount },
       replace: true,
     });
   };
@@ -140,13 +138,13 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
       <div className={`login-popup ${state.loginState.responseMessage === 'Login successful' ? 'success-popup' : ''}`} style={{ display: isModalOpen ? 'block' : 'none' }}>
         {state.loginState.responseMessage !== 'Login successful' && (
           <div className="login-title">
-            <h3>{state.loginState.otpSent || (openModel && state.loginPhase === 1) ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
+            <h3>{state.loginState.otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
           </div>
         )}
         <div className="login-paragraph">
-          {!state.loginState.otpSent && !(openModel && state.loginPhase === 1) && <p>We will send you a <strong>One Time Password</strong></p>}
+          {!state.loginState.otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
         </div>
-        {!state.loginState.otpSent && !(openModel && state.loginPhase === 1) ? (
+        {!state.loginState.otpSent ? (
           <div className="login-phone-input" style={{ width: '70%', textAlign: 'center', margin: 'auto' }}>
             <div className="input-group mb-3" style={{ marginRight: '20px', width: '23%' }}>
               <select className="form-select" aria-label="Default select example">
@@ -196,7 +194,7 @@ const Login = React.memo(({ onClose, onPhaseChange, openModel }) => {
             </div>
           ) : (
             <button onClick={handleSubmit} className="login-button" disabled={state.loginState.isLoading}>
-              {state.loginState.otpSent || (openModel && state.loginPhase === 1) ? 'VERIFY OTP' : 'SEND OTP'}
+              {state.loginState.otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
           )}
         </div>
