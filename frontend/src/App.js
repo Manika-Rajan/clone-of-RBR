@@ -55,14 +55,23 @@ function AppContent() {
   );
 }
 
-// Protected Route Component
+// ✅ Protected Route Component - adjusted
 const ProtectedRoute = ({ children }) => {
   const { state } = useStore();
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
   const location = useLocation();
 
-  return isLogin ? children : <Navigate to="/" state={{ from: location }} replace />;
+  // Important: prevent premature redirect while login state is being updated
+  if (userInfo === undefined) {
+    return null; // could also return a loader/spinner
+  }
+
+  return isLogin ? (
+    children
+  ) : (
+    <Navigate to="/" state={{ from: location }} replace />
+  );
 };
 
 function App() {
