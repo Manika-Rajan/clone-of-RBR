@@ -63,11 +63,26 @@ const reducer = (state, action) => {
       };
 
     case "SET_REPORT": {
-      // ✅ persist reportId + fileKey
       localStorage.setItem("reportFileKey", action.payload.fileKey || "");
       localStorage.setItem("reportId", action.payload.reportId || "");
 
       console.log("📝 SET_REPORT reducer applied:", action.payload);
+
+      return {
+        ...state,
+        report: {
+          fileKey: action.payload.fileKey || "",
+          reportId: action.payload.reportId || "",
+        },
+      };
+    }
+
+    // ✅ New action to store fileKey + reportId when BUY NOW is clicked
+    case "SET_FILE_REPORT": {
+      localStorage.setItem("reportFileKey", action.payload.fileKey || "");
+      localStorage.setItem("reportId", action.payload.reportId || "");
+
+      console.log("🛒 SET_FILE_REPORT reducer applied:", action.payload);
 
       return {
         ...state,
