@@ -12,6 +12,12 @@ const initialState = {
   },
   totalPrice: 0,
   status: false,
+
+  // ✅ add report state
+  report: {
+    fileKey: localStorage.getItem("reportFileKey") || "",
+    reportId: localStorage.getItem("reportId") || "",
+  },
 };
 
 const reducer = (state, action) => {
@@ -20,7 +26,6 @@ const reducer = (state, action) => {
       return { ...state, totalPrice: action.payload };
 
     case "USER_LOGIN": {
-      // ✅ Force isLogin true if payload says so
       const updatedUser = {
         isLogin: action.payload.isLogin === true,
         userId: action.payload.userId || state.userInfo.userId || Date.now().toString(),
@@ -48,11 +53,30 @@ const reducer = (state, action) => {
       localStorage.removeItem("userName");
       localStorage.removeItem("userEmail");
       localStorage.removeItem("userPhone");
+      localStorage.removeItem("reportFileKey");
+      localStorage.removeItem("reportId");
 
       return {
         ...state,
         userInfo: { isLogin: false, userId: "", name: "", phone: "", email: "" },
+        report: { fileKey: "", reportId: "" },
       };
+
+    case "SET_REPORT": {
+      // ✅ persist reportId + fileKey
+      localStorage.setItem("reportFileKey", action.payload.fileKey || "");
+      localStorage.setItem("reportId", action.payload.reportId || "");
+
+      console.log("📝 SET_REPORT reducer applied:", action.payload);
+
+      return {
+        ...state,
+        report: {
+          fileKey: action.payload.fileKey || "",
+          reportId: action.payload.reportId || "",
+        },
+      };
+    }
 
     case "SET_REPORT_STATUS":
       return { ...state, status: !state.status };
