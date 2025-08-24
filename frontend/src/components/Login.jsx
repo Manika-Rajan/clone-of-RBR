@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { useStore } from '../Store';
 
-const Login = React.memo(({ onClose, returnTo, fileKey, reportId }) => {
+const Login = React.memo(({ onClose, returnTo }) => { // ✅ Removed fileKey & reportId from props
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useStore();
@@ -29,12 +29,10 @@ const Login = React.memo(({ onClose, returnTo, fileKey, reportId }) => {
       'renderTrigger:',
       renderTrigger.current,
       'returnTo:',
-      returnTo,
-      'fileKey:',
-      fileKey
+      returnTo
     );
     renderTrigger.current += 1;
-  }, [returnTo, fileKey]);
+  }, [returnTo]);
 
   const sendOtp = async () => {
     if (!phone || phone.length !== 10 || !/^\d+$/.test(phone)) {
@@ -109,13 +107,9 @@ const Login = React.memo(({ onClose, returnTo, fileKey, reportId }) => {
         setIsModalOpen(false);
         const redirectTo = returnTo || '/report-display';
         const { from } = location.state || {};
-        console.log(
-          `Navigating to ${redirectTo || from} with state:`,
-          { loggedIn: true, fileKey, reportId: reportId || null, amount: null }
-        );
+        console.log(`Navigating to ${redirectTo || from}`);
         navigate(redirectTo || from || '/report-display', {
-          state: { loggedIn: true, fileKey, reportId: reportId || null, amount: null },
-          replace: true,
+          replace: true, // ✅ Removed state object with fileKey/reportId
         });
       } else {
         setError(`Error: ${data.error || 'Invalid OTP'}`);
