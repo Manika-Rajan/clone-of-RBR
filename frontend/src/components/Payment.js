@@ -15,9 +15,9 @@ const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Safe fallbacks for critical values (also mirror to localStorage so refreshes still work)
+  // Fix: support both fileKey (camelCase from navigate) and file_key
   const reportId =
-    (location.state && location.state.reportId) ||
+    (location.state && (location.state.reportId || location.state.report_id)) ||
     localStorage.getItem('reportId') ||
     '';
   const amount =
@@ -25,7 +25,7 @@ const Payment = () => {
     Number(localStorage.getItem('amount')) ||
     400; // default ₹400 fallback
   const file_key =
-    (location.state && location.state.file_key) ||
+    (location.state && (location.state.fileKey || location.state.file_key)) ||
     localStorage.getItem('fileKey') ||
     '';
 
@@ -186,7 +186,6 @@ const Payment = () => {
       return;
     }
 
-    // Confirm Razorpay library is present
     if (!window.Razorpay) {
       console.error('window.Razorpay is not available');
       setError('Payment gateway not loaded. Please refresh the page.');
@@ -229,7 +228,6 @@ const Payment = () => {
       const order = await response.json();
       console.log('Razorpay order response:', order);
 
-      // ⬇️ Robust key resolution: build-time env → window._env_ → localStorage override
       const razorpayKey =
         process.env.REACT_APP_RAZORPAY_KEY_ID ||
         (typeof window !== 'undefined' && window._env_?.RAZORPAY_KEY_ID) ||
@@ -318,9 +316,7 @@ const Payment = () => {
               }
             );
 
-            // Save user details after successful payment
             await saveUserDetails();
-            // Navigate immediately with success state
             navigate('/profile', { state: { showSuccess: true } });
           } catch (err) {
             console.error('Payment verification error:', err.message, err.stack);
@@ -371,7 +367,6 @@ const Payment = () => {
         setLoading(false);
       });
 
-      // Open the Razorpay popup
       rzp.open();
     } catch (error) {
       console.error('Payment initiation error:', error.message, error.stack);
@@ -382,6 +377,7 @@ const Payment = () => {
 
   return (
     <div className="payments-page" style={{ position: 'relative', zIndex: 1000 }}>
+      {/* Left Section */}
       <div className="payments-left">
         <div className="row" style={{ textAlign: 'center' }}>
           <img
@@ -479,7 +475,13 @@ const Payment = () => {
         {success && (
           <div
             className="success-message"
-            style={{ marginLeft: '20%', marginTop: '5%', display: 'flex', gap: 8, alignItems: 'center' }}
+            style={{
+              marginLeft: '20%',
+              marginTop: '5%',
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+            }}
           >
             <div>
               <img src={green} alt="Success" />
@@ -505,6 +507,7 @@ const Payment = () => {
         </div>
       </div>
 
+      {/* Right Section */}
       <div className="payments-right">
         <div className="row">
           <p className="pay-price">Total Price: ₹{amount || 0}</p>
