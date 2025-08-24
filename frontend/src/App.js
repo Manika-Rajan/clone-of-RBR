@@ -31,20 +31,26 @@ function AppContent() {
       <Routes>
         <Route path="/about" element={<About />} />
         <Route path="/" element={<Reports />} />
-        <Route path='/contact' element={<Contact />} />
-        <Route path='/report-display' element={<ReportsDisplay />} />
-        <Route path='/payment' element={
-          <ProtectedRoute>
-            <Payment />
-          </ProtectedRoute>
-        } />
-        <Route path='/commingSoon' element={<CommingSoon />} />
-        <Route path='/not-found' element={<Invalid />} />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        } />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/report-display" element={<ReportsDisplay />} />
+        <Route 
+          path="/payment" 
+          element={
+            <ProtectedRoute>
+              <Payment />
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="/commingSoon" element={<CommingSoon />} />
+        <Route path="/not-found" element={<Invalid />} />
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="/terms" element={<TermsAndConditions />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -55,28 +61,19 @@ function AppContent() {
   );
 }
 
-// ✅ Protected Route Component - adjusted
+// Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { state } = useStore();
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
   const location = useLocation();
 
-  // Important: prevent premature redirect while login state is being updated
-  if (userInfo === undefined) {
-    return null; // could also return a loader/spinner
-  }
-
-  return isLogin ? (
-    children
-  ) : (
-    <Navigate to="/" state={{ from: location }} replace />
-  );
+  return isLogin ? children : <Navigate to="/" state={{ from: location }} replace />;
 };
 
 function App() {
   return (
-    <StoreProvider key={Date.now()}> {/* Force re-render on mount */}
+    <StoreProvider> {/* ✅ Removed key={Date.now()} to preserve login state */}
       <Router>
         <AppContent />
       </Router>
