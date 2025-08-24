@@ -43,7 +43,8 @@ const reducer = (state, action) => {
 
       console.log("🔑 USER_LOGIN reducer applied, updatedUser:", updatedUser);
 
-      return { ...state, userInfo: updatedUser };
+      // ✅ preserve existing report object
+      return { ...state, userInfo: updatedUser, report: { ...state.report } };
     }
 
     case "LOGOUT":
