@@ -18,9 +18,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'r
 
 function AppContent() {
   const location = useLocation();
-  const { state } = useStore();
-  const { userInfo } = state;
-  const isLogin = userInfo?.isLogin || false;
 
   const hideNavbarRoutes = ["/report-display", "/payment"];
 
@@ -31,26 +28,20 @@ function AppContent() {
       <Routes>
         <Route path="/about" element={<About />} />
         <Route path="/" element={<Reports />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/report-display" element={<ReportsDisplay />} />
-        <Route 
-          path="/payment" 
-          element={
-            <ProtectedRoute>
-              <Payment />
-            </ProtectedRoute>
-          } 
-        />
-        <Route path="/commingSoon" element={<CommingSoon />} />
-        <Route path="/not-found" element={<Invalid />} />
-        <Route 
-          path="/profile" 
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          } 
-        />
+        <Route path='/contact' element={<Contact />} />
+        <Route path='/report-display' element={<ReportsDisplay />} />
+        <Route path='/payment' element={
+          <ProtectedRoute>
+            <Payment />
+          </ProtectedRoute>
+        } />
+        <Route path='/commingSoon' element={<CommingSoon />} />
+        <Route path='/not-found' element={<Invalid />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
         <Route path="/terms" element={<TermsAndConditions />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -61,19 +52,26 @@ function AppContent() {
   );
 }
 
-// Protected Route Component
+// ✅ Protected Route Component (surgical fix applied)
 const ProtectedRoute = ({ children }) => {
   const { state } = useStore();
   const { userInfo } = state;
   const isLogin = userInfo?.isLogin || false;
-  const location = useLocation();
 
-  return isLogin ? children : <Navigate to="/" state={{ from: location }} replace />;
+  const location = useLocation();
+  const navState = location.state;
+
+  // Allow access if logged in via store OR passed via navigate state
+  if (isLogin || navState?.loggedIn) {
+    return children;
+  }
+
+  return <Navigate to="/" state={{ from: location }} replace />;
 };
 
 function App() {
   return (
-    <StoreProvider> {/* ✅ Removed key={Date.now()} to preserve login state */}
+    <StoreProvider>
       <Router>
         <AppContent />
       </Router>
