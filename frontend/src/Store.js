@@ -21,15 +21,15 @@ const reducer = (state, action) => {
 
     case "USER_LOGIN": {
       const updatedUser = {
-        isLogin: action.payload.isLogin,
+        isLogin: !!action.payload.isLogin,
         userId: action.payload.userId || state.userInfo.userId,
         name: action.payload.name || state.userInfo.name,
         email: action.payload.email || state.userInfo.email,
         phone: action.payload.phone || state.userInfo.phone,
       };
 
-      // persist to localStorage
-      localStorage.setItem("isLogin", updatedUser.isLogin);
+      // ✅ persist to localStorage (always as strings)
+      localStorage.setItem("isLogin", updatedUser.isLogin ? "true" : "false");
       localStorage.setItem("userId", updatedUser.userId || "");
       localStorage.setItem("userName", updatedUser.name || "");
       localStorage.setItem("userEmail", updatedUser.email || "");
