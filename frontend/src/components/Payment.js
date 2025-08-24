@@ -8,14 +8,14 @@ import pencil from '../assets/pencil.svg';
 import green from '../assets/green-tick.svg';
 
 const Payment = () => {
-  // 🔧 FIX 1: Pull userInfo from state, then read isLogin/userId
+  // Pull userInfo from state, then read isLogin/userId
   const { state: { userInfo }, dispatch: cxtDispatch } = useContext(Store);
   const { isLogin, userId } = userInfo || {};
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🔧 FIX 2: Apply safe fallbacks for critical values
+  // Safe fallbacks for critical values (also mirror to localStorage so refreshes still work)
   const reportId =
     (location.state && location.state.reportId) ||
     localStorage.getItem('reportId') ||
@@ -29,9 +29,10 @@ const Payment = () => {
     localStorage.getItem('fileKey') ||
     '';
 
-  // Use localStorage fallbacks but also prefer values from userInfo
+  // Prefer values from userInfo, fallback to localStorage
   const storedName = localStorage.getItem('userName') || (userInfo?.name ?? '');
-  const storedPhone = localStorage.getItem('userPhone') || (userInfo?.phone ?? userId);
+  const storedPhone =
+    localStorage.getItem('userPhone') || (userInfo?.phone ?? userId);
   const storedEmail = localStorage.getItem('userEmail') || (userInfo?.email ?? '');
 
   const [editName, setEditName] = useState(false);
@@ -43,8 +44,21 @@ const Payment = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Persist payment context so refresh doesn't lose it
   useEffect(() => {
-    console.log('Payment.js - Initial state:', { isLogin, userId, reportId, amount, file_key });
+    if (reportId) localStorage.setItem('reportId', reportId);
+    if (file_key) localStorage.setItem('fileKey', file_key);
+    if (amount) localStorage.setItem('amount', String(amount));
+  }, [reportId, file_key, amount]);
+
+  useEffect(() => {
+    console.log('Payment.js - Initial state:', {
+      isLogin,
+      userId,
+      reportId,
+      amount,
+      file_key,
+    });
 
     if (!isLogin) {
       navigate('/');
@@ -79,21 +93,34 @@ const Payment = () => {
     }
 
     return () => {
-      const script = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      const script = document.querySelector(
+        'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+      );
       if (script) document.body.removeChild(script);
     };
   }, [isLogin, userId, navigate]);
 
   const saveUserDetails = async () => {
     try {
-      const response = await fetch('https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update', phone_number: storedPhone, name: inputName, email: inputEmail })
-      });
+      const response = await fetch(
+        'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update',
+            phone_number: storedPhone,
+            name: inputName,
+            email: inputEmail,
+          }),
+        }
+      );
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error saving user details:', errorData.error || 'Unknown error');
+        console.error(
+          'Error saving user details:',
+          errorData.error || 'Unknown error'
+        );
       } else {
         console.log('User details saved successfully');
       }
@@ -117,7 +144,10 @@ const Payment = () => {
 
   const handleEmail = (e) => {
     if (e.key === 'Enter') {
-      if (!inputEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputEmail)) {
+      if (
+        !inputEmail.trim() ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputEmail)
+      ) {
         setError('Please enter a valid email');
         return;
       }
@@ -132,13 +162,33 @@ const Payment = () => {
   const handlePayment = async () => {
     setError('');
     setLoading(true);
-    console.log('handlePayment called', { reportId, amount, file_key, userId, inputName, inputEmail, verify });
-    if (!reportId || !userId || !amount || !inputName.trim() || !inputEmail.trim() || !verify) {
+    console.log('handlePayment called', {
+      reportId,
+      amount,
+      file_key,
+      userId,
+      inputName,
+      inputEmail,
+      verify,
+    });
+
+    // Validate user input & context
+    if (
+      !reportId ||
+      !userId ||
+      !amount ||
+      !inputName.trim() ||
+      !inputEmail.trim() ||
+      !verify
+    ) {
       setError('Please fill all fields and agree to terms');
       setLoading(false);
       return;
     }
+
+    // Confirm Razorpay library is present
     if (!window.Razorpay) {
+      console.error('window.Razorpay is not available');
       setError('Payment gateway not loaded. Please refresh the page.');
       setLoading(false);
       return;
@@ -153,27 +203,47 @@ const Payment = () => {
         return;
       }
 
-      console.log('Fetching create-razorpay-order...');
-      const response = await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/create-razorpay-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ reportId, amount: Math.round(amount * 100), userId }),
-      });
+      console.log('Fetching create-razorpay-order…');
+      const response = await fetch(
+        'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/create-razorpay-order',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            reportId,
+            amount: Math.round(Number(amount) * 100),
+            userId,
+          }),
+        }
+      );
+
       console.log('create-razorpay-order response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to create order: ${errorText}`);
       }
+
       const order = await response.json();
       console.log('Razorpay order response:', order);
 
-      const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
+      // ⬇️ Robust key resolution: build-time env → window._env_ → localStorage override
+      const razorpayKey =
+        process.env.REACT_APP_RAZORPAY_KEY_ID ||
+        (typeof window !== 'undefined' && window._env_?.RAZORPAY_KEY_ID) ||
+        localStorage.getItem('razorpayKey');
+
       if (!razorpayKey) {
-        throw new Error('No Razorpay key configured. Please contact support.');
+        console.error('Razorpay key is missing/undefined at runtime.');
+        setError('Razorpay key not configured. Please contact support.');
+        setLoading(false);
+        return;
       }
+
+      console.log('Using Razorpay key (masked in logs):', razorpayKey ? '***' : '');
+      console.log('Opening Razorpay popup with order:', order?.id);
 
       const options = {
         key: razorpayKey,
@@ -192,49 +262,65 @@ const Payment = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
             });
-            const verifyResponse = await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/verify-payment', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-                'Access-Control-Request-Method': 'POST',
-                'Access-Control-Request-Headers': 'Content-Type,Authorization',
-              },
-              body: JSON.stringify({
-                reportId,
-                userId,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-            console.log('verify-payment response status:', verifyResponse.status);
+
+            const verifyResponse = await fetch(
+              'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/verify-payment',
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                  'Access-Control-Request-Method': 'POST',
+                  'Access-Control-Request-Headers': 'Content-Type,Authorization',
+                },
+                body: JSON.stringify({
+                  reportId,
+                  userId,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              }
+            );
+
+            console.log(
+              'verify-payment response status:',
+              verifyResponse.status
+            );
             if (!verifyResponse.ok) {
               const verifyError = await verifyResponse.text();
-              throw new Error(`Verification failed: ${verifyError || 'Unknown server error'}`);
+              throw new Error(
+                `Verification failed: ${verifyError || 'Unknown server error'}`
+              );
             }
             const verifyData = await verifyResponse.json();
             console.log('Payment verification response:', verifyData);
 
-            await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                reportId,
-                file_key,
-                userId,
-                status: 'success',
-                amount: Math.round(amount * 100),
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpaySignature: response.razorpay_signature,
-                timestamp: new Date().toISOString(),
-              }),
-            });
+            await fetch(
+              'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment',
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  reportId,
+                  file_key,
+                  userId,
+                  status: 'success',
+                  amount: Math.round(Number(amount) * 100),
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpaySignature: response.razorpay_signature,
+                  timestamp: new Date().toISOString(),
+                }),
+              }
+            );
+
+            // Save user details after successful payment
             await saveUserDetails();
+            // Navigate immediately with success state
             navigate('/profile', { state: { showSuccess: true } });
           } catch (err) {
             console.error('Payment verification error:', err.message, err.stack);
@@ -259,29 +345,33 @@ const Payment = () => {
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', async (response) => {
-        console.error('Payment failed:', response.error.description);
-        setError(`Payment failed: ${response.error.description}`);
-        await fetch('https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            reportId,
-            file_key,
-            userId,
-            status: 'failed',
-            amount: Math.round(amount * 100),
-            razorpayPaymentId: response.error.metadata.payment_id || null,
-            razorpayOrderId: order.id,
-            razorpaySignature: null,
-            timestamp: new Date().toISOString(),
-          }),
-        });
+        console.error('Payment failed:', response?.error?.description);
+        setError(`Payment failed: ${response?.error?.description || 'Unknown'}`);
+        await fetch(
+          'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              reportId,
+              file_key,
+              userId,
+              status: 'failed',
+              amount: Math.round(Number(amount) * 100),
+              razorpayPaymentId: response?.error?.metadata?.payment_id || null,
+              razorpayOrderId: order.id,
+              razorpaySignature: null,
+              timestamp: new Date().toISOString(),
+            }),
+          }
+        );
         setLoading(false);
       });
-      console.log('Opening Razorpay popup...');
+
+      // Open the Razorpay popup
       rzp.open();
     } catch (error) {
       console.error('Payment initiation error:', error.message, error.stack);
@@ -293,73 +383,112 @@ const Payment = () => {
   return (
     <div className="payments-page" style={{ position: 'relative', zIndex: 1000 }}>
       <div className="payments-left">
-        <div className="row" style={{ textAlign: "center" }}>
-          <img src={Personal} style={{ width: "187px", height: "36px", marginLeft: "15%" }} />
+        <div className="row" style={{ textAlign: 'center' }}>
+          <img
+            src={Personal}
+            alt="Personal"
+            style={{ width: '187px', height: '36px', marginLeft: '15%' }}
+          />
         </div>
+
         <div className="payment-name mt-2">
-          <div style={{ paddingRight: "20px" }}>
-            <label style={{ fontSize: "20px", fontWeight: "600" }}>Name:</label>
+          <div style={{ paddingRight: '20px' }}>
+            <label style={{ fontSize: '20px', fontWeight: '600' }}>Name:</label>
           </div>
-          <div style={{ paddingRight: "30px" }}>
+          <div style={{ paddingRight: '30px' }}>
             {editName ? (
               <input
                 id="nameInput"
                 className="edit-input"
-                style={{ border: "none", background: "transparent", borderBottom: "1px solid #0263c7", width: "90%" }}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  borderBottom: '1px solid #0263c7',
+                  width: '90%',
+                }}
                 value={inputName}
                 onChange={(e) => setInputName(e.target.value)}
                 onKeyDown={handleName}
               />
             ) : (
-              <p style={{ fontSize: "20px", fontWeight: "400" }}>{inputName}</p>
+              <p style={{ fontSize: '20px', fontWeight: '400' }}>{inputName}</p>
             )}
           </div>
           <div>
-            <img src={pencil} onClick={() => setEditName(!editName)} />
+            <img
+              src={pencil}
+              alt="Edit name"
+              onClick={() => setEditName(!editName)}
+              style={{ cursor: 'pointer' }}
+            />
           </div>
         </div>
+
         <div className="payment-name mt-2">
-          <div style={{ paddingRight: "20px" }}>
-            <label style={{ fontSize: "20px", fontWeight: "600" }}>Phone Number:</label>
+          <div style={{ paddingRight: '20px' }}>
+            <label style={{ fontSize: '20px', fontWeight: '600' }}>
+              Phone Number:
+            </label>
           </div>
-          <div style={{ paddingRight: "30px" }}>
-            <p style={{ fontSize: "20px", fontWeight: "400" }}>{storedPhone}</p>
+          <div style={{ paddingRight: '30px' }}>
+            <p style={{ fontSize: '20px', fontWeight: '400' }}>{storedPhone}</p>
           </div>
         </div>
-        <div className="row mt-2" style={{ textAlign: "center" }}>
-          <img src={Delivery} style={{ width: "187px", height: "36px", marginLeft: "15%" }} />
+
+        <div className="row mt-2" style={{ textAlign: 'center' }}>
+          <img
+            src={Delivery}
+            alt="Delivery"
+            style={{ width: '187px', height: '36px', marginLeft: '15%' }}
+          />
         </div>
+
         <div className="payment-name mt-3">
-          <div style={{ paddingRight: "20px" }}>
-            <label style={{ fontSize: "20px", fontWeight: "600" }}>Email:</label>
+          <div style={{ paddingRight: '20px' }}>
+            <label style={{ fontSize: '20px', fontWeight: '600' }}>Email:</label>
           </div>
-          <div style={{ paddingRight: "30px" }}>
+          <div style={{ paddingRight: '30px' }}>
             {editEmail ? (
               <input
                 id="emailInput"
                 className="edit-input"
-                style={{ border: "none", background: "transparent", borderBottom: "1px solid #0263c7", width: "90%" }}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  borderBottom: '1px solid #0263c7',
+                  width: '90%',
+                }}
                 value={inputEmail}
                 onChange={(e) => setInputEmail(e.target.value)}
                 onKeyDown={handleEmail}
               />
             ) : (
-              <p style={{ fontSize: "20px", fontWeight: "400" }}>{inputEmail}</p>
+              <p style={{ fontSize: '20px', fontWeight: '400' }}>{inputEmail}</p>
             )}
           </div>
           <div>
-            <img src={pencil} onClick={() => setEditEmail(!editEmail)} />
+            <img
+              src={pencil}
+              alt="Edit email"
+              onClick={() => setEditEmail(!editEmail)}
+              style={{ cursor: 'pointer' }}
+            />
           </div>
         </div>
+
         {success && (
-          <div className="success-message" style={{ marginLeft: "20%", marginTop: "5%" }}>
+          <div
+            className="success-message"
+            style={{ marginLeft: '20%', marginTop: '5%', display: 'flex', gap: 8, alignItems: 'center' }}
+          >
             <div>
-              <img src={green} />
+              <img src={green} alt="Success" />
             </div>
             <div>Your email id has been changed successfully</div>
           </div>
         )}
-        <div className="form-check" style={{ paddingLeft: "25%", paddingTop: "5%" }}>
+
+        <div className="form-check" style={{ paddingLeft: '25%', paddingTop: '5%' }}>
           <input
             className="form-check-input"
             type="checkbox"
@@ -369,17 +498,24 @@ const Payment = () => {
           />
           <label className="form-check-label" htmlFor="verify">
             <p className="text-secondary">
-              I agree to all terms <span className="text-primary">Terms & Conditions</span>
+              I agree to all terms{' '}
+              <span className="text-primary">Terms & Conditions</span>
             </p>
           </label>
         </div>
       </div>
+
       <div className="payments-right">
         <div className="row">
           <p className="pay-price">Total Price: ₹{amount || 0}</p>
         </div>
         <div className="row">
-          <button onClick={handlePayment} className="pay-btn" disabled={loading}>
+          <button
+            type="button"
+            onClick={handlePayment}
+            className="pay-btn"
+            disabled={loading}
+          >
             {loading ? 'Processing...' : 'Pay Now'}
           </button>
         </div>
