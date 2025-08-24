@@ -14,7 +14,7 @@ import { Modal, ModalBody } from "reactstrap";
 const ReportsDisplay = () => {
   const location = useLocation();
   const fileKey = location.state?.fileKey || '';
-  const reportId = location.state?.reportId || ''; // ✅ Get reportId from location.state
+  const reportId = location.state?.reportId || '';
   console.log("Received fileKey:", fileKey, "reportId:", reportId);
 
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const ReportsDisplay = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState('');
   const [localFileKey, setLocalFileKey] = useState(fileKey);
-  const [localReportId, setLocalReportId] = useState(reportId); // ✅ Persist reportId locally
+  const [localReportId, setLocalReportId] = useState(reportId);
 
   useEffect(() => {
     console.log("ReportsDisplay - isLogin:", isLogin);
@@ -34,6 +34,10 @@ const ReportsDisplay = () => {
 
   const handlePayment = () => {
     console.log("handlePayment - isLogin:", isLogin, "fileKey:", localFileKey, "reportId:", localReportId);
+    
+    // ✅ Save fileKey and reportId in Store for Payment
+    cxtDispatch({ type: 'SET_FILE_REPORT', payload: { fileKey: localFileKey, reportId: localReportId } });
+
     setOpenModel(true);
   };
 
@@ -75,7 +79,7 @@ const ReportsDisplay = () => {
   useEffect(() => {
     console.log("ReportsDisplay useEffect - isLogin updated to:", isLogin, "Path:", location.pathname);
     setLocalFileKey(fileKey);
-    setLocalReportId(reportId); // ✅ Update localReportId on location change
+    setLocalReportId(reportId);
   }, [isLogin, location.pathname, fileKey, reportId]);
 
   return (
@@ -132,8 +136,6 @@ const ReportsDisplay = () => {
           <Login
             onClose={() => setOpenModel(false)}
             returnTo="/payment"
-            fileKey={localFileKey}
-            reportId={localReportId} // ✅ Pass reportId to Login for Payment
           />
           {status && (
             <div style={{ textAlign: "center" }}>
