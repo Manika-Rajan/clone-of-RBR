@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { useStore } from '../Store';
 
-const Login = React.memo(({ onClose, returnTo }) => { // ✅ Removed fileKey & reportId from props
+const Login = React.memo(({ onClose, returnTo }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // ✅ Fix: protect against undefined state.phone
+
   const [phone, setPhone] = useState(
     state.phone ? state.phone.replace('+91', '') : ''
   );
@@ -16,6 +16,7 @@ const Login = React.memo(({ onClose, returnTo }) => { // ✅ Removed fileKey & r
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const renderTrigger = useRef(0);
   const componentId = useRef(Date.now().toString());
 
@@ -105,11 +106,13 @@ const Login = React.memo(({ onClose, returnTo }) => { // ✅ Removed fileKey & r
         console.log(`Post-dispatch state in Login:`, state);
         if (onClose) onClose();
         setIsModalOpen(false);
+
+        // ✅ Surgical edit: remove fileKey/reportId from navigation state
         const redirectTo = returnTo || '/report-display';
         const { from } = location.state || {};
         console.log(`Navigating to ${redirectTo || from}`);
         navigate(redirectTo || from || '/report-display', {
-          replace: true, // ✅ Removed state object with fileKey/reportId
+          replace: true,
         });
       } else {
         setError(`Error: ${data.error || 'Invalid OTP'}`);
@@ -161,11 +164,7 @@ const Login = React.memo(({ onClose, returnTo }) => { // ✅ Removed fileKey & r
               className="input-group mb-3"
               style={{ marginRight: '20px', width: '23%' }}
             >
-              <select
-                className="form-select"
-                aria-label="Default select example"
-                disabled
-              >
+              <select className="form-select" aria-label="Default select example" disabled>
                 <option defaultValue>+91</option>
               </select>
             </div>
