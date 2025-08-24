@@ -8,11 +8,15 @@ import pencil from '../assets/pencil.svg';
 import green from '../assets/green-tick.svg';
 
 const Payment = () => {
-  // Pull userInfo from state, then read isLogin/userId
+  // Pull userInfo and report from state
   const {
-    state: { userInfo, reportId: storeReportId, fileKey: storeFileKey },
+    state: { userInfo, report },
     dispatch: cxtDispatch,
   } = useContext(Store);
+
+  const storeFileKey = report?.fileKey || '';
+  const storeReportId = report?.reportId || '';
+
   const { isLogin, userId } = userInfo || {};
 
   const navigate = useNavigate();
