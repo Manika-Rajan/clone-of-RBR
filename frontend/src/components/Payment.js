@@ -8,13 +8,19 @@ import pencil from '../assets/pencil.svg';
 import green from '../assets/green-tick.svg';
 
 const Payment = () => {
-  const { state: { isLogin, userId }, dispatch: cxtDispatch } = useContext(Store);
+  // 🔧 FIX 1: Pull userInfo from state, then read isLogin/userId
+  const { state: { userInfo }, dispatch: cxtDispatch } = useContext(Store);
+  const { isLogin, userId } = userInfo || {};
+
   const navigate = useNavigate();
   const location = useLocation();
   const { reportId, amount, file_key } = location.state || {};
-  const storedName = localStorage.getItem('userName') || '';
-  const storedPhone = localStorage.getItem('userPhone') || userId;
-  const storedEmail = localStorage.getItem('userEmail') || '';
+
+  // Use localStorage fallbacks but also prefer values from userInfo
+  const storedName = localStorage.getItem('userName') || (userInfo?.name ?? '');
+  const storedPhone = localStorage.getItem('userPhone') || (userInfo?.phone ?? userId);
+  const storedEmail = localStorage.getItem('userEmail') || (userInfo?.email ?? '');
+
   const [editName, setEditName] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
   const [inputName, setInputName] = useState(storedName);
@@ -26,8 +32,11 @@ const Payment = () => {
 
   useEffect(() => {
     console.log('Payment.js - Initial state:', { isLogin, userId, reportId, amount, file_key });
+
+    // 🔧 FIX 2: Avoid redirecting to a non-existent /login route (which sent you to /not-found).
+    // ProtectedRoute already blocks unauthenticated access. If we somehow get here unauthenticated, send home.
     if (!isLogin) {
-      navigate('/login?redirect=/payment');
+      navigate('/');
       return;
     }
 
@@ -128,7 +137,8 @@ const Payment = () => {
       const token = localStorage.getItem('authToken');
       if (!token) {
         setError('Please log in again');
-        navigate('/login?redirect=/payment');
+        // Do not send to /login (route not present). If token is missing, go home to re-auth.
+        navigate('/');
         setLoading(false);
         return;
       }
