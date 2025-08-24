@@ -14,7 +14,20 @@ const Payment = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { reportId, amount, file_key } = location.state || {};
+
+  // 🔧 FIX 2: Apply safe fallbacks for critical values
+  const reportId =
+    (location.state && location.state.reportId) ||
+    localStorage.getItem('reportId') ||
+    '';
+  const amount =
+    (location.state && location.state.amount) ||
+    Number(localStorage.getItem('amount')) ||
+    400; // default ₹400 fallback
+  const file_key =
+    (location.state && location.state.file_key) ||
+    localStorage.getItem('fileKey') ||
+    '';
 
   // Use localStorage fallbacks but also prefer values from userInfo
   const storedName = localStorage.getItem('userName') || (userInfo?.name ?? '');
@@ -33,8 +46,6 @@ const Payment = () => {
   useEffect(() => {
     console.log('Payment.js - Initial state:', { isLogin, userId, reportId, amount, file_key });
 
-    // 🔧 FIX 2: Avoid redirecting to a non-existent /login route (which sent you to /not-found).
-    // ProtectedRoute already blocks unauthenticated access. If we somehow get here unauthenticated, send home.
     if (!isLogin) {
       navigate('/');
       return;
@@ -99,7 +110,7 @@ const Payment = () => {
       }
       cxtDispatch({ type: 'SET_NAME', payload: inputName });
       localStorage.setItem('userName', inputName);
-      saveUserDetails(); // Save to backend
+      saveUserDetails();
       setEditName(false);
     }
   };
@@ -112,7 +123,7 @@ const Payment = () => {
       }
       cxtDispatch({ type: 'SET_EMAIL', payload: inputEmail });
       localStorage.setItem('userEmail', inputEmail);
-      saveUserDetails(); // Save to backend
+      saveUserDetails();
       setEditEmail(false);
       setSuccess(true);
     }
@@ -137,7 +148,6 @@ const Payment = () => {
       const token = localStorage.getItem('authToken');
       if (!token) {
         setError('Please log in again');
-        // Do not send to /login (route not present). If token is missing, go home to re-auth.
         navigate('/');
         setLoading(false);
         return;
@@ -224,9 +234,7 @@ const Payment = () => {
                 timestamp: new Date().toISOString(),
               }),
             });
-            // Save user details after successful payment
             await saveUserDetails();
-            // Navigate immediately with success state
             navigate('/profile', { state: { showSuccess: true } });
           } catch (err) {
             console.error('Payment verification error:', err.message, err.stack);
