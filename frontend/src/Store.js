@@ -20,12 +20,13 @@ const reducer = (state, action) => {
       return { ...state, totalPrice: action.payload };
 
     case "USER_LOGIN": {
+      // ✅ Force isLogin true if payload says so
       const updatedUser = {
         isLogin: action.payload.isLogin === true,
-        userId: action.payload.userId || "",
-        name: action.payload.name || "",
-        email: action.payload.email || "",
-        phone: action.payload.phone || "",
+        userId: action.payload.userId || state.userInfo.userId || Date.now().toString(),
+        name: action.payload.name || state.userInfo.name,
+        email: action.payload.email || state.userInfo.email,
+        phone: action.payload.phone || state.userInfo.phone,
       };
 
       // ✅ persist to localStorage
@@ -35,7 +36,8 @@ const reducer = (state, action) => {
       localStorage.setItem("userEmail", updatedUser.email);
       localStorage.setItem("userPhone", updatedUser.phone);
 
-      // ✅ update state immediately
+      console.log("🔑 USER_LOGIN reducer applied, updatedUser:", updatedUser);
+
       return { ...state, userInfo: updatedUser };
     }
 
