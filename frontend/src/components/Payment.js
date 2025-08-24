@@ -9,23 +9,37 @@ import green from '../assets/green-tick.svg';
 
 const Payment = () => {
   // Pull userInfo from state, then read isLogin/userId
-  const { state: { userInfo }, dispatch: cxtDispatch } = useContext(Store);
+  const {
+    state: { userInfo, reportId: storeReportId, fileKey: storeFileKey },
+    dispatch: cxtDispatch,
+  } = useContext(Store);
   const { isLogin, userId } = userInfo || {};
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Fix: support both fileKey (camelCase from navigate) and file_key
-  const reportId =
-    (location.state && (location.state.reportId || location.state.report_id)) ||
+  // ---- Helpers to resolve values safely from multiple sources ----
+  const stateObj = location?.state || {};
+
+  const resolvedReportId =
+    stateObj.reportId ||
+    stateObj.report_id ||
+    storeReportId ||
     localStorage.getItem('reportId') ||
+    localStorage.getItem('lastReportId') || // optional extra fallback
     '';
-  const amount =
-    (location.state && location.state.amount) ||
-    Number(localStorage.getItem('amount')) ||
+
+  const resolvedAmount =
+    stateObj.amount ??
+    (localStorage.getItem('amount')
+      ? Number(localStorage.getItem('amount'))
+      : undefined) ??
     400; // default ₹400 fallback
-  const file_key =
-    (location.state && (location.state.fileKey || location.state.file_key)) ||
+
+  const resolvedFileKey =
+    stateObj.fileKey ||
+    stateObj.file_key ||
+    storeFileKey ||
     localStorage.getItem('fileKey') ||
     '';
 
@@ -44,12 +58,29 @@ const Payment = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Persist payment context so refresh doesn't lose it
+  // Local reactive copies for logging & validation
+  const reportId = resolvedReportId;
+  const amount = resolvedAmount;
+  const file_key = resolvedFileKey;
+
+  // Persist payment context so refresh doesn't lose it (and optionally into store if you add actions later)
   useEffect(() => {
-    if (reportId) localStorage.setItem('reportId', reportId);
+    // Mirror to localStorage
+    if (reportId) {
+      localStorage.setItem('reportId', reportId);
+      localStorage.setItem('lastReportId', reportId);
+    }
     if (file_key) localStorage.setItem('fileKey', file_key);
-    if (amount) localStorage.setItem('amount', String(amount));
-  }, [reportId, file_key, amount]);
+    if (amount != null) localStorage.setItem('amount', String(amount));
+
+    // Optional: dispatch to store (no-op if your reducer doesn't implement these types)
+    try {
+      if (reportId) cxtDispatch({ type: 'SET_REPORT_ID', payload: reportId });
+      if (file_key) cxtDispatch({ type: 'SET_FILE_KEY', payload: file_key });
+    } catch {
+      // Safe to ignore if your reducer doesn't handle these yet
+    }
+  }, [reportId, file_key, amount, cxtDispatch]);
 
   useEffect(() => {
     console.log('Payment.js - Initial state:', {
@@ -58,6 +89,7 @@ const Payment = () => {
       reportId,
       amount,
       file_key,
+      locationState: location?.state,
     });
 
     if (!isLogin) {
@@ -98,7 +130,7 @@ const Payment = () => {
       );
       if (script) document.body.removeChild(script);
     };
-  }, [isLogin, userId, navigate]);
+  }, [isLogin, userId, navigate, location?.state]);
 
   const saveUserDetails = async () => {
     try {
@@ -117,10 +149,7 @@ const Payment = () => {
       );
       if (!response.ok) {
         const errorData = await response.json();
-        console.error(
-          'Error saving user details:',
-          errorData.error || 'Unknown error'
-        );
+        console.error('Error saving user details:', errorData.error || 'Unknown error');
       } else {
         console.log('User details saved successfully');
       }
@@ -144,10 +173,7 @@ const Payment = () => {
 
   const handleEmail = (e) => {
     if (e.key === 'Enter') {
-      if (
-        !inputEmail.trim() ||
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputEmail)
-      ) {
+      if (!inputEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputEmail)) {
         setError('Please enter a valid email');
         return;
       }
@@ -173,8 +199,12 @@ const Payment = () => {
     });
 
     // Validate user input & context
+    if (!reportId) {
+      setError('Missing report reference. Please go back and re-open payment.');
+      setLoading(false);
+      return;
+    }
     if (
-      !reportId ||
       !userId ||
       !amount ||
       !inputName.trim() ||
@@ -186,6 +216,7 @@ const Payment = () => {
       return;
     }
 
+    // Confirm Razorpay library is present
     if (!window.Razorpay) {
       console.error('window.Razorpay is not available');
       setError('Payment gateway not loaded. Please refresh the page.');
@@ -228,6 +259,7 @@ const Payment = () => {
       const order = await response.json();
       console.log('Razorpay order response:', order);
 
+      // Robust key resolution: build-time env → window._env_ → localStorage override
       const razorpayKey =
         process.env.REACT_APP_RAZORPAY_KEY_ID ||
         (typeof window !== 'undefined' && window._env_?.RAZORPAY_KEY_ID) ||
@@ -240,7 +272,6 @@ const Payment = () => {
         return;
       }
 
-      console.log('Using Razorpay key (masked in logs):', razorpayKey ? '***' : '');
       console.log('Opening Razorpay popup with order:', order?.id);
 
       const options = {
@@ -268,6 +299,7 @@ const Payment = () => {
                 headers: {
                   'Content-Type': 'application/json',
                   Authorization: `Bearer ${token}`,
+                  // The next 2 headers are not necessary for simple POSTs; kept if your API expects them.
                   'Access-Control-Request-Method': 'POST',
                   'Access-Control-Request-Headers': 'Content-Type,Authorization',
                 },
@@ -281,10 +313,7 @@ const Payment = () => {
               }
             );
 
-            console.log(
-              'verify-payment response status:',
-              verifyResponse.status
-            );
+            console.log('verify-payment response status:', verifyResponse.status);
             if (!verifyResponse.ok) {
               const verifyError = await verifyResponse.text();
               throw new Error(
@@ -294,6 +323,7 @@ const Payment = () => {
             const verifyData = await verifyResponse.json();
             console.log('Payment verification response:', verifyData);
 
+            // Log outcome for your backend
             await fetch(
               'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment',
               {
@@ -332,6 +362,7 @@ const Payment = () => {
         },
         notes: {
           file_key,
+          reportId, // helpful to have in Razorpay dashboard
           address: 'Rajan Business Ideas Office',
         },
         theme: {
@@ -367,6 +398,7 @@ const Payment = () => {
         setLoading(false);
       });
 
+      // Open the Razorpay popup
       rzp.open();
     } catch (error) {
       console.error('Payment initiation error:', error.message, error.stack);
@@ -387,6 +419,7 @@ const Payment = () => {
           />
         </div>
 
+        {/* Name */}
         <div className="payment-name mt-2">
           <div style={{ paddingRight: '20px' }}>
             <label style={{ fontSize: '20px', fontWeight: '600' }}>Name:</label>
@@ -420,6 +453,7 @@ const Payment = () => {
           </div>
         </div>
 
+        {/* Phone */}
         <div className="payment-name mt-2">
           <div style={{ paddingRight: '20px' }}>
             <label style={{ fontSize: '20px', fontWeight: '600' }}>
@@ -439,6 +473,7 @@ const Payment = () => {
           />
         </div>
 
+        {/* Email */}
         <div className="payment-name mt-3">
           <div style={{ paddingRight: '20px' }}>
             <label style={{ fontSize: '20px', fontWeight: '600' }}>Email:</label>
