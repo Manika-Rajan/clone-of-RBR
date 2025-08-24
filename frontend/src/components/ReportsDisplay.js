@@ -30,11 +30,8 @@ const ReportsDisplay = () => {
 
   const handlePayment = () => {
     console.log("handlePayment - isLogin:", isLogin, "Current path:", location.pathname, "fileKey:", localFileKey);
-    if (isLogin) {
-      navigate("/payment");
-    } else {
-      setOpenModel(true); // Only toggle modal
-    }
+    // Always show login modal and let Login handle navigation to /payment
+    setOpenModel(true);
   };
 
   const changeStatus = () => {
@@ -133,7 +130,7 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => setOpenModel(false)} returnTo={location.pathname} fileKey={localFileKey} />
+          <Login onClose={() => setOpenModel(false)} returnTo="/payment" fileKey={localFileKey} />
           {status && (
             <div className='' style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
