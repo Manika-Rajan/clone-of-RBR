@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './Login.css';
 import { useStore } from '../Store';
 
-const Login = React.memo(({ onClose, returnTo, fileKey }) => {
+const Login = React.memo(({ onClose, returnTo, fileKey, reportId }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useStore();
@@ -111,10 +111,10 @@ const Login = React.memo(({ onClose, returnTo, fileKey }) => {
         const { from } = location.state || {};
         console.log(
           `Navigating to ${redirectTo || from} with state:`,
-          { loggedIn: true, fileKey, reportId: null, amount: null }
+          { loggedIn: true, fileKey, reportId: reportId || null, amount: null }
         );
         navigate(redirectTo || from || '/report-display', {
-          state: { loggedIn: true, fileKey, reportId: null, amount: null },
+          state: { loggedIn: true, fileKey, reportId: reportId || null, amount: null },
           replace: true,
         });
       } else {
