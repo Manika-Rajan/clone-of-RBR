@@ -14,26 +14,26 @@ import { Modal, ModalBody } from "reactstrap";
 const ReportsDisplay = () => {
   const location = useLocation();
   const fileKey = location.state?.fileKey || '';
-  console.log("Received fileKey:", fileKey);
+  const reportId = location.state?.reportId || ''; // ✅ Get reportId from location.state
+  console.log("Received fileKey:", fileKey, "reportId:", reportId);
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useStore();
-  // ✅ Defaulting destructured values so they’re never undefined
   const { isLogin = false, name = '', status = false, email = '' } = state || {};
+
+  const [openModel, setOpenModel] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [localFileKey, setLocalFileKey] = useState(fileKey);
+  const [localReportId, setLocalReportId] = useState(reportId); // ✅ Persist reportId locally
 
   useEffect(() => {
     console.log("ReportsDisplay - isLogin:", isLogin);
   }, [isLogin]);
 
-  const [openModel, setOpenModel] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pdfUrl, setPdfUrl] = useState('');
-  const [localFileKey, setLocalFileKey] = useState(fileKey); // Persist fileKey locally
-
   const handlePayment = () => {
-    console.log("handlePayment - isLogin:", isLogin, "Current path:", location.pathname, "fileKey:", localFileKey);
-    // Always show login modal and let Login handle navigation to /payment
+    console.log("handlePayment - isLogin:", isLogin, "fileKey:", localFileKey, "reportId:", localReportId);
     setOpenModel(true);
   };
 
@@ -57,16 +57,11 @@ const ReportsDisplay = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ file_key: localFileKey }),
         });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         console.log('API Response:', data);
-        if (data.presigned_url) {
-          setPdfUrl(data.presigned_url);
-        } else {
-          throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
-        }
+        if (data.presigned_url) setPdfUrl(data.presigned_url);
+        else throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
       } catch (error) {
         console.error('Error fetching presigned URL:', error.message);
         setPdfUrl(null);
@@ -79,8 +74,9 @@ const ReportsDisplay = () => {
 
   useEffect(() => {
     console.log("ReportsDisplay useEffect - isLogin updated to:", isLogin, "Path:", location.pathname);
-    setLocalFileKey(fileKey); // Update localFileKey on location change
-  }, [isLogin, location.pathname, fileKey]);
+    setLocalFileKey(fileKey);
+    setLocalReportId(reportId); // ✅ Update localReportId on location change
+  }, [isLogin, location.pathname, fileKey, reportId]);
 
   return (
     <>
@@ -100,7 +96,7 @@ const ReportsDisplay = () => {
                 </p>
               </div>
             </div>
-            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
               <span className="navbar-toggler-icon"></span>
             </button>
             <div className="collapse navbar-collapse" id="navbarSupportedContent">
@@ -133,9 +129,14 @@ const ReportsDisplay = () => {
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => setOpenModel(false)} returnTo="/payment" fileKey={localFileKey} />
+          <Login
+            onClose={() => setOpenModel(false)}
+            returnTo="/payment"
+            fileKey={localFileKey}
+            reportId={localReportId} // ✅ Pass reportId to Login for Payment
+          />
           {status && (
-            <div className='' style={{ textAlign: "center" }}>
+            <div style={{ textAlign: "center" }}>
               <p className='success-head'>The Report has been successfully sent to</p>
               <p className='success-email'>{email}</p>
               <button className='btn btn-primary' onClick={changeStatus}>Ok</button>
