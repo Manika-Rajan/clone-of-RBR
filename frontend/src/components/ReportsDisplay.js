@@ -19,9 +19,12 @@ const ReportsDisplay = () => {
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const { state, dispatch: cxtDispatch } = useStore();
-  const { isLogin, name, status, email } = state;
+  // ✅ Defaulting destructured values so they’re never undefined
+  const { isLogin = false, name = '', status = false, email = '' } = state || {};
 
-  console.log("ReportsDisplay - isLogin:", isLogin);
+  useEffect(() => {
+    console.log("ReportsDisplay - isLogin:", isLogin);
+  }, [isLogin]);
 
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
