@@ -88,8 +88,52 @@ const Login = React.memo(({ onClose, returnTo }) => {
       const data = await response.json();
       console.log('verify-otp response:', data);
       if (response.status === 200) {
-        const fetchedName = data.user?.name || phoneNumber;
-        const fetchedEmail = data.user?.email || '';
+        // --- 🔽 Surgical edit starts here ---
+        let fetchedName = data.user?.name || phoneNumber;
+        let fetchedEmail = data.user?.email || '';
+
+        try {
+          // 1. Try to fetch profile from DynamoDB
+          const getRes = await fetch(
+            'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'get',
+                phone_number: phoneNumber,
+              }),
+            }
+          );
+          const getData = await getRes.json();
+          console.log('manage-user-profile get response:', getData);
+
+          if (getRes.ok && (getData.name || getData.email)) {
+            fetchedName = getData.name || fetchedName;
+            fetchedEmail = getData.email || fetchedEmail;
+          }
+
+          // 2. Update profile in DynamoDB
+          const updateRes = await fetch(
+            'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'update',
+                phone_number: phoneNumber,
+                name: fetchedName,
+                email: fetchedEmail,
+              }),
+            }
+          );
+          const updateData = await updateRes.json();
+          console.log('manage-user-profile update response:', updateData);
+        } catch (profileErr) {
+          console.error('Profile fetch/update error:', profileErr);
+        }
+        // --- 🔼 Surgical edit ends here ---
+
         console.log(
           `Dispatching USER_LOGIN with isLogin: true, phone: ${phoneNumber}, name: ${fetchedName}, email: ${fetchedEmail}`
         );
@@ -107,7 +151,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
         if (onClose) onClose();
         setIsModalOpen(false);
 
-        // ✅ Surgical edit: remove fileKey/reportId from navigation state
+        // ✅ Navigation
         const redirectTo = returnTo || '/report-display';
         const { from } = location.state || {};
         console.log(`Navigating to ${redirectTo || from}`);
