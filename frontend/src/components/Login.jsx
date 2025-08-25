@@ -132,11 +132,15 @@ const Login = React.memo(({ onClose, returnTo }) => {
         if (onClose) onClose();
         setIsModalOpen(false);
 
-        const redirectTo = returnTo || '/report-display';
-        const { from } = location.state || {};
-        navigate(redirectTo || from || '/report-display', {
-          replace: true,
-        });
+        // ✅ Conditional redirect logic
+        let redirectTo = '/'; // default → landing page
+        if (returnTo) {
+          redirectTo = returnTo;
+        } else if (location.pathname.includes('/report-display')) {
+          redirectTo = '/report-display';
+        }
+
+        navigate(redirectTo, { replace: true });
       } else {
         setError(`Error: ${data.error || 'Invalid OTP'}`);
       }
