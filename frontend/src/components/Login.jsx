@@ -17,23 +17,25 @@ const Login = React.memo(({ onClose, returnTo }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const phoneInputRef = useRef(null);
+  const otpInputRef = useRef(null);
+
   const renderTrigger = useRef(0);
   const componentId = useRef(Date.now().toString());
 
   useEffect(() => {
     setIsModalOpen(true);
-    console.log(
-      `Login [ID: ${componentId.current}] - isModalOpen updated to:`,
-      isModalOpen,
-      'state:',
-      state,
-      'renderTrigger:',
-      renderTrigger.current,
-      'returnTo:',
-      returnTo
-    );
     renderTrigger.current += 1;
   }, [returnTo]);
+
+  // ✅ Autofocus input when step changes
+  useEffect(() => {
+    if (!otpSent && phoneInputRef.current) {
+      phoneInputRef.current.focus();
+    } else if (otpSent && otpInputRef.current) {
+      otpInputRef.current.focus();
+    }
+  }, [otpSent, isModalOpen]);
 
   const sendOtp = async () => {
     if (!phone || phone.length !== 10 || !/^\d+$/.test(phone)) {
@@ -53,7 +55,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
         }
       );
       const data = await response.json();
-      console.log('send-otp response:', data);
       if (response.ok) {
         cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
         setOtpSent(true);
@@ -61,7 +62,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
         setError(`Error: ${data.error || 'Failed to send OTP'}`);
       }
     } catch (err) {
-      console.error('send-otp error:', err);
       setError(`An error occurred: ${err.message}`);
     } finally {
       setIsLoading(false);
@@ -86,7 +86,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
         }
       );
       const data = await response.json();
-      console.log('verify-otp response:', data);
 
       if (response.status === 200) {
         // ✅ After OTP is verified, fetch profile from DynamoDB
@@ -101,8 +100,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
           );
 
           const profileData = await profileRes.json();
-          console.log('manage-user-profile (get) response:', profileData);
-
           const fetchedName = profileData.name || phoneNumber;
           const fetchedEmail = profileData.email || '';
 
@@ -117,7 +114,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
             },
           });
         } catch (profileErr) {
-          console.error('Error fetching profile:', profileErr);
           // fallback dispatch if DynamoDB fails
           cxtDispatch({
             type: 'USER_LOGIN',
@@ -136,7 +132,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
 
         const redirectTo = returnTo || '/report-display';
         const { from } = location.state || {};
-        console.log(`Navigating to ${redirectTo || from}`);
         navigate(redirectTo || from || '/report-display', {
           replace: true,
         });
@@ -144,7 +139,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
         setError(`Error: ${data.error || 'Invalid OTP'}`);
       }
     } catch (err) {
-      console.error('verify-otp error:', err);
       setError(`An error occurred: ${err.message}`);
     } finally {
       setIsLoading(false);
@@ -160,13 +154,9 @@ const Login = React.memo(({ onClose, returnTo }) => {
   const handleChange = (setter) => (e) => setter(e.target.value);
 
   return (
-    <div
-      className={`login-popup-container ${
-        !error && !isLoading && 'success-popup-container'
-      }`}
-    >
+    <div className="login-popup-container">
       <div
-        className={`login-popup ${!error && !isLoading && 'success-popup'}`}
+        className="login-popup"
         style={{ display: isModalOpen ? 'block' : 'none' }}
       >
         {!isLoading && !error && (
@@ -181,59 +171,60 @@ const Login = React.memo(({ onClose, returnTo }) => {
             </p>
           )}
         </div>
-        {!otpSent ? (
-          <div
-            className="login-phone-input"
-            style={{ width: '70%', textAlign: 'center', margin: 'auto' }}
-          >
+
+        {/* ✅ Form handles Enter key */}
+        <form onSubmit={handleSubmit}>
+          {!otpSent ? (
             <div
-              className="input-group mb-3"
-              style={{ marginRight: '20px', width: '23%' }}
+              className="login-phone-input d-flex justify-content-center align-items-center gap-2"
+              style={{ width: '80%', margin: 'auto' }}
             >
-              <select className="form-select" aria-label="Default select example" disabled>
+              <select
+                className="form-select w-auto"
+                aria-label="Country code"
+                disabled
+              >
                 <option defaultValue>+91</option>
               </select>
-            </div>
-            <div className="input-group mb-3">
               <input
                 type="text"
-                className="form-control"
+                className="form-control text-center"
                 placeholder="Enter Your 10 digit Mobile Number"
-                style={{ textAlign: 'center' }}
                 value={phone}
                 onChange={handleChange(setPhone)}
                 maxLength={10}
                 disabled={isLoading}
+                ref={phoneInputRef} // ✅ autofocus phone
               />
             </div>
-          </div>
-        ) : (
-          <div className="otp-fields">
-            <input
-              type="text"
-              placeholder="Enter 6-digit OTP"
-              value={otp}
-              onChange={handleChange(setOtp)}
-              maxLength={6}
-              disabled={isLoading}
-            />
-          </div>
-        )}
-        <div>
-          {!isLoading && !error ? (
+          ) : (
+            <div className="otp-fields d-flex justify-content-center mt-3">
+              <input
+                type="text"
+                className="form-control text-center"
+                placeholder="Enter 6-digit OTP"
+                value={otp}
+                onChange={handleChange(setOtp)}
+                maxLength={6}
+                disabled={isLoading}
+                ref={otpInputRef} // ✅ autofocus OTP
+              />
+            </div>
+          )}
+
+          <div className="text-center mt-3">
             <button
-              onClick={handleSubmit}
-              className="login-btn"
+              type="submit"
+              className="btn btn-primary w-50"
               disabled={isLoading}
             >
               {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
             </button>
-          ) : error ? (
-            <p className="error-message">{error}</p>
-          ) : (
-            <p className="loading-message">Processing...</p>
-          )}
-        </div>
+          </div>
+        </form>
+
+        {error && <p className="error-message text-danger mt-2">{error}</p>}
+        {isLoading && <p className="loading-message">Processing...</p>}
       </div>
     </div>
   );
