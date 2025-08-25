@@ -102,6 +102,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
           const profileData = await profileRes.json();
           const fetchedName = profileData.name || phoneNumber;
           const fetchedEmail = profileData.email || '';
+          const fetchedPhoto = profileData.photo_url || null;
 
           cxtDispatch({
             type: 'USER_LOGIN',
@@ -111,6 +112,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
               name: fetchedName,
               email: fetchedEmail,
               phone: phoneNumber,
+              photo_url: fetchedPhoto,
             },
           });
         } catch (profileErr) {
