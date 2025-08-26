@@ -100,7 +100,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
           );
 
           const profileData = await profileRes.json();
-          const fetchedName = profileData.name || phoneNumber;
+          const fetchedName = profileData.name || "User Name";
           const fetchedEmail = profileData.email || '';
           const fetchedPhoto = profileData.photo_url || null;
 
@@ -116,15 +116,16 @@ const Login = React.memo(({ onClose, returnTo }) => {
             },
           });
         } catch (profileErr) {
-          // fallback dispatch if DynamoDB fails
+          // ✅ fallback dispatch if DynamoDB fails
           cxtDispatch({
             type: 'USER_LOGIN',
             payload: {
               isLogin: true,
               userId: phoneNumber,
-              name: phoneNumber,
+              name: "User Name",   // ✅ safe fallback
               email: '',
               phone: phoneNumber,
+              photo_url: null,
             },
           });
         }
