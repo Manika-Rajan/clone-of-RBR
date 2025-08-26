@@ -105,11 +105,22 @@ const Login = React.memo(({ onClose, returnTo }) => {
           );
 
           const profileData = await profileRes.json();
+          let userProfile = profileData;
+
+          // 🔧 Fix: parse nested body JSON if exists
+          if (profileData.body) {
+            try {
+              userProfile = JSON.parse(profileData.body);
+            } catch (e) {
+              console.error("Failed to parse profile body:", profileData.body);
+            }
+          }
+
           const enrichedUser = {
             ...baseUser,
-            name: profileData.name || "User Name",
-            email: profileData.email || '',
-            photo_url: profileData.photo_url || null,
+            name: userProfile.name || "User Name",
+            email: userProfile.email || '',
+            photo_url: userProfile.photo_url || null,
           };
 
           cxtDispatch({ type: 'USER_LOGIN', payload: enrichedUser });
