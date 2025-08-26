@@ -189,7 +189,6 @@ const Payment = () => {
     }
   };
 
-  // ---- SURGICAL EDIT: Updated ensureRazorpayLoaded for reliability and logging ----
   const ensureRazorpayLoaded = () =>
     new Promise((resolve, reject) => {
       if (window.Razorpay) {
@@ -216,9 +215,8 @@ const Payment = () => {
         }
       }, 10000); // Increased timeout to 10 seconds
     });
-  // ---- END SURGICAL EDIT ----
 
-  // ---- SURGICAL EDIT: Updated handlePayment to fix Razorpay modal issue ----
+  // ---- SURGICAL EDIT: Updated handlePayment to handle missing authToken ----
   const handlePayment = async () => {
     console.log('handlePayment started', {
       reportId,
@@ -229,6 +227,7 @@ const Payment = () => {
       inputEmail,
       verify,
       authToken: localStorage.getItem('authToken'),
+      userInfoToken: userInfo?.token, // Check if token exists in userInfo
     });
 
     setError('');
@@ -244,7 +243,7 @@ const Payment = () => {
     if (!userId) {
       console.error('Validation failed: Missing userId');
       setError('Please log in again.');
-      navigate('/');
+      navigate('/login'); // Changed to /login for clarity
       setLoading(false);
       return;
     }
@@ -286,11 +285,12 @@ const Payment = () => {
 
     // Step 3: Fetch Razorpay order
     try {
-      const token = localStorage.getItem('authToken');
+      // Check authToken in localStorage and userInfo
+      const token = localStorage.getItem('authToken') || userInfo?.token;
       if (!token) {
-        console.error('No auth token found');
-        setError('Please log in again.');
-        navigate('/');
+        console.error('No auth token found in localStorage or userInfo');
+        setError('Authentication error. Please log in again and retry.');
+        navigate('/login'); // Changed to /login for clarity
         setLoading(false);
         return;
       }
@@ -299,6 +299,7 @@ const Payment = () => {
         reportId,
         amount: Math.round(Number(amount) * 100),
         userId,
+        tokenSource: localStorage.getItem('authToken') ? 'localStorage' : 'userInfo',
       });
       const response = await fetch(
         'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/create-razorpay-order',
@@ -457,13 +458,12 @@ const Payment = () => {
         },
         notes: {
           file_key,
-          reportId, // helpful to have in Razorpay dashboard
+          reportId,
           address: 'Rajan Business Ideas Office',
         },
         theme: {
           color: '#3399cc',
         },
-        // ---- SURGICAL EDIT: ensure loading resets if user closes the modal ----
         modal: {
           ondismiss: () => {
             console.log('Razorpay modal closed by user');
@@ -471,7 +471,6 @@ const Payment = () => {
             setLoading(false);
           },
         },
-        // ---- END SURGICAL EDIT ----
       };
 
       console.log('Razorpay options:', options);
@@ -497,9 +496,7 @@ const Payment = () => {
                 status: 'failed',
                 amount: Math.round(Number(amount) * 100),
                 razorpayPaymentId: response?.error?.metadata?.payment_id || null,
-                // ---- SURGICAL EDIT: use resolved orderId for accurate logging ----
                 razorpayOrderId: orderId,
-                // ---- END SURGICAL EDIT ----
                 razorpaySignature: null,
                 timestamp: new Date().toISOString(),
               }),
@@ -516,12 +513,11 @@ const Payment = () => {
         setLoading(false);
       }
     } catch (error) {
-      console.error('Payment initiation error:', error.message, error.stack);
+      console.error('Payment initiation error:', error.message, err.stack);
       setError(`Failed to initiate payment: ${error.message}`);
       setLoading(false);
     }
   };
-  // ---- END SURGICAL EDIT ----
 
   return (
     <div className="payments-page" style={{ position: 'relative', zIndex: 1000 }}>
