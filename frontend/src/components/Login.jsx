@@ -20,12 +20,8 @@ const Login = React.memo(({ onClose, returnTo }) => {
   const phoneInputRef = useRef(null);
   const otpInputRef = useRef(null);
 
-  const renderTrigger = useRef(0);
-  const componentId = useRef(Date.now().toString());
-
   useEffect(() => {
     setIsModalOpen(true);
-    renderTrigger.current += 1;
   }, [returnTo]);
 
   // ✅ Autofocus input when step changes
@@ -88,7 +84,16 @@ const Login = React.memo(({ onClose, returnTo }) => {
       const data = await response.json();
 
       if (response.status === 200) {
-        // ✅ After OTP is verified, fetch profile from DynamoDB
+        // ✅ Step 1: Dispatch minimal login info
+        const baseUser = {
+          isLogin: true,
+          userId: phoneNumber,
+          phone: phoneNumber,
+        };
+        cxtDispatch({ type: 'USER_LOGIN', payload: baseUser });
+        localStorage.setItem('userInfo', JSON.stringify(baseUser));
+
+        // ✅ Step 2: Immediately fetch full profile from DynamoDB
         try {
           const profileRes = await fetch(
             'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile',
@@ -100,34 +105,21 @@ const Login = React.memo(({ onClose, returnTo }) => {
           );
 
           const profileData = await profileRes.json();
-          const fetchedName = profileData.name || "User Name";
-          const fetchedEmail = profileData.email || '';
-          const fetchedPhoto = profileData.photo_url || null;
+          const enrichedUser = {
+            ...baseUser,
+            name: profileData.name || "User Name",
+            email: profileData.email || '',
+            photo_url: profileData.photo_url || null,
+          };
 
-          cxtDispatch({
-            type: 'USER_LOGIN',
-            payload: {
-              isLogin: true,
-              userId: phoneNumber,
-              name: fetchedName,
-              email: fetchedEmail,
-              phone: phoneNumber,
-              photo_url: fetchedPhoto,
-            },
-          });
+          cxtDispatch({ type: 'USER_LOGIN', payload: enrichedUser });
+          localStorage.setItem('userInfo', JSON.stringify(enrichedUser));
         } catch (profileErr) {
-          // ✅ fallback dispatch if DynamoDB fails
-          cxtDispatch({
-            type: 'USER_LOGIN',
-            payload: {
-              isLogin: true,
-              userId: phoneNumber,
-              name: "User Name",   // ✅ safe fallback
-              email: '',
-              phone: phoneNumber,
-              photo_url: null,
-            },
-          });
+          console.error("Profile fetch failed:", profileErr);
+          // ✅ fallback to safe default
+          const fallbackUser = { ...baseUser, name: "User Name", email: '', photo_url: null };
+          cxtDispatch({ type: 'USER_LOGIN', payload: fallbackUser });
+          localStorage.setItem('userInfo', JSON.stringify(fallbackUser));
         }
 
         if (onClose) onClose();
@@ -201,7 +193,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
                 onChange={handleChange(setPhone)}
                 maxLength={10}
                 disabled={isLoading}
-                ref={phoneInputRef} // ✅ autofocus phone
+                ref={phoneInputRef}
               />
             </div>
           ) : (
@@ -214,7 +206,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
                 onChange={handleChange(setOtp)}
                 maxLength={6}
                 disabled={isLoading}
-                ref={otpInputRef} // ✅ autofocus OTP
+                ref={otpInputRef}
               />
             </div>
           )}
