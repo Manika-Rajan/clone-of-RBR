@@ -374,7 +374,7 @@ const Payment = () => {
       // Step 5: Initialize Razorpay
       const options = {
         key: razorpayKey,
-        amount: buildings,
+        amount: orderAmount,
         currency: orderCurrency,
         name: 'Rajan Business Ideas Pvt. Ltd',
         description: `Purchase of report ${reportId}`,
@@ -512,7 +512,7 @@ const Payment = () => {
         setLoading(false);
       }
     } catch (error) {
-      console.error('Payment initiation error:', error.message, error.stack); // Fixed: Changed err.stack to error.stack
+      console.error('Payment initiation error:', error.message, error.stack);
       setError(`Failed to initiate payment: ${error.message}`);
       setLoading(false);
     }
