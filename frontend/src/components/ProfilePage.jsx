@@ -128,7 +128,7 @@ const ProfilePage = () => {
     }
   };
 
-  // ---- SURGICAL EDIT: use `userid` for the photo upload API ONLY ----
+  // ---- SURGICAL EDIT: use `userId` for the photo upload API ONLY ----
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) {
@@ -144,10 +144,10 @@ const ProfilePage = () => {
       localStorage.getItem('user_id') ||
       localStorage.getItem('userId');
     const authToken = localStorage.getItem('authToken') || '';
-    console.log('Attempting upload with userid:', uid, 'authToken:', authToken);
+    console.log('Attempting upload with userId:', uid, 'authToken:', authToken);
     if (!uid) {
-      console.error('userid is undefined or missing');
-      alert('Failed to upload photo: userid is undefined or missing');
+      console.error('userId is undefined or missing');
+      alert('Failed to upload photo: userId is undefined or missing');
       return;
     }
 
@@ -161,8 +161,8 @@ const ProfilePage = () => {
             'Content-Type': 'application/json', 
             'Authorization': `Bearer ${authToken}` 
           },
-          // ⬇️ send `userid` instead of `user_id`
-          body: JSON.stringify({ userid: uid }),
+          // ⬇️ send `userId` instead of `user_id` or `userid`
+          body: JSON.stringify({ userId: uid }),
         }
       );
       console.log('Presigned URL fetch response status:', response.status, 'Headers:', Object.fromEntries(response.headers));
