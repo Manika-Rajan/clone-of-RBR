@@ -216,7 +216,6 @@ const Payment = () => {
       }, 10000); // Increased timeout to 10 seconds
     });
 
-  // ---- SURGICAL EDIT: Updated handlePayment to handle missing authToken ----
   const handlePayment = async () => {
     console.log('handlePayment started', {
       reportId,
@@ -375,7 +374,7 @@ const Payment = () => {
       // Step 5: Initialize Razorpay
       const options = {
         key: razorpayKey,
-        amount: orderAmount,
+        amount: buildings,
         currency: orderCurrency,
         name: 'Rajan Business Ideas Pvt. Ltd',
         description: `Purchase of report ${reportId}`,
@@ -513,7 +512,7 @@ const Payment = () => {
         setLoading(false);
       }
     } catch (error) {
-      console.error('Payment initiation error:', error.message, err.stack);
+      console.error('Payment initiation error:', error.message, error.stack); // Fixed: Changed err.stack to error.stack
       setError(`Failed to initiate payment: ${error.message}`);
       setLoading(false);
     }
