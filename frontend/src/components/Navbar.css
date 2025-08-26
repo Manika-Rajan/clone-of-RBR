@@ -1,3 +1,4 @@
+```css
 /* Navbar container */
 .navbar {
   background-color: #ffffff;
@@ -7,8 +8,8 @@
 
 /* Container for navbar content */
 .container-fluid {
-  padding-left: 30px;
-  padding-right: 30px; /* Increased to keep content away from edges */
+  padding-left: 40px !important; /* Increased for more edge space */
+  padding-right: 40px !important;
 }
 
 /* Left section with logo and text */
@@ -84,23 +85,24 @@
 }
 
 /* Dropdown Menu */
-.navbar-nav .dropdown-menu {
+.navbar-nav .nav-item.dropdown .dropdown-menu {
   position: absolute;
   top: 50px;
-  right: 0;
-  left: auto;
+  right: 0 !important; /* Align with toggle's right edge */
+  left: auto !important;
   background: white;
   border-radius: 5px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   min-width: 160px;
-  max-width: calc(100vw - 30px); /* Prevent overflow beyond viewport */
+  max-width: calc(100vw - 80px) !important; /* Ensure fits viewport */
   padding: 10px 0;
   z-index: 1000;
   display: none;
-  transform: translateX(-10px); /* Slight left shift to avoid edge */
+  transform: translateX(-20px) !important; /* Stronger left shift */
+  /* border: 1px solid red; */ /* Uncomment for debugging */
 }
 
-.navbar-nav .dropdown-menu.show {
+.navbar-nav .nav-item.dropdown .dropdown-menu.show {
   display: block;
 }
 
@@ -132,8 +134,8 @@
 /* Mobile view */
 @media (max-width: 991px) {
   .container-fluid {
-    padding-left: 15px;
-    padding-right: 15px; /* Reduced padding for mobile */
+    padding-left: 15px !important;
+    padding-right: 15px !important;
   }
   .navbar-nav {
     text-align: left;
@@ -145,14 +147,16 @@
   .nav-item.dropdown {
     margin-right: 0;
   }
-  .navbar-nav .dropdown-menu {
-    right: auto;
-    left: 0;
+  .navbar-nav .nav-item.dropdown .dropdown-menu {
+    right: auto !important;
+    left: 0 !important;
     width: 100%;
-    max-width: 100%;
-    transform: none; /* Remove transform on mobile */
+    max-width: 100% !important;
+    transform: none !important;
+    /* border: 1px solid blue; */ /* Uncomment for debugging */
   }
   .dropdown-item, .logout-btn {
     text-align: left;
   }
 }
+```
