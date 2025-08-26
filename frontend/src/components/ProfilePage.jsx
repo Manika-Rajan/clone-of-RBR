@@ -128,6 +128,7 @@ const ProfilePage = () => {
     }
   };
 
+  // ---- SURGICAL EDIT BEGINS: use `userid` (not `user_id`) for the presigned upload API ----
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) {
@@ -137,12 +138,16 @@ const ProfilePage = () => {
 
     console.log('File selected:', file.name, file.type, file.size);
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const user_id = storedUserInfo?.user_id || localStorage.getItem('user_id');
+    const uid =
+      storedUserInfo?.user_id ||
+      storedUserInfo?.userId ||
+      localStorage.getItem('user_id') ||
+      localStorage.getItem('userId');
     const authToken = localStorage.getItem('authToken') || '';
-    console.log('Attempting upload with user_id:', user_id, 'authToken:', authToken);
-    if (!user_id) {
-      console.error('user_id is undefined or missing');
-      alert('Failed to upload photo: user_id is undefined or missing');
+    console.log('Attempting upload with userid:', uid, 'authToken:', authToken);
+    if (!uid) {
+      console.error('userid is undefined or missing');
+      alert('Failed to upload photo: userid is undefined or missing');
       return;
     }
 
@@ -156,7 +161,8 @@ const ProfilePage = () => {
             'Content-Type': 'application/json', 
             'Authorization': `Bearer ${authToken}` 
           },
-          body: JSON.stringify({ user_id }),
+          // ⬇️ send `userid` instead of `user_id`
+          body: JSON.stringify({ userid: uid }),
         }
       );
       console.log('Presigned URL fetch response status:', response.status, 'Headers:', Object.fromEntries(response.headers));
@@ -180,7 +186,7 @@ const ProfilePage = () => {
       setNewPhoto(null);
       console.log('Photo upload successful, photoUrl set to presigned GET URL:', presignedGetUrl);
       alert('Photo uploaded successfully!');
-      const updatedUserInfo = { ...storedUserInfo, user_id, photo_url: presignedGetUrl };
+      const updatedUserInfo = { ...storedUserInfo, user_id: uid, photo_url: presignedGetUrl };
       cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
       localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
     } catch (error) {
@@ -190,6 +196,7 @@ const ProfilePage = () => {
       setPhotoUploading(false);
     }
   };
+  // ---- SURGICAL EDIT ENDS ----
 
   const handleRemovePhoto = async () => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
