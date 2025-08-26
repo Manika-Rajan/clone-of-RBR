@@ -128,7 +128,7 @@ const ProfilePage = () => {
     }
   };
 
-  // ---- SURGICAL EDIT BEGINS: use `userid` (not `user_id`) for the presigned upload API ----
+  // ---- SURGICAL EDIT: use `userid` for the photo upload API ONLY ----
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) {
@@ -196,7 +196,7 @@ const ProfilePage = () => {
       setPhotoUploading(false);
     }
   };
-  // ---- SURGICAL EDIT ENDS ----
+  // ---- END SURGICAL EDIT ----
 
   const handleRemovePhoto = async () => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
