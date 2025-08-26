@@ -189,6 +189,23 @@ const Payment = () => {
     }
   };
 
+  // ---- SURGICAL EDIT: small helper to ensure Razorpay SDK is ready on demand ----
+  const ensureRazorpayLoaded = () =>
+    new Promise((resolve, reject) => {
+      if (window.Razorpay) return resolve(true);
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => reject(new Error('Razorpay SDK failed to load'));
+      document.body.appendChild(script);
+      // safety timeout
+      setTimeout(() => {
+        if (!window.Razorpay) reject(new Error('Razorpay SDK load timeout'));
+      }, 7000);
+    });
+  // ---- END SURGICAL EDIT ----
+
   const handlePayment = async () => {
     setError('');
     setLoading(true);
@@ -220,13 +237,16 @@ const Payment = () => {
       return;
     }
 
-    // Confirm Razorpay library is present
-    if (!window.Razorpay) {
-      console.error('window.Razorpay is not available');
+    // ---- SURGICAL EDIT: actively ensure Razorpay is loaded before proceeding ----
+    try {
+      await ensureRazorpayLoaded();
+    } catch (e) {
+      console.error('window.Razorpay could not be loaded:', e?.message);
       setError('Payment gateway not loaded. Please refresh the page.');
       setLoading(false);
       return;
     }
+    // ---- END SURGICAL EDIT ----
 
     try {
       const token = localStorage.getItem('authToken');
@@ -263,11 +283,37 @@ const Payment = () => {
       const order = await response.json();
       console.log('Razorpay order response:', order);
 
-      // Robust key resolution: build-time env → window._env_ → localStorage override
+      // ---- SURGICAL EDIT: tolerate multiple shapes from backend for id/amount/currency/key ----
+      const orderId =
+        order?.id ||
+        order?.order_id ||
+        order?.data?.id ||
+        order?.data?.order_id;
+
+      const orderAmount =
+        order?.amount ||
+        order?.data?.amount ||
+        Math.round(Number(amount) * 100);
+
+      const orderCurrency =
+        order?.currency ||
+        order?.data?.currency ||
+        'INR';
+
+      const keyFromOrder =
+        order?.key ||
+        order?.key_id ||
+        order?.data?.key ||
+        order?.data?.key_id ||
+        null;
+      // ---- END SURGICAL EDIT ----
+
+      // Robust key resolution: build-time env → window._env_ → localStorage → backend-provided key
       const razorpayKey =
         process.env.REACT_APP_RAZORPAY_KEY_ID ||
         (typeof window !== 'undefined' && window._env_?.RAZORPAY_KEY_ID) ||
-        localStorage.getItem('razorpayKey');
+        localStorage.getItem('razorpayKey') ||
+        keyFromOrder;
 
       if (!razorpayKey) {
         console.error('Razorpay key is missing/undefined at runtime.');
@@ -276,16 +322,23 @@ const Payment = () => {
         return;
       }
 
-      console.log('Opening Razorpay popup with order:', order?.id);
+      if (!orderId) {
+        console.error('Order ID not present in create-order response:', order);
+        setError('Payment could not be initialized. Please retry.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Opening Razorpay popup with order:', orderId);
 
       const options = {
         key: razorpayKey,
-        amount: order.amount,
-        currency: 'INR',
+        amount: orderAmount,
+        currency: orderCurrency,
         name: 'Rajan Business Ideas Pvt. Ltd',
         description: `Purchase of report ${reportId}`,
         image: '/logo.svg',
-        order_id: order.id,
+        order_id: orderId,
         handler: async (response) => {
           try {
             console.log('Verifying payment with:', {
@@ -303,9 +356,6 @@ const Payment = () => {
                 headers: {
                   'Content-Type': 'application/json',
                   Authorization: `Bearer ${token}`,
-                  // The next 2 headers are not necessary for simple POSTs; kept if your API expects them.
-                  'Access-Control-Request-Method': 'POST',
-                  'Access-Control-Request-Headers': 'Content-Type,Authorization',
                 },
                 body: JSON.stringify({
                   reportId,
@@ -372,6 +422,14 @@ const Payment = () => {
         theme: {
           color: '#3399cc',
         },
+        // ---- SURGICAL EDIT: ensure loading resets if user closes the modal ----
+        modal: {
+          ondismiss: () => {
+            console.log('Razorpay modal closed by user');
+            setLoading(false);
+          },
+        },
+        // ---- END SURGICAL EDIT ----
       };
 
       const rzp = new window.Razorpay(options);
@@ -393,7 +451,9 @@ const Payment = () => {
               status: 'failed',
               amount: Math.round(Number(amount) * 100),
               razorpayPaymentId: response?.error?.metadata?.payment_id || null,
-              razorpayOrderId: order.id,
+              // ---- SURGICAL EDIT: use resolved orderId for accurate logging ----
+              razorpayOrderId: orderId,
+              // ---- END SURGICAL EDIT ----
               razorpaySignature: null,
               timestamp: new Date().toISOString(),
             }),
