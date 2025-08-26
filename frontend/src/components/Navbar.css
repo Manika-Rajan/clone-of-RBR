@@ -39,7 +39,7 @@
 }
 
 .nav-item {
-  margin-right: 30px;
+  margin-right: 80px; /* Increased to match LOGIN button spacing */
 }
 
 .nav-link {
@@ -61,6 +61,11 @@
   padding: 10px;
 }
 
+/* Ensure dropdown nav-item has same spacing */
+.nav-item.dropdown {
+  margin-right: 80px; /* Match other nav items */
+}
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -77,11 +82,12 @@
 .dropdown-menu {
   position: absolute;
   top: 50px;
-  right: 10px;
+  right: 0; /* Align with right edge of toggle */
+  left: auto; /* Prevent left alignment */
   background: white;
   border-radius: 5px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  width: 150px;
+  min-width: 160px; /* Slightly wider for content */
   list-style: none;
   padding: 10px 0;
   z-index: 1000;
@@ -93,11 +99,11 @@
 }
 
 .dropdown-item {
-  padding: 10px;
+  padding: 10px 16px;
   text-decoration: none;
   color: black;
   display: block;
-  text-align: center;
+  text-align: left; /* Changed to left for better readability */
 }
 
 .dropdown-item:hover {
@@ -108,11 +114,34 @@
   border: none;
   background: none;
   width: 100%;
-  text-align: center;
+  text-align: left; /* Align with dropdown items */
   cursor: pointer;
   color: red;
 }
 
 .logout-btn:hover {
   background: #ffcccc;
+}
+
+/* Mobile view */
+@media (max-width: 991px) {
+  .navbar-nav {
+    text-align: left; /* Align nav items left on mobile */
+  }
+  .nav-item {
+    margin-right: 0; /* Remove right margin on mobile */
+    margin-bottom: 10px; /* Add spacing between items */
+  }
+  .nav-item.dropdown {
+    margin-right: 0; /* Remove right margin on mobile */
+  }
+  .dropdown-menu {
+    right: auto; /* Reset for mobile */
+    left: 0; /* Align left on mobile */
+    width: 100%; /* Full width on mobile */
+    min-width: 0; /* Remove min-width constraint */
+  }
+  .dropdown-item, .logout-btn {
+    text-align: left; /* Consistent alignment */
+  }
 }
