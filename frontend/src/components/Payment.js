@@ -189,27 +189,38 @@ const Payment = () => {
     }
   };
 
-  // ---- SURGICAL EDIT: small helper to ensure Razorpay SDK is ready on demand ----
+  // ---- SURGICAL EDIT: Updated ensureRazorpayLoaded for reliability and logging ----
   const ensureRazorpayLoaded = () =>
     new Promise((resolve, reject) => {
-      if (window.Razorpay) return resolve(true);
+      if (window.Razorpay) {
+        console.log('Razorpay SDK already loaded');
+        return resolve(true);
+      }
+      console.log('Loading Razorpay SDK...');
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => reject(new Error('Razorpay SDK failed to load'));
+      script.onload = () => {
+        console.log('Razorpay SDK loaded successfully');
+        resolve(true);
+      };
+      script.onerror = () => {
+        console.error('Razorpay SDK failed to load');
+        reject(new Error('Razorpay SDK failed to load'));
+      };
       document.body.appendChild(script);
-      // safety timeout
       setTimeout(() => {
-        if (!window.Razorpay) reject(new Error('Razorpay SDK load timeout'));
-      }, 7000);
+        if (!window.Razorpay) {
+          console.error('Razorpay SDK load timeout');
+          reject(new Error('Razorpay SDK load timeout'));
+        }
+      }, 10000); // Increased timeout to 10 seconds
     });
   // ---- END SURGICAL EDIT ----
 
+  // ---- SURGICAL EDIT: Updated handlePayment to fix Razorpay modal issue ----
   const handlePayment = async () => {
-    setError('');
-    setLoading(true);
-    console.log('handlePayment called', {
+    console.log('handlePayment started', {
       reportId,
       amount,
       file_key,
@@ -217,47 +228,78 @@ const Payment = () => {
       inputName,
       inputEmail,
       verify,
+      authToken: localStorage.getItem('authToken'),
     });
 
-    // Validate user input & context
+    setError('');
+    setLoading(true);
+
+    // Step 1: Validate inputs individually
     if (!reportId) {
-      setError('Missing report reference. Please go back and re-open payment.');
+      console.error('Validation failed: Missing reportId');
+      setError('Missing report reference. Please select a report.');
       setLoading(false);
       return;
     }
-    if (
-      !userId ||
-      !amount ||
-      !inputName.trim() ||
-      !inputEmail.trim() ||
-      !verify
-    ) {
-      setError('Please fill all fields and agree to terms');
+    if (!userId) {
+      console.error('Validation failed: Missing userId');
+      setError('Please log in again.');
+      navigate('/');
+      setLoading(false);
+      return;
+    }
+    if (!inputName.trim()) {
+      console.error('Validation failed: Missing name');
+      setError('Please enter your name.');
+      setLoading(false);
+      return;
+    }
+    if (!inputEmail.trim()) {
+      console.error('Validation failed: Missing email');
+      setError('Please enter your email.');
+      setLoading(false);
+      return;
+    }
+    if (!verify) {
+      console.error('Validation failed: Terms not accepted');
+      setError('Please agree to the terms and conditions.');
+      setLoading(false);
+      return;
+    }
+    if (!amount || isNaN(amount)) {
+      console.error('Validation failed: Invalid amount', { amount });
+      setError('Invalid payment amount.');
       setLoading(false);
       return;
     }
 
-    // ---- SURGICAL EDIT: actively ensure Razorpay is loaded before proceeding ----
+    // Step 2: Ensure Razorpay SDK is loaded
     try {
       await ensureRazorpayLoaded();
+      console.log('Razorpay SDK confirmed:', !!window.Razorpay);
     } catch (e) {
-      console.error('window.Razorpay could not be loaded:', e?.message);
-      setError('Payment gateway not loaded. Please refresh the page.');
+      console.error('Razorpay SDK error:', e.message);
+      setError('Failed to load payment gateway. Please refresh the page.');
       setLoading(false);
       return;
     }
-    // ---- END SURGICAL EDIT ----
 
+    // Step 3: Fetch Razorpay order
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        setError('Please log in again');
+        console.error('No auth token found');
+        setError('Please log in again.');
         navigate('/');
         setLoading(false);
         return;
       }
 
-      console.log('Fetching create-razorpay-order…');
+      console.log('Fetching create-razorpay-order with:', {
+        reportId,
+        amount: Math.round(Number(amount) * 100),
+        userId,
+      });
       const response = await fetch(
         'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/create-razorpay-order',
         {
@@ -277,53 +319,51 @@ const Payment = () => {
       console.log('create-razorpay-order response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to create order: ${errorText}`);
+        console.error('create-razorpay-order error:', errorText);
+        setError(`Failed to initiate payment: ${errorText || 'Server error'}`);
+        setLoading(false);
+        return;
       }
 
       const order = await response.json();
       console.log('Razorpay order response:', order);
 
-      // ---- SURGICAL EDIT: tolerate multiple shapes from backend for id/amount/currency/key ----
+      // Step 4: Resolve order details
       const orderId =
         order?.id ||
         order?.order_id ||
         order?.data?.id ||
         order?.data?.order_id;
-
       const orderAmount =
         order?.amount ||
         order?.data?.amount ||
         Math.round(Number(amount) * 100);
-
       const orderCurrency =
         order?.currency ||
         order?.data?.currency ||
         'INR';
-
       const keyFromOrder =
         order?.key ||
         order?.key_id ||
         order?.data?.key ||
         order?.data?.key_id ||
         null;
-      // ---- END SURGICAL EDIT ----
 
-      // Robust key resolution: build-time env → window._env_ → localStorage → backend-provided key
       const razorpayKey =
         process.env.REACT_APP_RAZORPAY_KEY_ID ||
         (typeof window !== 'undefined' && window._env_?.RAZORPAY_KEY_ID) ||
         localStorage.getItem('razorpayKey') ||
         keyFromOrder;
 
+      console.log('Resolved Razorpay key:', razorpayKey, 'Order ID:', orderId);
       if (!razorpayKey) {
-        console.error('Razorpay key is missing/undefined at runtime.');
-        setError('Razorpay key not configured. Please contact support.');
+        console.error('Razorpay key missing');
+        setError('Payment configuration error. Please contact support.');
         setLoading(false);
         return;
       }
-
       if (!orderId) {
-        console.error('Order ID not present in create-order response:', order);
+        console.error('Order ID missing in response:', order);
         setError('Payment could not be initialized. Please retry.');
         setLoading(false);
         return;
@@ -331,6 +371,7 @@ const Payment = () => {
 
       console.log('Opening Razorpay popup with order:', orderId);
 
+      // Step 5: Initialize Razorpay
       const options = {
         key: razorpayKey,
         amount: orderAmount,
@@ -426,50 +467,61 @@ const Payment = () => {
         modal: {
           ondismiss: () => {
             console.log('Razorpay modal closed by user');
+            setError('Payment cancelled. Please try again.');
             setLoading(false);
           },
         },
         // ---- END SURGICAL EDIT ----
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', async (response) => {
-        console.error('Payment failed:', response?.error?.description);
-        setError(`Payment failed: ${response?.error?.description || 'Unknown'}`);
-        await fetch(
-          'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              reportId,
-              file_key,
-              userId,
-              status: 'failed',
-              amount: Math.round(Number(amount) * 100),
-              razorpayPaymentId: response?.error?.metadata?.payment_id || null,
-              // ---- SURGICAL EDIT: use resolved orderId for accurate logging ----
-              razorpayOrderId: orderId,
-              // ---- END SURGICAL EDIT ----
-              razorpaySignature: null,
-              timestamp: new Date().toISOString(),
-            }),
-          }
-        );
-        setLoading(false);
-      });
+      console.log('Razorpay options:', options);
 
-      // Open the Razorpay popup
-      rzp.open();
+      // Step 6: Open Razorpay modal
+      try {
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', async (response) => {
+          console.error('Payment failed:', response?.error?.description);
+          setError(`Payment failed: ${response?.error?.description || 'Unknown'}`);
+          await fetch(
+            'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                reportId,
+                file_key,
+                userId,
+                status: 'failed',
+                amount: Math.round(Number(amount) * 100),
+                razorpayPaymentId: response?.error?.metadata?.payment_id || null,
+                // ---- SURGICAL EDIT: use resolved orderId for accurate logging ----
+                razorpayOrderId: orderId,
+                // ---- END SURGICAL EDIT ----
+                razorpaySignature: null,
+                timestamp: new Date().toISOString(),
+              }),
+            }
+          );
+          setLoading(false);
+        });
+
+        console.log('Opening Razorpay modal');
+        rzp.open();
+      } catch (err) {
+        console.error('Razorpay initialization error:', err.message);
+        setError(`Failed to open payment gateway: ${err.message}`);
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Payment initiation error:', error.message, error.stack);
       setError(`Failed to initiate payment: ${error.message}`);
       setLoading(false);
     }
   };
+  // ---- END SURGICAL EDIT ----
 
   return (
     <div className="payments-page" style={{ position: 'relative', zIndex: 1000 }}>
