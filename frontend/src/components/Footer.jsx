@@ -6,6 +6,16 @@ import linkedin from '../assets/linkedin.svg';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
+  const services = [
+    'Sell on our Business Ideas Page',
+    'Sell on our Field Reports Page',
+    'RB Ideas Global Selling',
+    'Become an Affiliate',
+    'Fulfilment by RB Ideas',
+    'Advertise Your Products',
+    'RB Ideas Pay',
+  ];
+
   return (
     <div className="row footer">
       <div className="row">
@@ -24,7 +34,7 @@ const Footer = () => {
             <u>
               <li>
                 <Link to="/careers" style={{ color: "white" }} onClick={() => window.scrollTo(0, 0)}>
-                Careers
+                  Careers
                 </Link>
               </li>
             </u>
@@ -33,55 +43,20 @@ const Footer = () => {
         <div className="col-md-3 col-sm-6 col-12">
           <p className="footer-head">Make Money with Us</p>
           <ul>
-            <u style={{ color: "#0263C7" }}>
-              <li className="text-primary">
-                <Link to="/commingSoon" onClick={() => window.scrollTo(0, 0)}>
-                  Sell on our Business Ideas Page
-                </Link>
-              </li>
-            </u>
-            <u style={{ color: "#0263C7" }}>
-              <li className="text-primary">
-                <Link to="/commingSoon" onClick={() => window.scrollTo(0, 0)}>
-                  Sell on our Field Reports Page
-                </Link>
-              </li>
-            </u>
-            <u style={{ color: "#0263C7" }}>
-              <li className="text-primary">
-                <Link to="/commingSoon" onClick={() => window.scrollTo(0, 0)}>
-                  RB Ideas Global Selling
-                </Link>
-              </li>
-            </u>
-            <u style={{ color: "#0263C7" }}>
-              <li className="text-primary">
-                <Link to="/commingSoon" onClick={() => window.scrollTo(0, 0)}>
-                  Become an Affiliate
-                </Link>
-              </li>
-            </u>
-            <u style={{ color: "#0263C7" }}>
-              <li className="text-primary">
-                <Link to="/commingSoon" onClick={() => window.scrollTo(0, 0)}>
-                  Fulfilment by RB Ideas
-                </Link>
-              </li>
-            </u>
-            <u style={{ color: "#0263C7" }}>
-              <li className="text-primary">
-                <Link to="/commingSoon" onClick={() => window.scrollTo(0, 0)}>
-                  Advertise Your Products
-                </Link>
-              </li>
-            </u>
-            <u style={{ color: "#0263C7" }}>
-              <li className="text-primary">
-                <Link to="/commingSoon" onClick={() => window.scrollTo(0, 0)}>
-                  RB Ideas Pay
-                </Link>
-              </li>
-            </u>
+            {services.map((service) => (
+              <u key={service} style={{ color: "#0263C7" }}>
+                <li className="text-primary">
+                  <Link
+                    to="/partner"
+                    state={{ service }}
+                    style={{ color: "#0263C7" }}
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
+                    {service}
+                  </Link>
+                </li>
+              </u>
+            ))}
           </ul>
         </div>
         <div className="col-md-3 col-sm-6 col-12">

@@ -1,0 +1,152 @@
+
+.report-display-title{
+font-family: 'Baskerville Old Face';
+font-style: normal;
+font-weight: 400;
+font-size: 24px;
+line-height: 24px;
+letter-spacing: 0.03em;
+
+color: #181818;
+
+}
+.report-display-desc{
+width: 653.35px;
+height: 32px;
+/* left: 143px; */
+top: 60px;
+
+font-family: 'Open Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 16px;
+letter-spacing: 0.03em;
+
+color: #293750;
+
+}
+.buy-btn{
+    width: 200px;
+  height: 36px;
+  border-radius: 9px;
+  background-color: #0263c7;
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: 0.48px;
+  text-align:center;
+  padding:8px, 16px, 8px, 16px;
+  /* margin-left: 30%; */
+}
+.buy-btn:hover{
+  color:white;
+}
+.pay-btn{
+  margin: auto;
+  width: 40%;
+  height: 36px;
+  border-radius: 9px;
+  background-color: #0263c7;
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: 0.48px;
+  text-align:center;
+  color: #fff;
+  padding:8px, 16px, 8px, 16px;
+}
+.pdf-div{
+  margin:auto;
+  width:40%;
+  height: 50vh;
+  border-radius: 15px;;
+  border:1px solid #0263c7;
+  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+}
+
+.pay-price{
+font-style: normal;
+font-weight: 600;
+font-size: 24px;
+line-height: 33px;
+  text-align: center;
+  margin-top:2% ;
+  margin-bottom: 2%;
+}
+.payment-name{
+  display: flex;
+  padding-left: 20%;
+}
+.viewer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90vh;
+  margin: auto;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+.success-message{
+  display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 16px;
+gap: 16px;
+
+width: 440px;
+height: 56px;
+
+background: #FFFFFF;
+border: 1px solid #1EC310;
+border-radius: 5px;
+}
+.error-message{
+  margin-top: 2%;
+text-align: center;
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 19px;
+
+letter-spacing: 0.03em;
+
+color: #E70000;
+}
+.edit-input:focus{
+  border: none;
+  border-bottom: 1px solid #0263c7;
+  outline: none;
+}
+.success-email{
+  font-style: normal;
+font-weight: 700;
+font-size: 24px;
+line-height: 33px;
+/* identical to box height */
+
+letter-spacing: 0.03em;
+
+color: #0263C7;
+
+}
+.success-head{
+  font-family: 'Baskerville Old Face';
+font-style: normal;
+font-weight: 400;
+font-size: 32px;
+line-height: 32px;
+
+letter-spacing: 0.01em;
+
+color: #293750;
+}

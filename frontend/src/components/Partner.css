@@ -1,4 +1,4 @@
-.career-page {
+.partner-page {
   background-color: #f4f7fc;
   min-height: 100vh;
   font-family: 'Roboto', sans-serif;
@@ -22,7 +22,7 @@
   opacity: 0.9;
 }
 
-.career-container {
+.partner-container {
   padding: 2rem 0;
 }
 
@@ -32,6 +32,7 @@
   font-weight: 600;
   margin-bottom: 1.5rem;
   position: relative;
+  text-align: center;
 }
 
 .section-title::after {
@@ -40,76 +41,10 @@
   width: 50px;
   height: 3px;
   background: #0263C7;
-  margin-top: 0.25rem;
+  margin: 0.25rem auto;
 }
 
-.region-section {
-  margin-bottom: 2rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-}
-
-.region-section:hover {
-  transform: translateY(-5px);
-}
-
-.region-title {
-  font-size: 1.4rem;
-  color: #333;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-}
-
-.region-title::before {
-  content: '🌍';
-  margin-right: 0.5rem;
-}
-
-.job-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.job-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  border: 1px solid #e0e0e0;
-}
-
-.job-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-.job-info h5 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #333;
-}
-
-.job-info p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.no-jobs {
-  color: #666;
-  font-style: italic;
-}
-
-.resume-form {
+.partner-form {
   background: white;
   padding: 2rem;
   border-radius: 8px;
@@ -117,41 +52,61 @@
   transition: all 0.3s ease;
 }
 
-.resume-form .form-group {
+.partner-form .form-group {
   position: relative;
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+  padding: 0.75rem;
 }
 
-.resume-form .form-label {
+.partner-form .form-label {
   font-weight: 500;
-  color: #333;
-  transition: all 0.3s ease;
+  color: #0263C7;
   position: absolute;
-  top: 0.75rem;
+  top: -1.0rem;
   left: 1rem;
   pointer-events: none;
-}
-
-.resume-form .form-control:focus + .form-label,
-.resume-form .form-control:not(:placeholder-shown) + .form-label {
-  transform: translateY(-1.5rem);
+  background: #fff;
+  padding: 0 0.25rem;
   font-size: 0.85rem;
-  color: #0263C7;
+  z-index: 2;
 }
 
-.resume-form .form-control {
+.partner-form .mobile-label {
+  top: -2.0rem;
+  left: 0.5rem;
+}
+
+.partner-form .form-control,
+.partner-form .form-select {
   border-radius: 6px;
   border: 1px solid #ccc;
   padding: 0.75rem;
   transition: border-color 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.resume-form .form-control:focus {
+.partner-form .form-control:focus,
+.partner-form .form-select:focus {
   border-color: #0263C7;
   box-shadow: 0 0 5px rgba(2, 99, 199, 0.3);
+  outline: none;
 }
 
-.resume-form .form-select {
-  border-radius: 6px;
+.partner-form .input-group .form-select {
+  flex: 0 0 auto;
+  width: 100px;
+}
+
+.partner-form .input-group .form-control {
+  padding: 0.75rem;
+}
+
+.partner-form .input-group > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+  margin-left: -1px;
 }
 
 .submit-btn {
@@ -188,6 +143,11 @@
   100% { opacity: 1; }
 }
 
+.mb-3 {
+  margin-bottom: 1rem !important;
+  margin-top: 2rem !important;
+}
+
 @media (max-width: 767px) {
   .hero-section h1 {
     font-size: 2rem;
@@ -195,12 +155,34 @@
   .hero-section .lead {
     font-size: 1rem;
   }
-  .region-section, .resume-form {
+  .partner-form {
     padding: 1rem;
   }
-  .job-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  .partner-form .form-group {
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+    padding: 0.75rem;
+  }
+  .partner-form .form-label {
+    top: -1.0rem;
+    left: 0.8rem;
+    font-size: 0.8rem;
+  }
+  .partner-form .mobile-label {
+    top: -2.0rem;
+    left: 0.4rem;
+  }
+  .partner-form .form-control,
+  .partner-form .form-select {
+    padding: 0.6rem;
+  }
+  .partner-form .input-group .form-select {
+    width: 80px;
+  }
+  .partner-form .input-group > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    margin-left: -1px;
   }
 }
+

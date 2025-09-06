@@ -99,3 +99,8 @@
 .success-message img {
   margin-right: 10px;
 }
+
+.razorpay-checkout-frame svg {
+  width: 100px !important;
+  height: 100px !important;
+}

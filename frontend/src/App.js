@@ -9,9 +9,11 @@ import ReportsDisplay from './components/ReportsDisplay';
 import Payment from './components/Payment';
 import Footer from './components/Footer';
 import CommingSoon from './components/CommingSoon';
+import Careers from './components/Career';
 import Invalid from './components/Invalid';
 import RefundPolicy from './components/RefundPolicy'; 
 import PrivacyPolicy from './components/PrivacyPolicy'; 
+import Partner from './components/Partner';
 import React from 'react';
 import { StoreProvider, useStore } from './Store';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
@@ -30,6 +32,8 @@ function AppContent() {
         <Route path="/" element={<Reports />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/report-display' element={<ReportsDisplay />} />
+        <Route path="/careers" element={<Careers />} />
+        <Route path="/partner" element={<Partner />} />
         <Route path='/payment' element={
           <ProtectedRoute>
             <Payment />

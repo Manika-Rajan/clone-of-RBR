@@ -8,7 +8,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [phone, setPhone] = useState(
     state.phone ? state.phone.replace('+91', '') : ''
   );
@@ -16,7 +15,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const phoneInputRef = useRef(null);
   const otpInputRef = useRef(null);
 
@@ -82,16 +80,39 @@ const Login = React.memo(({ onClose, returnTo }) => {
         }
       );
       const data = await response.json();
+      console.log('verify-otp response:', data); // Debug response
 
       if (response.status === 200) {
-        // ✅ Step 1: Dispatch minimal login info
+        // Parse the body string
+        let parsedBody;
+        try {
+          parsedBody = JSON.parse(data.body);
+        } catch (e) {
+          console.error('Failed to parse verify-otp body:', data.body);
+          setError('Authentication failed: Invalid response format');
+          setIsLoading(false);
+          return;
+        }
+
+        const { token } = parsedBody;
+        if (!token) {
+          console.error('No token in parsed body:', parsedBody);
+          setError('Authentication failed: No token received');
+          setIsLoading(false);
+          return;
+        }
+
+        // ✅ Step 1: Dispatch minimal login info with token
         const baseUser = {
           isLogin: true,
           userId: phoneNumber,
           phone: phoneNumber,
+          token,
         };
         cxtDispatch({ type: 'USER_LOGIN', payload: baseUser });
+        localStorage.setItem('authToken', token); // Store token
         localStorage.setItem('userInfo', JSON.stringify(baseUser));
+        console.log('baseUser dispatched:', baseUser); // Debug dispatch
 
         // ✅ Step 2: Immediately fetch full profile from DynamoDB
         try {
@@ -99,12 +120,15 @@ const Login = React.memo(({ onClose, returnTo }) => {
             'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile',
             {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
               body: JSON.stringify({ action: 'get', phone_number: phoneNumber }),
             }
           );
-
           const profileData = await profileRes.json();
+          console.log('manage-user-profile response:', profileData); // Debug profile response
           let userProfile = profileData;
 
           // 🔧 Fix: parse nested body JSON if exists
@@ -112,43 +136,59 @@ const Login = React.memo(({ onClose, returnTo }) => {
             try {
               userProfile = JSON.parse(profileData.body);
             } catch (e) {
-              console.error("Failed to parse profile body:", profileData.body);
+              console.error('Failed to parse profile body:', profileData.body);
             }
           }
 
           const enrichedUser = {
             ...baseUser,
-            name: userProfile.name || "User Name",
+            name: userProfile.name || 'User Name',
             email: userProfile.email || '',
             photo_url: userProfile.photo_url || null,
+            token,
           };
-
           cxtDispatch({ type: 'USER_LOGIN', payload: enrichedUser });
+          localStorage.setItem('authToken', token);
           localStorage.setItem('userInfo', JSON.stringify(enrichedUser));
+          console.log('enrichedUser dispatched:', enrichedUser); // Debug dispatch
+
         } catch (profileErr) {
-          console.error("Profile fetch failed:", profileErr);
-          // ✅ fallback to safe default
-          const fallbackUser = { ...baseUser, name: "User Name", email: '', photo_url: null };
+          console.error('Profile fetch failed:', profileErr);
+          const fallbackUser = {
+            ...baseUser,
+            name: 'User Name',
+            email: '',
+            photo_url: null,
+            token,
+          };
           cxtDispatch({ type: 'USER_LOGIN', payload: fallbackUser });
+          localStorage.setItem('authToken', token);
           localStorage.setItem('userInfo', JSON.stringify(fallbackUser));
+          console.log('fallbackUser dispatched:', fallbackUser); // Debug dispatch
         }
 
         if (onClose) onClose();
         setIsModalOpen(false);
 
-        // ✅ Conditional redirect logic
-        let redirectTo = '/'; // default → landing page
-        if (returnTo) {
-          redirectTo = returnTo;
-        } else if (location.pathname.includes('/report-display')) {
-          redirectTo = '/report-display';
+        // ✅ Conditional redirect logic for Buy Now
+        console.log('Redirect debug - returnTo:', returnTo, 'location.pathname:', location.pathname, 'location.state:', location.state); // Debug redirect
+        let redirectTo = '/';
+        if (returnTo === '/payment' || location.pathname.includes('/report-display')) {
+          redirectTo = '/payment';
         }
-
-        navigate(redirectTo, { replace: true });
+        console.log('Navigating to:', redirectTo); // Debug navigation
+        navigate(redirectTo, {
+          replace: true,
+          state: {
+            fileKey: location.state?.fileKey || state.fileKey,
+            reportId: location.state?.reportId || state.reportId,
+          },
+        });
       } else {
         setError(`Error: ${data.error || 'Invalid OTP'}`);
       }
     } catch (err) {
+      console.error('verifyOtp error:', err);
       setError(`An error occurred: ${err.message}`);
     } finally {
       setIsLoading(false);
@@ -181,7 +221,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
             </p>
           )}
         </div>
-
         {/* ✅ Form handles Enter key */}
         <form onSubmit={handleSubmit}>
           {!otpSent ? (
@@ -221,7 +260,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
               />
             </div>
           )}
-
           <div className="text-center mt-3">
             <button
               type="submit"
@@ -232,7 +270,6 @@ const Login = React.memo(({ onClose, returnTo }) => {
             </button>
           </div>
         </form>
-
         {error && <p className="error-message text-danger mt-2">{error}</p>}
         {isLoading && <p className="loading-message">Processing...</p>}
       </div>
