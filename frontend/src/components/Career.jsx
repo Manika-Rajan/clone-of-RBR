@@ -106,8 +106,7 @@ const Career = () => {
           <div className="col-md-6 col-12">
             <h3 className="section-title">Apply Now</h3>
             <form onSubmit={handleSubmit} className="resume-form">
-              <div className="form-group mb-3">
-                <label htmlFor="firstName" className="form-label">First Name *</label>
+              <div className={`form-group mb-3 ${formData.firstName ? 'has-value' : ''}`}>
                 <input
                   type="text"
                   className="form-control"
@@ -116,10 +115,12 @@ const Career = () => {
                   value={formData.firstName}
                   onChange={handleInputChange}
                   required
+                  placeholder="Enter first name"
+                  aria-label="First Name"
                 />
+                <label htmlFor="firstName" className="form-label">First Name *</label>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="lastName" className="form-label">Last Name *</label>
+              <div className={`form-group mb-3 ${formData.lastName ? 'has-value' : ''}`}>
                 <input
                   type="text"
                   className="form-control"
@@ -128,25 +129,28 @@ const Career = () => {
                   value={formData.lastName}
                   onChange={handleInputChange}
                   required
+                  placeholder="Enter last name"
+                  aria-label="Last Name"
                 />
+                <label htmlFor="lastName" className="form-label">Last Name *</label>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="gender" className="form-label">Gender</label>
+              <div className={`form-group mb-3 ${formData.gender ? 'has-value' : ''}`}>
                 <select
                   className="form-select"
                   id="gender"
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
+                  aria-label="Gender"
                 >
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
+                <label htmlFor="gender" className="form-label">Gender</label>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="country" className="form-label">Country *</label>
+              <div className={`form-group mb-3 ${formData.country ? 'has-value' : ''}`}>
                 <select
                   className="form-select"
                   id="country"
@@ -154,6 +158,7 @@ const Career = () => {
                   value={formData.country}
                   onChange={handleInputChange}
                   required
+                  aria-label="Country"
                 >
                   <option value="India">India</option>
                   <option value="USA">USA</option>
@@ -161,9 +166,9 @@ const Career = () => {
                   <option value="Canada">Canada</option>
                   <option value="Other">Other</option>
                 </select>
+                <label htmlFor="country" className="form-label">Country *</label>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="experience" className="form-label">Experience (Years) *</label>
+              <div className={`form-group mb-3 ${formData.experience ? 'has-value' : ''}`}>
                 <select
                   className="form-select"
                   id="experience"
@@ -171,15 +176,16 @@ const Career = () => {
                   value={formData.experience}
                   onChange={handleInputChange}
                   required
+                  aria-label="Experience"
                 >
                   <option value="">Select Experience</option>
                   {[...Array(21).keys()].map((year) => (
                     <option key={year} value={year}>{year} {year === 1 ? 'year' : 'years'}</option>
                   ))}
                 </select>
+                <label htmlFor="experience" className="form-label">Experience (Years) *</label>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="email" className="form-label">Email ID *</label>
+              <div className={`form-group mb-3 ${formData.email ? 'has-value' : ''}`}>
                 <input
                   type="email"
                   className="form-control"
@@ -188,16 +194,19 @@ const Career = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
+                  placeholder="Enter email"
+                  aria-label="Email"
                 />
+                <label htmlFor="email" className="form-label">Email ID *</label>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="mobile" className="form-label">Mobile Number *</label>
+              <div className={`form-group mb-3 ${formData.mobile ? 'has-value' : ''}`}>
                 <div className="input-group">
                   <select
                     className="form-select w-auto"
                     name="countryCode"
                     value={formData.countryCode}
                     onChange={handleInputChange}
+                    aria-label="Country code"
                   >
                     <option value="+91">+91</option>
                     <option value="+1">+1</option>
@@ -214,11 +223,13 @@ const Career = () => {
                     onChange={handleInputChange}
                     maxLength={15}
                     required
+                    placeholder="Enter mobile number"
+                    aria-label="Mobile Number"
                   />
+                  <label htmlFor="mobile" className="form-label mobile-label">Mobile Number *</label>
                 </div>
               </div>
               <div className="form-group mb-3">
-                <label htmlFor="resume" className="form-label">Upload Resume (.doc, .docx, .pdf) *</label>
                 <input
                   type="file"
                   className="form-control"
@@ -227,7 +238,9 @@ const Career = () => {
                   accept=".doc,.docx,application/pdf"
                   onChange={handleFileChange}
                   required
+                  aria-label="Resume"
                 />
+                <label htmlFor="resume" className="form-label">Upload Resume (.doc, .docx, .pdf) *</label>
               </div>
               {error && <p className="text-danger animate-error">{error}</p>}
               {success && <p className="text-success animate-success">{success}</p>}
