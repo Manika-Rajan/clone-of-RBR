@@ -11,8 +11,6 @@ import vector from '../assets/vector.svg';
 import black from '../assets/black.svg';
 import { useNavigate } from 'react-router-dom';
 import { Store } from '../Store';
-import SearchBox from './SearchBox';
-
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -243,32 +241,6 @@ const Reports = () => {
   return (
     <>
       <Navbar reports />
-      {/* ✅ Hero Banner with SearchBox */}
-      <div className="hero-banner">
-        <div className="hero-content">
-          <h1>Find Market Reports Instantly</h1>
-          <p>Type your business question (e.g. “Ceramics industry in India”) and we’ll match the right filters</p>
-          <div className="hero-search">
-            <SearchBox
-              onFiltersDetected={(filters) => {
-                if (filters.industry?.length) setSelect_industry(filters.industry);
-                if (filters.city?.length) setSelect_city(filters.city);
-                if (filters.market?.length) setSelect_market(filters.market);
-                if (filters.pain?.length) setSelect_pain(filters.pain);
-                if (filters.competitors?.length) setSelect_competitors(filters.competitors);
-      
-                // auto-expand for visibility
-                if (filters.industry?.length) setIndustry(true);
-                if (filters.city?.length) setCity(true);
-                if (filters.market?.length) setMarket(true);
-                if (filters.pain?.length) setPainpoints(true);
-                if (filters.competitors?.length) setCompetitors(true);
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
       {popup && (
         <div className="nav-popup row">
           <div className="col-md-11 col-sm-10 col-10">
@@ -283,26 +255,6 @@ const Reports = () => {
       )}
 
       <div className="report row">
-        {/* ✅ New SearchBox placed above filters */}
-        <div className="col-md-12 col-sm-12 col-12 mb-3">
-          <SearchBox
-            onFiltersDetected={(filters) => {
-              if (filters.industry?.length) setSelect_industry(filters.industry);
-              if (filters.city?.length) setSelect_city(filters.city);
-              if (filters.market?.length) setSelect_market(filters.market);
-              if (filters.pain?.length) setSelect_pain(filters.pain);
-              if (filters.competitors?.length) setSelect_competitors(filters.competitors);
-      
-              // (optional) auto-expand sections when filters applied
-              if (filters.industry?.length) setIndustry(true);
-              if (filters.city?.length) setCity(true);
-              if (filters.market?.length) setMarket(true);
-              if (filters.pain?.length) setPainpoints(true);
-              if (filters.competitors?.length) setCompetitors(true);
-            }}
-          />
-        </div>
-        
         <div className="col-md-4 col-sm-10 col-11 filters">
           <Filters
             updateIndustry={updateIndustry}
