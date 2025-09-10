@@ -243,33 +243,24 @@ const Reports = () => {
       <Navbar reports />
           {/* 🔍 Search Strip Section */}
           <div className="search-strip">
-            <h2 className="search-heading">Find the insights you need</h2>
-            <div className="amazon-style-search">
+            <h2 className="search-strip-heading">Find Your Market Report</h2>
+            <div className="search-strip-bar">
               <input
                 type="text"
-                placeholder="Search reports… e.g. ceramics market in Delhi"
+                placeholder="Search… e.g. ceramics market in Delhi"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    const query = e.target.value.toLowerCase();
-          
-                    if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
-                    if (query.includes('steel')) setSelect_industry(['Steel']);
-                    if (query.includes('india')) setSelect_city(['India']);
-                    if (query.includes('delhi')) setSelect_city(['Delhi']);
-          
-                    setNoSearch(false);
+                    // handle intent parsing into filters...
                   }
                 }}
               />
               <button
                 onClick={() => {
-                  const query = document.querySelector('.amazon-style-search input').value.toLowerCase();
-          
+                  const query = document.querySelector('.search-strip-bar input').value.toLowerCase();
                   if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
                   if (query.includes('steel')) setSelect_industry(['Steel']);
                   if (query.includes('india')) setSelect_city(['India']);
                   if (query.includes('delhi')) setSelect_city(['Delhi']);
-          
                   setNoSearch(false);
                 }}
               >
@@ -278,7 +269,6 @@ const Reports = () => {
                 </svg>
               </button>
             </div>
-            <p className="microcopy">Type your market need — we’ll map it to the right report</p>
           </div>
       
       {popup && (
