@@ -241,22 +241,22 @@ const Reports = () => {
   return (
     <>
       <Navbar reports />
-          {/* 🔍 Search Strip Section */}
-          <div className="search-strip">
-            <h2 className="search-strip-heading">Find Your Market Report</h2>
-            <div className="search-strip-bar">
+          <div className="search-hero">
+            <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
+            <p className="search-hero-sub">Type your requirement and generate a tailored report in minutes</p>
+            <div className="search-hero-bar">
               <input
                 type="text"
-                placeholder="Search… e.g. ceramics market in Delhi"
+                placeholder="e.g. ceramics market in Delhi"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    // handle intent parsing into filters...
+                    // handle parsing into filters...
                   }
                 }}
               />
               <button
                 onClick={() => {
-                  const query = document.querySelector('.search-strip-bar input').value.toLowerCase();
+                  const query = document.querySelector('.search-hero-bar input').value.toLowerCase();
                   if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
                   if (query.includes('steel')) setSelect_industry(['Steel']);
                   if (query.includes('india')) setSelect_city(['India']);
@@ -267,9 +267,11 @@ const Reports = () => {
                 <svg className="search-icon" viewBox="0 0 24 24">
                   <path d="M10,2A8,8 0 1,0 18,10A8,8 0 0,0 10,2M22,22L17,17" />
                 </svg>
+                Search
               </button>
             </div>
           </div>
+
       
       {popup && (
         <div className="nav-popup row">
