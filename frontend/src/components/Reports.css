@@ -141,8 +141,7 @@ letter-spacing: 0.03em;
 /* Search strip container */
 
 .search-hero {
-  background: #f4f6f9 url("assets/world-map-bg.png") no-repeat center center;
-  background-size: contain;
+  background-color: #f4f6f9;  /* keep solid fallback color */
   padding: 40px 15px;
   text-align: center;
   border-bottom: 1px solid #e6e9ef;
