@@ -242,36 +242,47 @@ const Reports = () => {
   return (
     <>
       <Navbar reports />
-          <div className="search-hero">
-            <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
-            <p className="search-hero-sub">Type your requirement and generate a tailored report in minutes</p>
-            <div className="search-hero-bar">
-              <input
-                type="text"
-                placeholder="e.g. ceramics market in Delhi"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    // handle parsing into filters...
-                  }
-                }}
-              />
-              <button
-                onClick={() => {
-                  const query = document.querySelector('.search-hero-bar input').value.toLowerCase();
-                  if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
-                  if (query.includes('steel')) setSelect_industry(['Steel']);
-                  if (query.includes('india')) setSelect_city(['India']);
-                  if (query.includes('delhi')) setSelect_city(['Delhi']);
-                  setNoSearch(false);
-                }}
-              >
-                <svg className="search-icon" viewBox="0 0 24 24">
-                  <path d="M10,2A8,8 0 1,0 18,10A8,8 0 0,0 10,2M22,22L17,17" />
-                </svg>
-                Search
-              </button>
+          <div
+              className="search-hero"
+              style={{
+                background: `#f4f6f9 url(${worldMapBg}) no-repeat center center`,
+                backgroundSize: "contain",
+              }}
+            >
+              <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
+              <p className="search-hero-sub">
+                Type your requirement and generate a tailored report in minutes
+              </p>
+              <div className="search-hero-bar">
+                <input
+                  type="text"
+                  placeholder="e.g. ceramics market in Delhi"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      // handle parsing into filters...
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const query = document
+                      .querySelector(".search-hero-bar input")
+                      .value.toLowerCase();
+                    if (query.includes("ceramic")) setSelect_industry(["Ceramics"]);
+                    if (query.includes("steel")) setSelect_industry(["Steel"]);
+                    if (query.includes("india")) setSelect_city(["India"]);
+                    if (query.includes("delhi")) setSelect_city(["Delhi"]);
+                    setNoSearch(false);
+                  }}
+                >
+                  <svg className="search-icon" viewBox="0 0 24 24">
+                    <path d="M10,2A8,8 0 1,0 18,10A8,8 0 0,0 10,2M22,22L17,17" />
+                  </svg>
+                  Search
+                </button>
+              </div>
             </div>
-          </div>
+
 
       
       {popup && (
