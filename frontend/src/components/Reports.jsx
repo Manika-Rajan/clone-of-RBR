@@ -241,6 +241,24 @@ const Reports = () => {
   return (
     <>
       <Navbar reports />
+      <div className="amazon-style-search">
+        <input
+          type="text"
+          placeholder="Search reports… e.g. ceramics market in Delhi"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              // handle intent parsing into filters...
+            }
+          }}
+        />
+        <button onClick={/* similar intent handler */}>
+          <svg className="search-icon" viewBox="0 0 24 24">
+            {/* Magnifying glass SVG */}  
+          </svg>
+        </button>
+      </div>
+      <p className="microcopy">Type your market need — find the right report instantly</p>
+      
       {popup && (
         <div className="nav-popup row">
           <div className="col-md-11 col-sm-10 col-10">
