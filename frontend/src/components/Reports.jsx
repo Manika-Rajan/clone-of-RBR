@@ -11,6 +11,7 @@ import vector from '../assets/vector.svg';
 import black from '../assets/black.svg';
 import { useNavigate } from 'react-router-dom';
 import { Store } from '../Store';
+import worldMapBg from '../assets/world-map-bg.png';
 
 const Reports = () => {
   const navigate = useNavigate();
