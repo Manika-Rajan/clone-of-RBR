@@ -99,5 +99,32 @@ letter-spacing: 0.03em;
     .generate-btn{
       padding:10px 30px;
     }
-
    }
+.hero-banner {
+  background: linear-gradient(135deg, #0263c7 0%, #014a94 100%);
+  color: white;
+  padding: 60px 20px;
+  text-align: center;
+  border-radius: 12px;
+  margin: 20px auto 40px;
+  max-width: 1000px;
+}
+
+.hero-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.hero-search {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+
