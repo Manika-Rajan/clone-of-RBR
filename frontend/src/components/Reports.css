@@ -141,16 +141,33 @@ letter-spacing: 0.03em;
 /* Search strip container */
 
 .search-hero {
-  background-color: #f4f6f9;  /* keep solid fallback color */
-  padding: 40px 15px;
-  text-align: center;
-  border-bottom: 1px solid #e6e9ef;
   position: relative;
+  min-height: 280px;                        /* ensures visible area */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  background-color: #f4f6f9;                /* fallback */
+  background-image: url("../assets/world-map-bg.png"); /* point to assets */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+
+  border-bottom: 1px solid #e6e9ef;
+  padding: 40px 15px;
 }
 
+
 .search-hero::before {
-  content: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(244, 246, 249, 0.75); /* light overlay */
+  pointer-events: none;
 }
+
 
 
 .search-hero-heading,
@@ -158,6 +175,7 @@ letter-spacing: 0.03em;
 .search-hero-bar {
   position: relative;
 }
+
 
 .search-hero-heading {
   font-size: 20px;
