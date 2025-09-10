@@ -142,14 +142,15 @@ letter-spacing: 0.03em;
 
 .search-hero {
   position: relative;
-  min-height: 280px;                        /* ensures visible area */
+  min-height: 280px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
 
-  background-color: #f4f6f9;                /* fallback */
+  background-color: #f4f6f9; /* fallback */
+  background-image: url("../assets/world-map-bg.png"); /* ✅ use imported image */
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -163,7 +164,7 @@ letter-spacing: 0.03em;
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(244, 246, 249, 0.75); /* light overlay */
+  background: rgba(255, 255, 255, 0.75); /* ✅ subtle white overlay */
   pointer-events: none;
 }
 
@@ -173,6 +174,7 @@ letter-spacing: 0.03em;
 .search-hero-sub,
 .search-hero-bar {
   position: relative;
+  z-index: 1; /* ✅ ensures text & input are above overlay */
 }
 
 
