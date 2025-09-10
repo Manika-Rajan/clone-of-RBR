@@ -267,11 +267,6 @@ const Reports = () => {
             <path d="M10,2A8,8 0 1,0 18,10A8,8 0 0,0 10,2M22,22L17,17" />
           </svg>
         </button>
-
-          <svg className="search-icon" viewBox="0 0 24 24">
-            {/* Magnifying glass SVG */}  
-          </svg>
-        </button>
       </div>
       <p className="microcopy">Type your market need — find the right report instantly</p>
       
