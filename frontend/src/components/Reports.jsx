@@ -246,7 +246,7 @@ const Reports = () => {
               className="search-hero"
               style={{
                 background: `#f4f6f9 url(${worldMapBg}) no-repeat center center`,
-                backgroundSize: "contain",
+                backgroundSize: "cover",   // instead of contain
               }}
             >
               <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
