@@ -241,34 +241,45 @@ const Reports = () => {
   return (
     <>
       <Navbar reports />
-      <div className="amazon-style-search">
-        <input
-          type="text"
-          placeholder="Search reports… e.g. ceramics market in Delhi"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              // handle intent parsing into filters...
-            }
-          }}
-        />
-        <button
-          onClick={() => {
-            const query = document.querySelector('.amazon-style-search input').value.toLowerCase();
-        
-            if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
-            if (query.includes('steel')) setSelect_industry(['Steel']);
-            if (query.includes('india')) setSelect_city(['India']);
-            if (query.includes('delhi')) setSelect_city(['Delhi']);
-        
-            setNoSearch(false);
-          }}
-        >
-          <svg className="search-icon" viewBox="0 0 24 24">
-            <path d="M10,2A8,8 0 1,0 18,10A8,8 0 0,0 10,2M22,22L17,17" />
-          </svg>
-        </button>
-      </div>
-      <p className="microcopy">Type your market need — find the right report instantly</p>
+          {/* 🔍 Search Strip Section */}
+          <div className="search-strip">
+            <h2 className="search-heading">Find the insights you need</h2>
+            <div className="amazon-style-search">
+              <input
+                type="text"
+                placeholder="Search reports… e.g. ceramics market in Delhi"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const query = e.target.value.toLowerCase();
+          
+                    if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
+                    if (query.includes('steel')) setSelect_industry(['Steel']);
+                    if (query.includes('india')) setSelect_city(['India']);
+                    if (query.includes('delhi')) setSelect_city(['Delhi']);
+          
+                    setNoSearch(false);
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  const query = document.querySelector('.amazon-style-search input').value.toLowerCase();
+          
+                  if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
+                  if (query.includes('steel')) setSelect_industry(['Steel']);
+                  if (query.includes('india')) setSelect_city(['India']);
+                  if (query.includes('delhi')) setSelect_city(['Delhi']);
+          
+                  setNoSearch(false);
+                }}
+              >
+                <svg className="search-icon" viewBox="0 0 24 24">
+                  <path d="M10,2A8,8 0 1,0 18,10A8,8 0 0,0 10,2M22,22L17,17" />
+                </svg>
+              </button>
+            </div>
+            <p className="microcopy">Type your market need — we’ll map it to the right report</p>
+          </div>
       
       {popup && (
         <div className="nav-popup row">
