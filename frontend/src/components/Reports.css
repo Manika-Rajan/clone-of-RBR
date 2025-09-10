@@ -100,21 +100,41 @@ letter-spacing: 0.03em;
       padding:10px 30px;
     }
    }
-.intent-search {
-  margin-bottom: 15px;
-}
-
-.intent-search input {
+.amazon-style-search {
   width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
+  max-width: 800px;
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
+  overflow: hidden;
 }
 
-.intent-search input:focus {
+.amazon-style-search input {
+  flex: 1;
+  padding: 12px 18px;
+  border: none;
+  font-size: 1rem;
   outline: none;
-  border-color: #0263c7;
-  box-shadow: 0 0 4px rgba(2, 99, 199, 0.3);
+}
+
+.amazon-style-search button {
+  background: #ff9900; /* Amazon-like accent */
+  border: none;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.amazon-style-search .search-icon {
+  width: 20px;
+  height: 20px;
+  fill: white;
+}
+
+.microcopy {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 4px;
 }
