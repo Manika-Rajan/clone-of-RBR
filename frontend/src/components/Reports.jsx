@@ -242,13 +242,7 @@ const Reports = () => {
   return (
     <>
       <Navbar reports />
-          <div className="search-hero"
-            style={{
-                backgroundImage: `url(${worldMapBg})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
+          <div className="search-hero">
               <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
               <p className="search-hero-sub">
                 Type your requirement and generate a tailored report in minutes
