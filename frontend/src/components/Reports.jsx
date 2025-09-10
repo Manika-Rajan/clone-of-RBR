@@ -256,23 +256,6 @@ const Reports = () => {
 
       <div className="report row">
         <div className="col-md-4 col-sm-10 col-11 filters">
-            <div className="intent-search">
-            <input
-              type="text"
-              placeholder="Search reports (e.g. ceramics industry in India)"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const query = e.target.value.toLowerCase();
-                  if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
-                  if (query.includes('steel')) setSelect_industry(['Steel']);
-                  if (query.includes('india')) setSelect_city(['India']);
-                  if (query.includes('delhi')) setSelect_city(['Delhi']);
-                  setNoSearch(false);
-                }
-              }}
-            />
-          </div>
-
           <Filters
             updateIndustry={updateIndustry}
             updateCity={updateCity}
