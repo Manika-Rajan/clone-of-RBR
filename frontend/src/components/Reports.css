@@ -141,23 +141,11 @@ letter-spacing: 0.03em;
 /* Search strip container */
 
 .search-hero {
-  position: relative;
-  min-height: 280px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-
-  background-color: #f4f6f9; /* fallback */
-  background-image: url("../assets/world-map-bg.png"); /* ✅ use imported image */
-  background-repeat: no-repeat;
-  background-position: center;
+  background: #f4f6f9 url("/assets/world-map-bg.png") no-repeat center center;
   background-size: cover;
-
-  border-bottom: 1px solid #e6e9ef;
-  padding: 40px 15px;
+  position: relative;
 }
+
 
 
 .search-hero::before {
