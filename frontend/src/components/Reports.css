@@ -141,30 +141,29 @@ letter-spacing: 0.03em;
 /* Search strip container */
 
 .search-hero {
-  background: #f4f6f9 url('/assets/world-map-light.png') no-repeat center center;
-  background-size: cover; /* scale background */
+  background: #f4f6f9 url('/assets/world-map-bg.png') no-repeat center center;
+  background-size: contain;
   padding: 40px 15px;
   text-align: center;
   border-bottom: 1px solid #e6e9ef;
   position: relative;
 }
 
-/* optional overlay for softening */
 .search-hero::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(244, 246, 249, 0.8); /* soft overlay */
+  background: rgba(244, 246, 249, 0.85);
 }
 
 .search-hero-heading,
 .search-hero-sub,
 .search-hero-bar {
-  position: relative; /* ensures text sits above overlay */
+  position: relative;
 }
 
 .search-hero-heading {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   margin-bottom: 6px;
   color: #293750;
@@ -187,6 +186,7 @@ letter-spacing: 0.03em;
   overflow: hidden;
   background: white;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .search-hero-bar input {
