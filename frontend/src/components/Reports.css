@@ -149,11 +149,9 @@ letter-spacing: 0.03em;
 }
 
 .search-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(244, 246, 249, 0.85);
+  content: none;
 }
+
 
 .search-hero-heading,
 .search-hero-sub,
