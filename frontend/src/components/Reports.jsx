@@ -11,6 +11,8 @@ import vector from '../assets/vector.svg';
 import black from '../assets/black.svg';
 import { useNavigate } from 'react-router-dom';
 import { Store } from '../Store';
+import worldMap from "../assets/world-map-bg.png";
+
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -242,7 +244,7 @@ const Reports = () => {
     <>
       <Navbar reports />
           <div className="search-hero"
-              style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/assets/world-map-bg.png)` }}
+              style={{ backgroundImage: `url(${worldMap})` }}
           >
             <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
             <p className="search-hero-sub">Type your requirement and generate a tailored report in minutes</p>
