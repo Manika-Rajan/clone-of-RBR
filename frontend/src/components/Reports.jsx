@@ -267,15 +267,11 @@ const Reports = () => {
               Search
             </button>
           </div>
-        
-          <p className="microcopy">
-            Example: “Healthcare in India”, “EV Market Trends”, “AI in Retail”
-          </p>
-        </div>
           
             <p className="microcopy">
               Example: “Healthcare in India”, “EV Market Trends”, “AI in Retail”
             </p>
+      </div>
           
             <button
               onClick={() => {
