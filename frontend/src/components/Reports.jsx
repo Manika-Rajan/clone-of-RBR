@@ -243,9 +243,9 @@ const Reports = () => {
     <>
       <Navbar reports />
           <div className="search-hero">
-            <h2 className="search-hero-heading">Find Raw Materials, Markets, and Sales Hotspots Fast</h2>
+            <h2 className="search-hero-heading">All Your Market Questions, Answered Instantly</h2>
             <p className="search-hero-sub">
-            Type what you’re looking for and get a tailored market report instantly — everything you need to make informed business decisions.
+            From suppliers to sales trends, uncover data that powers smarter business decisions — no waiting, no guesswork.
             </p>
             <div className="search-hero-bar">
               <input
