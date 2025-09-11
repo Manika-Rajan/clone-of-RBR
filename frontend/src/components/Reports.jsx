@@ -12,6 +12,15 @@ import black from '../assets/black.svg';
 import { useNavigate } from 'react-router-dom';
 import { Store } from '../Store';
 
+const placeholderExamples = [
+  "How much demand is there for paper cups in Hyderabad?",
+  "List of raw material suppliers for car manufacturing",
+  "Top-selling ceramic products in Delhi",
+  "Demand for LED lights in Bangalore and Mumbai"
+];
+
+const [placeholder, setPlaceholder] = useState(placeholderExamples[0]);
+
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -43,6 +52,20 @@ const Reports = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastReportId, setLastReportId] = useState(0); // Track the last used ID
 
+
+  useEffect(() => {
+      const interval = setInterval(() => {
+        setPlaceholder((prev) => {
+          let nextIndex = placeholderExamples.indexOf(prev) + 1;
+          if (nextIndex >= placeholderExamples.length) nextIndex = 0;
+          return placeholderExamples[nextIndex];
+        });
+      }, 5000); // change every 5 seconds
+    
+      return () => clearInterval(interval);
+    }, []);
+
+  
   useEffect(() => {
     const filters = {
       industry: select_industry,
@@ -251,7 +274,7 @@ const Reports = () => {
             <div className="search-hero-bar">
               <input
                 type="text"
-                placeholder="e.g. ceramics market in Delhi"
+                placeholder={placeholder}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     // handle parsing into filters...
