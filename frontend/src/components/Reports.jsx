@@ -244,10 +244,15 @@ const Reports = () => {
     <>
       <Navbar reports />
           <div className="search-hero"
-              style={{ backgroundImage: `url(${worldMap})` }}
+              style={{ 
+                        backgroundImage: `url(${worldMap})`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "center",
+                        backgroundSize: "cover" 
+              }}
           >
             <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
-            <p className="search-hero-sub">Type your requirement and generate a tailored report in minutes</p>
+            <p className="search-hero-sub">Search across our industry-leading research database</p>
             <div className="search-hero-bar">
               <input
                 type="text"
