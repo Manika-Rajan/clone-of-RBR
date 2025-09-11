@@ -19,7 +19,6 @@ const placeholderExamples = [
   "Demand for LED lights in Bangalore and Mumbai"
 ];
 
-const [placeholder, setPlaceholder] = useState(placeholderExamples[0]);
 
 
 const Reports = () => {
@@ -51,7 +50,7 @@ const Reports = () => {
   const [price, setPrice] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [lastReportId, setLastReportId] = useState(0); // Track the last used ID
-
+  const [placeholder, setPlaceholder] = useState(placeholderExamples[0]);
   
   useEffect(() => {
     const filters = {
