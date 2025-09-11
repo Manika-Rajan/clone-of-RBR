@@ -243,54 +243,37 @@ const Reports = () => {
   return (
     <>
         <Navbar reports />
-        <div className="search-hero">
-          <h1 className="search-hero-heading">Find Your Market Report</h1>
-          <p className="search-hero-sub">
-            Search across our industry‐leading research database
-          </p>
-        
-          <div className="search-hero-bar">
-            <input type="text" placeholder="Search reports..." />
-            <button>
-              <svg
-                className="search-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+      <Navbar reports />
+          <div className="search-hero">
+            <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
+            <p className="search-hero-sub">Type your requirement and generate a tailored report in minutes</p>
+            <div className="search-hero-bar">
+              <input
+                type="text"
+                placeholder="e.g. ceramics market in Delhi"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    // handle parsing into filters...
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  const query = document.querySelector('.search-hero-bar input').value.toLowerCase();
+                  if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
+                  if (query.includes('steel')) setSelect_industry(['Steel']);
+                  if (query.includes('india')) setSelect_city(['India']);
+                  if (query.includes('delhi')) setSelect_city(['Delhi']);
+                  setNoSearch(false);
+                }}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M12.9 14.32a8 8 0 111.414−1.414l4.387 4.387a1 1 0 01−1.414 1.414l−4.387−4.387zM14 8a6 6 0 11−12 0 6 6 0 0112 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Search
-            </button>
-          </div>
-          
-            <p className="microcopy">
-              Example: “Healthcare in India”, “EV Market Trends”, “AI in Retail”
-            </p>
-          </div>
-          
-            <button
-              onClick={() => {
-                const query = document
-                  .querySelector('.search-hero-bar input')
-                  .value.toLowerCase();
-                if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
-                if (query.includes('steel')) setSelect_industry(['Steel']);
-                if (query.includes('india')) setSelect_city(['India']);
-                if (query.includes('delhi')) setSelect_city(['Delhi']);
-                setNoSearch(false);
-              }}
-            >
-              <svg className="search-icon" viewBox="0 0 24 24">
-                <path d="M10,2A8,8 0 1,0 18,10A8,8 0 0,0 10,2M22,22L17,17" />
-              </svg>
-              Search
-            </button>
-          
+                <svg className="search-icon" viewBox="0 0 24 24">
+                  <path d="M10,2A8,8 0 1,0 18,10A8,8 0 0,0 10,2M22,22L17,17" />
+                </svg>
+                Search
+              </button>
+            </div>
+          </div>          
 
 
       
