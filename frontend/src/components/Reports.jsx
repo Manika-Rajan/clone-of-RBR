@@ -52,19 +52,6 @@ const Reports = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastReportId, setLastReportId] = useState(0); // Track the last used ID
 
-
-  useEffect(() => {
-      const interval = setInterval(() => {
-        setPlaceholder((prev) => {
-          let nextIndex = placeholderExamples.indexOf(prev) + 1;
-          if (nextIndex >= placeholderExamples.length) nextIndex = 0;
-          return placeholderExamples[nextIndex];
-        });
-      }, 5000); // change every 5 seconds
-    
-      return () => clearInterval(interval);
-    }, []);
-
   
   useEffect(() => {
     const filters = {
@@ -76,6 +63,18 @@ const Reports = () => {
     };
     setSelectedFilters(filters);
     console.log('Updated selectedFilters:', filters);
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setPlaceholder((prev) => {
+          let nextIndex = placeholderExamples.indexOf(prev) + 1;
+          if (nextIndex >= placeholderExamples.length) nextIndex = 0;
+          return placeholderExamples[nextIndex];
+        });
+      }, 5000); // change every 5 seconds
+    
+      return () => clearInterval(interval);
+    }, []);
 
     const hasFilters =
       select_industry.length > 0 ||
