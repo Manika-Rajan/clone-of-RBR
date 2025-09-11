@@ -63,6 +63,16 @@ const Reports = () => {
     setSelectedFilters(filters);
     console.log('Updated selectedFilters:', filters);
 
+
+    const hasFilters =
+      select_industry.length > 0 ||
+      select_city.length > 0 ||
+      select_market.length > 0 ||
+      select_pain.length > 0 ||
+      select_competitors.length > 0;
+    setGenerate(hasFilters);
+  }, [select_industry, select_city, select_competitors, select_market, select_pain]);
+
     useEffect(() => {
       const interval = setInterval(() => {
         setPlaceholder((prev) => {
@@ -75,15 +85,7 @@ const Reports = () => {
       return () => clearInterval(interval);
     }, []);
 
-    const hasFilters =
-      select_industry.length > 0 ||
-      select_city.length > 0 ||
-      select_market.length > 0 ||
-      select_pain.length > 0 ||
-      select_competitors.length > 0;
-    setGenerate(hasFilters);
-  }, [select_industry, select_city, select_competitors, select_market, select_pain]);
-
+  
   const generateReport = async () => {
     setIsLoading(true);
     try {
