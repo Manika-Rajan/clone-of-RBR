@@ -243,9 +243,9 @@ const Reports = () => {
     <>
       <Navbar reports />
           <div className="search-hero">
-            <h2 className="search-hero-heading">Wondering Where to Source, Sell, or Expand?</h2>
+            <h2 className="search-hero-heading">All Your Market Questions, Answered Instantly</h2>
             <p className="search-hero-sub">
-            Get instant insights on raw materials, sales hotspots, competitors, and market trends — tailored for your business in minutes.
+            From suppliers to sales trends, uncover data that powers smarter business decisions — no waiting, no guesswork.
             </p>
             <div className="search-hero-bar">
               <input
