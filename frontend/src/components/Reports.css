@@ -141,12 +141,9 @@ letter-spacing: 0.03em;
 /* Search strip container */
 
 .search-hero {
-  background: #f4f6f9 url("${process.env.PUBLIC_URL}/assets/world-map-bg.png") no-repeat center center;
-  background-size: cover;
+  background: #f4f6f9;
   position: relative;
 }
-
-
 
 .search-hero::before {
   content: "";
