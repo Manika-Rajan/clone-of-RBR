@@ -142,39 +142,22 @@ letter-spacing: 0.03em;
 
 .search-hero {
   background: #f4f6f9;
-  position: relative;
-  min-height: 280px;
+  padding: 50px 20px;
+  text-align: center;
+  border-bottom: 1px solid #e6e9ef;
 }
-
-.search-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.75); /* ✅ subtle white overlay */
-  pointer-events: none;
-}
-
-
-
-.search-hero-heading,
-.search-hero-sub,
-.search-hero-bar {
-  position: relative;
-  z-index: 1; /* ✅ ensures text & input are above overlay */
-}
-
 
 .search-hero-heading {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: #293750;
 }
 
 .search-hero-sub {
-  font-size: 14px;
+  font-size: 15px;
   color: #555;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .search-hero-bar {
@@ -188,7 +171,6 @@ letter-spacing: 0.03em;
   overflow: hidden;
   background: white;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  position: relative;
 }
 
 .search-hero-bar input {
@@ -221,5 +203,10 @@ letter-spacing: 0.03em;
 .search-hero-bar .search-icon {
   width: 16px;
   height: 16px;
-  fill: white;
+}
+
+.microcopy {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 12px;
 }
