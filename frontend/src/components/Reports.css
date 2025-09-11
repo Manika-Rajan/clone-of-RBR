@@ -143,6 +143,7 @@ letter-spacing: 0.03em;
 .search-hero {
   background: #f4f6f9;
   position: relative;
+  min-height: 280px;
 }
 
 .search-hero::before {
