@@ -271,7 +271,7 @@ const Reports = () => {
             <p className="microcopy">
               Example: “Healthcare in India”, “EV Market Trends”, “AI in Retail”
             </p>
-      </div>
+          </div>
           
             <button
               onClick={() => {
@@ -290,7 +290,7 @@ const Reports = () => {
               </svg>
               Search
             </button>
-          </div>
+          
 
 
       
