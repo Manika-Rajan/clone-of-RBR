@@ -11,7 +11,6 @@ import vector from '../assets/vector.svg';
 import black from '../assets/black.svg';
 import { useNavigate } from 'react-router-dom';
 import { Store } from '../Store';
-import worldMap from "../assets/world-map-bg.png";
 
 
 const Reports = () => {
@@ -242,7 +241,6 @@ const Reports = () => {
 
   return (
     <>
-        <Navbar reports />
       <Navbar reports />
           <div className="search-hero">
             <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
