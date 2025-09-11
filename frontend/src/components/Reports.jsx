@@ -241,7 +241,9 @@ const Reports = () => {
   return (
     <>
       <Navbar reports />
-          <div className="search-hero">
+          <div className="search-hero"
+              style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/assets/world-map-bg.png)` }}
+          >
             <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
             <p className="search-hero-sub">Type your requirement and generate a tailored report in minutes</p>
             <div className="search-hero-bar">
