@@ -247,6 +247,7 @@ const Reports = () => {
             <p className="search-hero-sub">
             From suppliers to sales trends, uncover data that powers smarter business decisions — no waiting, no guesswork.
             </p>
+            <p className="example-text">e.g., "Ceramic suppliers in Delhi" or "Top-selling steel products in India"</p>
             <div className="search-hero-bar">
               <input
                 type="text"
