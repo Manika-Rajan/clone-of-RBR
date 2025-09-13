@@ -274,7 +274,7 @@ const Reports = () => {
       console.log("Sending search query:", trimmed);
   
       const payload = {
-        search_query: , trimmed,
+        search_query: trimmed,
         user: state.user || {} // if you’re tracking logged-in user in context
       };
   
