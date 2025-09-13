@@ -275,7 +275,7 @@ const Reports = () => {
   
       const payload = {
         search_query: trimmed,
-        user: state.user || {} // if you’re tracking logged-in user in context
+        user: state.userInfo || {} // if you’re tracking logged-in user in context
       };
   
       const response = await fetch(
