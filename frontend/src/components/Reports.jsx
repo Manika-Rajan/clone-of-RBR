@@ -271,10 +271,10 @@ const Reports = () => {
       }
   
     try {
-      console.log("Sending search query:", query);
+      console.log("Sending search query:", trimmed);
   
       const payload = {
-        search_query: query,
+        search_query: , trimmed,
         user: state.user || {} // if you’re tracking logged-in user in context
       };
   
@@ -283,12 +283,7 @@ const Reports = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(
-            {
-              query: searchText,   // ✅ use "query", not "search_query"
-              user: { name: currentUserName } // optional if you want username
-            }
-          ),
+          body: JSON.stringify(payload),
         }
       );
   
@@ -308,6 +303,7 @@ const Reports = () => {
   
     } catch (err) {
       console.error("Error logging search:", err);
+      alert(`Search failed: ${err.message}`);
     }
   };
 
