@@ -275,7 +275,12 @@ const Reports = () => {
   
       const payload = {
         search_query: trimmed,
-        user: state.userInfo || {} // if you’re tracking logged-in user in context
+        user: {
+              name: state.userInfo?.name || "Unknown",
+              email: state.userInfo?.email || "",
+              phone: state.userInfo?.phone || "", // ✅ include phone here
+              userId: state.userInfo?.userId || state.userInfo?.phone || ""
+            }
       };
   
       const response = await fetch(
