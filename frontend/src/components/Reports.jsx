@@ -283,7 +283,12 @@ const Reports = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(
+            {
+              query: searchText,   // ✅ use "query", not "search_query"
+              user: { name: currentUserName } // optional if you want username
+            }
+          ),
         }
       );
   
