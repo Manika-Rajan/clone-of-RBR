@@ -333,7 +333,7 @@ const Reports = () => {
               />
               <button
                 onClick={() => {
-                  const query = document.querySelector('.search-hero-bar input')..value.trim().toLowerCase();
+                  const query = document.querySelector('.search-hero-bar input').value.trim().toLowerCase();
                   if (!query) {
                     alert("Please enter text to search");
                     return;
