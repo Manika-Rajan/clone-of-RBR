@@ -274,7 +274,7 @@ const Reports = () => {
       console.log("Sending search query:", trimmed);
   
       const payload = {
-        search_query: trimmed,
+        query: trimmed,
         user: state.user || {} // if you’re tracking logged-in user in context
       };
   
@@ -288,7 +288,8 @@ const Reports = () => {
       );
   
       if (!response.ok) {
-        throw new Error(`Failed with status ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Failed with status ${response.status}, body: ${errorText}`);
       }
   
       const data = await response.json();
