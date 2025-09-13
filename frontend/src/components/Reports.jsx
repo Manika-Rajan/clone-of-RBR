@@ -263,7 +263,12 @@ const Reports = () => {
   };
 
   const handleSearch = async (query) => {
-    if (!query.trim()) return;
+   const trimmed = query.trim();
+
+      if (!trimmed) {
+        alert("Please enter text to search.");
+        return;
+      }
   
     try {
       console.log("Sending search query:", query);
@@ -290,10 +295,10 @@ const Reports = () => {
       console.log("Search log API response:", data);
   
       // (Optional) parse query into filters like before
-      if (query.toLowerCase().includes("ceramic")) setSelect_industry(["Ceramics"]);
-      if (query.toLowerCase().includes("steel")) setSelect_industry(["Steel"]);
-      if (query.toLowerCase().includes("india")) setSelect_city(["India"]);
-      if (query.toLowerCase().includes("delhi")) setSelect_city(["Delhi"]);
+        if (trimmed.toLowerCase().includes("ceramic")) setSelect_industry(["Ceramics"]);
+        if (trimmed.toLowerCase().includes("steel")) setSelect_industry(["Steel"]);
+        if (trimmed.toLowerCase().includes("india")) setSelect_city(["India"]);
+        if (trimmed.toLowerCase().includes("delhi")) setSelect_city(["Delhi"]);
       setNoSearch(false);
   
     } catch (err) {
