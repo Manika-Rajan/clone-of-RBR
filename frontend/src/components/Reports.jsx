@@ -322,14 +322,23 @@ const Reports = () => {
                 placeholder={placeholder}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    handleSearch(e.target.value);
+                    const query = e.target.value.trim().toLowerCase();
+                    if (!query) {
+                      alert("Please enter text to search");
+                      return;
+                    }
+                    handleSearch(query);
                   }
                 }}
               />
               <button
                 onClick={() => {
-                  const query = document.querySelector('.search-hero-bar input').value.toLowerCase();
-                  handleSearch(query);  
+                  const query = document.querySelector('.search-hero-bar input')..value.trim().toLowerCase();
+                  if (!query) {
+                    alert("Please enter text to search");
+                    return;
+                  }
+                  handleSearch(query);
                 }}
               >
                 <svg className="search-icon" viewBox="0 0 24 24">
