@@ -262,6 +262,46 @@ const Reports = () => {
     });
   };
 
+  const handleSearch = async (query) => {
+    if (!query.trim()) return;
+  
+    try {
+      console.log("Sending search query:", query);
+  
+      const payload = {
+        search_query: query,
+        user: state.user || {} // if you’re tracking logged-in user in context
+      };
+  
+      const response = await fetch(
+        "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/search-log",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error(`Failed with status ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log("Search log API response:", data);
+  
+      // (Optional) parse query into filters like before
+      if (query.toLowerCase().includes("ceramic")) setSelect_industry(["Ceramics"]);
+      if (query.toLowerCase().includes("steel")) setSelect_industry(["Steel"]);
+      if (query.toLowerCase().includes("india")) setSelect_city(["India"]);
+      if (query.toLowerCase().includes("delhi")) setSelect_city(["Delhi"]);
+      setNoSearch(false);
+  
+    } catch (err) {
+      console.error("Error logging search:", err);
+    }
+  };
+
+
   return (
     <>
       <Navbar reports />
@@ -277,18 +317,14 @@ const Reports = () => {
                 placeholder={placeholder}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    // handle parsing into filters...
+                    handleSearch(e.target.value);
                   }
                 }}
               />
               <button
                 onClick={() => {
                   const query = document.querySelector('.search-hero-bar input').value.toLowerCase();
-                  if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
-                  if (query.includes('steel')) setSelect_industry(['Steel']);
-                  if (query.includes('india')) setSelect_city(['India']);
-                  if (query.includes('delhi')) setSelect_city(['Delhi']);
-                  setNoSearch(false);
+                  handleSearch(query);  
                 }}
               >
                 <svg className="search-icon" viewBox="0 0 24 24">
