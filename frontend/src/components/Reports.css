@@ -346,3 +346,41 @@ letter-spacing: 0.03em;
     transform: scale(1);
   }
 }
+
+.popup-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-align: center;
+  color: #333;
+}
+
+.popup-message {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #555;
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.popup-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.popup-button {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.popup-button:hover {
+  background: #4338ca;
+}
