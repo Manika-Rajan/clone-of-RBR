@@ -402,7 +402,7 @@ const Reports = () => {
                   </div>
                 </div>
               )}
-
+            </div>
       
       {popup && (
         <div className="nav-popup row">
