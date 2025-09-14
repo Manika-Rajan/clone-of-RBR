@@ -312,7 +312,8 @@ const Reports = () => {
       setSearchMessage(
         setSearchMessage(
           "⚠️ We’re sorry, the specific data you requested isn’t available right now. Our research team has logged your query, and fresh insights will be added within the next 72 hours. Please revisit soon—we’ll make sure it’s worth your while."
-      );
+          )
+        );
   
       // (Optional) parse query into filters like before
         if (trimmed.toLowerCase().includes("ceramic")) setSelect_industry(["Ceramics"]);
