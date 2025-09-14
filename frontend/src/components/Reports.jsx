@@ -20,6 +20,32 @@ const placeholderExamples = [
   "Demand for LED lights in Bangalore and Mumbai"
 ];
 
+const LoaderRing = () => (
+  <svg className="loader-ring" viewBox="0 0 100 100">
+    <circle
+      className="loader-ring__bg"
+      cx="50"
+      cy="50"
+      r="45"
+      fill="none"
+      stroke="#e6e6e6"
+      strokeWidth="8"
+    />
+    <circle
+      className="loader-ring__progress"
+      cx="50"
+      cy="50"
+      r="45"
+      fill="none"
+      stroke="#0263c7"
+      strokeWidth="8"
+      strokeLinecap="round"
+      strokeDasharray="283"    /* 2πr (r=45 → circumference ≈ 283) */
+      strokeDashoffset="75"
+    />
+  </svg>
+);
+
 
 
 const Reports = () => {
@@ -310,7 +336,7 @@ const Reports = () => {
 
       // ✅ professional confirmation message
       setSearchMessage(
-          "⚠️ We’re sorry, the specific data you requested isn’t available right now. Our research team has logged your query, these insights will be added within the next 72 hours. Please revisit soon—we’ll make sure it’s worth your while."
+          "ℹ️ We’re sorry, the specific data you requested isn’t available right now. Our research team has logged your query, these insights will be added within the next 72 hours. Please revisit soon—we’ll make sure it’s worth your while."
         );
   
       // (Optional) parse query into filters like before
@@ -373,27 +399,7 @@ const Reports = () => {
               {searchLoading && (
                 <div className="popup-overlay">
                   <div className="popup-box">
-                    {/* ✅ Rotating spinner */}
-                    <svg
-                      className="animate-spin h-10 w-10 text-blue-600"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                      ></path>
-                    </svg>
+                    <LoaderRing />
               
                     <p style={{ marginTop: "12px", fontSize: "14px", color: "#333" }}>
                       Fetching your request...
