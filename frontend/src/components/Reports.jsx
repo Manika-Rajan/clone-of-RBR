@@ -310,7 +310,8 @@ const Reports = () => {
 
       // ✅ professional confirmation message
       setSearchMessage(
-        "✅ Thank you for your query! Our research team has logged your request. Fresh insights will be curated and made available within the next 72 hours. We’ll notify you when it’s ready—please visit again soon."
+        setSearchMessage(
+          "⚠️ We’re sorry, the specific data you requested isn’t available right now. Our research team has logged your query, and fresh insights will be added within the next 72 hours. Please revisit soon—we’ll make sure it’s worth your while."
       );
   
       // (Optional) parse query into filters like before
@@ -391,17 +392,39 @@ const Reports = () => {
               {/* Popup overlay for response */}
               {!searchLoading && searchMessage && (
                 <div className="popup-overlay">
-                  <div className="popup-box">
-                    <p>{searchMessage}</p>
-                    <button
-                      className="close-btn"
-                      onClick={() => setSearchMessage("")}
-                    >
-                      Close
-                    </button>
+                  <div className="popup-box enhanced">
+                    <div className="popup-header">
+                      <svg
+                        className="popup-icon"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <h3>Important Update</h3>
+                    </div>
+                    <div className="popup-body">
+                      <p>{searchMessage}</p>
+                    </div>
+                    <div className="popup-footer">
+                      <button
+                        className="close-btn fancy"
+                        onClick={() => setSearchMessage("")}
+                      >
+                        Got it
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
+
             </div>
           </div> {/* ✅ closes .search-hero */}
       
