@@ -413,7 +413,7 @@ const Reports = () => {
               {!searchLoading && searchMessage && (
                 <div className="popup-overlay">
                   <div className="popup-box enhanced">
-                    <h2 className="popup-title">📊 We’re Working on It</h2>
+                    <h2 className="popup-title">📊 This Data is coming soon</h2>
                     <p className="popup-message">
                       {searchMessage}
                     </p>
