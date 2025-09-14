@@ -388,41 +388,26 @@ const Reports = () => {
                 </div>
               )}
               
-              {/* Popup overlay for response */}
+             {/* Popup overlay for response */}
               {!searchLoading && searchMessage && (
                 <div className="popup-overlay">
                   <div className="popup-box enhanced">
-                    <div className="popup-header">
-                      <svg
-                        className="popup-icon"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <h3>Important Update</h3>
-                    </div>
-                    <div className="popup-body">
-                      <p>{searchMessage}</p>
-                    </div>
+                    <h2 className="popup-title">📊 We’re Working on It</h2>
+                    <p className="popup-message">
+                      {searchMessage}
+                    </p>
                     <div className="popup-footer">
                       <button
-                        className="close-btn fancy"
+                        className="popup-button"
                         onClick={() => setSearchMessage("")}
                       >
-                        Got it
+                        Okay, I’ll check back
                       </button>
                     </div>
                   </div>
                 </div>
               )}
+
 
             </div>
           </div> {/* ✅ closes .search-hero */}
