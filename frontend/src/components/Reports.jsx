@@ -403,6 +403,7 @@ const Reports = () => {
                 </div>
               )}
             </div>
+          </div> {/* ✅ closes .search-hero */}
       
       {popup && (
         <div className="nav-popup row">
