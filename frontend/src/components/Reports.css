@@ -390,3 +390,37 @@ letter-spacing: 0.03em;
 .popup-button:hover {
   background: #4338ca;
 }
+
+.loader-ring {
+  width: 60px;
+  height: 60px;
+  animation: rotate 1.5s linear infinite;
+}
+
+.loader-ring__bg {
+  opacity: 0.2;
+}
+
+.loader-ring__progress {
+  stroke-dasharray: 283;
+  stroke-dashoffset: 210;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 280;
+  }
+  50% {
+    stroke-dashoffset: 75;
+  }
+  100% {
+    stroke-dashoffset: 280;
+  }
+}
