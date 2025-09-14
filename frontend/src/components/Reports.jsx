@@ -368,31 +368,40 @@ const Reports = () => {
                 </svg>
                 Search
               </button>
-              {/* Loader when searching */}
+              
+              {/* Popup overlay for loader */}
               {searchLoading && (
-                <div className="loading-container">
-                  <svg className="spinner" viewBox="0 0 50 50">
-                    <circle
-                      className="path"
-                      cx="25"
-                      cy="25"
-                      r="20"
-                      fill="none"
-                      strokeWidth="5"
-                    />
-                  </svg>
-                  <p>Fetching your request...</p>
+                <div className="popup-overlay">
+                  <div className="popup-box">
+                    <svg className="spinner" viewBox="0 0 50 50">
+                      <circle
+                        className="path"
+                        cx="25"
+                        cy="25"
+                        r="20"
+                        fill="none"
+                        strokeWidth="5"
+                      />
+                    </svg>
+                    <p>Fetching your request...</p>
+                  </div>
                 </div>
               )}
-            </div>
-          </div>          
-
-          {/* Message after response */}
-          {!searchLoading && searchMessage && (
-            <div className="response-message">
-              <p>{searchMessage}</p>
-            </div>
-          )}
+              
+              {/* Popup overlay for response */}
+              {!searchLoading && searchMessage && (
+                <div className="popup-overlay">
+                  <div className="popup-box">
+                    <p>{searchMessage}</p>
+                    <button
+                      className="close-btn"
+                      onClick={() => setSearchMessage("")}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
 
       
       {popup && (
