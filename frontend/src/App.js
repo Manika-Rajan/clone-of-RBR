@@ -17,6 +17,8 @@ import Partner from './components/Partner';
 import React from 'react';
 import { StoreProvider, useStore } from './Store';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import PrivateRoute from "./components/PrivateRoute";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
 
 function AppContent() {
   const location = useLocation();
@@ -34,6 +36,7 @@ function AppContent() {
         <Route path='/report-display' element={<ReportsDisplay />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/partner" element={<Partner />} />
+        <Route path="/analytics" element={<PrivateRoute roleRequired="admin"> <AnalyticsDashboard /> </PrivateRoute> } />
         <Route path='/payment' element={
           <ProtectedRoute>
             <Payment />
