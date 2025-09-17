@@ -146,6 +146,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
             email: userProfile.email || '',
             photo_url: userProfile.photo_url || null,
             token,
+            role: userProfile.role || 'user', // ✅ fetch from DynamoDB
           };
           cxtDispatch({ type: 'USER_LOGIN', payload: enrichedUser });
           localStorage.setItem('authToken', token);
