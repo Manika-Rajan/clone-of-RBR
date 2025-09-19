@@ -7,26 +7,28 @@ const Login = React.memo(({ onClose, returnTo }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch: cxtDispatch } = useStore();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [phone, setPhone] = useState(
-    state.phone ? state.phone.replace('+91', '') : ''
-  );
+  const [phone, setPhone] = useState(state.phone ? state.phone.replace('+91', '') : '');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const phoneInputRef = useRef(null);
   const otpInputRef = useRef(null);
 
-  // 🔹 New states for profile completion
+  // ---- New profile completion state ----
   const [needsProfile, setNeedsProfile] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  // --------------------------------------
 
   useEffect(() => {
     setIsModalOpen(true);
   }, [returnTo]);
 
+  // Autofocus on inputs when switching steps
   useEffect(() => {
     if (!otpSent && phoneInputRef.current) {
       phoneInputRef.current.focus();
@@ -35,6 +37,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
     }
   }, [otpSent, isModalOpen]);
 
+  // Send OTP
   const sendOtp = async () => {
     if (!phone || phone.length !== 10 || !/^\d+$/.test(phone)) {
       setError('Please enter a valid 10-digit mobile number');
@@ -43,6 +46,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
     setIsLoading(true);
     setError('');
     const phoneNumber = `+91${phone}`;
+
     try {
       const response = await fetch(
         'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp',
@@ -53,6 +57,8 @@ const Login = React.memo(({ onClose, returnTo }) => {
         }
       );
       const data = await response.json();
+      console.log('send-otp response:', data);
+
       if (response.ok) {
         cxtDispatch({ type: 'SET_PHONE', payload: phoneNumber });
         setOtpSent(true);
@@ -60,12 +66,14 @@ const Login = React.memo(({ onClose, returnTo }) => {
         setError(`Error: ${data.error || 'Failed to send OTP'}`);
       }
     } catch (err) {
+      console.error('sendOtp error:', err);
       setError(`An error occurred: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Verify OTP
   const verifyOtp = async () => {
     if (!otp || otp.length !== 6 || !/^\d+$/.test(otp)) {
       setError('Please enter a valid 6-digit OTP');
@@ -74,6 +82,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
     setIsLoading(true);
     setError('');
     const phoneNumber = `+91${phone}`;
+
     try {
       const response = await fetch(
         'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp',
@@ -83,13 +92,15 @@ const Login = React.memo(({ onClose, returnTo }) => {
           body: JSON.stringify({ phone_number: phoneNumber, otp }),
         }
       );
+
       const data = await response.json();
-      console.log('verify-otp response:', data);
+      console.log('verify-otp response:', data); // Debug response
 
       if (response.status === 200) {
+        // response.body might be a stringified body depending on gateway — handle both
         let parsedBody;
         try {
-          parsedBody = JSON.parse(data.body);
+          parsedBody = data.body ? JSON.parse(data.body) : data;
         } catch (e) {
           console.error('Failed to parse verify-otp body:', data.body);
           setError('Authentication failed: Invalid response format');
@@ -97,7 +108,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
           return;
         }
 
-        const { token } = parsedBody;
+        const token = parsedBody.token;
         if (!token) {
           console.error('No token in parsed body:', parsedBody);
           setError('Authentication failed: No token received');
@@ -105,7 +116,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
           return;
         }
 
-        // Step 1: base user
+        // Step 1: Dispatch minimal login info with token
         const baseUser = {
           isLogin: true,
           userId: phoneNumber,
@@ -113,10 +124,11 @@ const Login = React.memo(({ onClose, returnTo }) => {
           token,
         };
         cxtDispatch({ type: 'USER_LOGIN', payload: baseUser });
-        localStorage.setItem('authToken', token);
+        localStorage.setItem('authToken', token); // Store token
         localStorage.setItem('userInfo', JSON.stringify(baseUser));
+        console.log('baseUser dispatched:', baseUser); // Debug dispatch
 
-        // Step 2: fetch profile
+        // Step 2: Immediately fetch full profile from DynamoDB
         try {
           const profileRes = await fetch(
             'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile',
@@ -129,11 +141,13 @@ const Login = React.memo(({ onClose, returnTo }) => {
               body: JSON.stringify({ action: 'get', phone_number: phoneNumber }),
             }
           );
+
           const profileData = await profileRes.json();
-          console.log('manage-user-profile response:', profileData);
+          console.log('manage-user-profile response:', profileData); // Debug profile response
 
           let userProfile = profileData;
-          if (profileData.body) {
+          // If API returns { body: "..." } parse that as well (common with API Gateway)
+          if (profileData && profileData.body) {
             try {
               userProfile = JSON.parse(profileData.body);
             } catch (e) {
@@ -141,34 +155,42 @@ const Login = React.memo(({ onClose, returnTo }) => {
             }
           }
 
-          // 🔹 If name/email missing → show profile form
+          // If profile is missing name OR email — ask user to complete profile
           if (!userProfile.name || !userProfile.email) {
+            // Keep baseUser logged in but show profile completion form
             setNeedsProfile(true);
             setName(userProfile.name || '');
             setEmail(userProfile.email || '');
+            // stop loading and wait for user to enter details
             setIsLoading(false);
             return;
           }
 
+          // Normal flow: profile has required details
           const enrichedUser = {
             ...baseUser,
-            name: userProfile.name,
-            email: userProfile.email,
+            name: userProfile.name || 'User Name',
+            email: userProfile.email || '',
             photo_url: userProfile.photo_url || null,
             token,
-            role: userProfile.role || 'user',
+            role: userProfile.role || 'user', // fetch role if exists
           };
+
           cxtDispatch({ type: 'USER_LOGIN', payload: enrichedUser });
           localStorage.setItem('authToken', token);
           localStorage.setItem('userInfo', JSON.stringify(enrichedUser));
+          console.log('enrichedUser dispatched:', enrichedUser); // Debug dispatch
 
+          // close modal if provided, then redirect as before
           if (onClose) onClose();
           setIsModalOpen(false);
 
+          console.log('Redirect debug - returnTo:', returnTo, 'location.pathname:', location.pathname, 'location.state:', location.state);
           let redirectTo = '/';
           if (returnTo === '/payment' || location.pathname.includes('/report-display')) {
             redirectTo = '/payment';
           }
+          console.log('Navigating to:', redirectTo);
           navigate(redirectTo, {
             replace: true,
             state: {
@@ -177,7 +199,28 @@ const Login = React.memo(({ onClose, returnTo }) => {
             },
           });
         } catch (profileErr) {
+          // if profile fetch fails — fallback but keep user logged in minimally
           console.error('Profile fetch failed:', profileErr);
+          const fallbackUser = {
+            ...baseUser,
+            name: 'User Name',
+            email: '',
+            photo_url: null,
+            token,
+          };
+          cxtDispatch({ type: 'USER_LOGIN', payload: fallbackUser });
+          localStorage.setItem('authToken', token);
+          localStorage.setItem('userInfo', JSON.stringify(fallbackUser));
+          console.log('fallbackUser dispatched:', fallbackUser);
+
+          if (onClose) onClose();
+          setIsModalOpen(false);
+
+          let redirectTo = '/';
+          if (returnTo === '/payment' || location.pathname.includes('/report-display')) {
+            redirectTo = '/payment';
+          }
+          navigate(redirectTo, { replace: true });
         }
       } else {
         setError(`Error: ${data.error || 'Invalid OTP'}`);
@@ -190,11 +233,19 @@ const Login = React.memo(({ onClose, returnTo }) => {
     }
   };
 
+  // Save profile after user fills missing info
   const saveProfile = async () => {
-    try {
-      const phoneNumber = `+91${phone}`;
-      const token = localStorage.getItem('authToken');
+    // basic validation
+    if (!name || !email) {
+      setError('Please provide both name and email');
+      return;
+    }
+    setIsLoading(true);
+    setError('');
+    const phoneNumber = `+91${phone}`;
+    const token = localStorage.getItem('authToken');
 
+    try {
       const response = await fetch(
         'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile',
         {
@@ -212,50 +263,71 @@ const Login = React.memo(({ onClose, returnTo }) => {
         }
       );
 
-      if (response.ok) {
-        const profileRes = await fetch(
-          'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ action: 'get', phone_number: phoneNumber }),
-          }
-        );
-        const profileData = await profileRes.json();
-        const finalProfile = profileData.body
-          ? JSON.parse(profileData.body)
-          : profileData;
-
-        const enrichedUser = {
-          isLogin: true,
-          userId: phoneNumber,
-          phone: phoneNumber,
-          token,
-          name: finalProfile.name,
-          email: finalProfile.email,
-          photo_url: finalProfile.photo_url || null,
-          role: finalProfile.role || 'user',
-        };
-
-        cxtDispatch({ type: 'USER_LOGIN', payload: enrichedUser });
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('userInfo', JSON.stringify(enrichedUser));
-
-        if (onClose) onClose();
-        setIsModalOpen(false);
-        navigate('/');
-      } else {
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('Profile update failed body:', errText);
         setError('Failed to save profile');
+        setIsLoading(false);
+        return;
       }
+
+      // fetch the updated profile to get final data (including role if set)
+      const profileRes = await fetch(
+        'https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/manage-user-profile',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action: 'get', phone_number: phoneNumber }),
+        }
+      );
+
+      const profileData = await profileRes.json();
+      const finalProfile = profileData && profileData.body ? JSON.parse(profileData.body) : profileData;
+
+      const enrichedUser = {
+        isLogin: true,
+        userId: phoneNumber,
+        phone: phoneNumber,
+        token,
+        name: finalProfile.name || name,
+        email: finalProfile.email || email,
+        photo_url: finalProfile.photo_url || null,
+        role: finalProfile.role || 'user',
+      };
+
+      cxtDispatch({ type: 'USER_LOGIN', payload: enrichedUser });
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('userInfo', JSON.stringify(enrichedUser));
+
+      // close and navigate home (original logic redirected to / or /payment earlier — keep it simple here)
+      if (onClose) onClose();
+      setIsModalOpen(false);
+      setNeedsProfile(false);
+      setIsLoading(false);
+
+      // preserve redirect behavior: if user was trying to go pay, send them to /payment
+      let redirectTo = '/';
+      if (returnTo === '/payment' || location.pathname.includes('/report-display')) {
+        redirectTo = '/payment';
+      }
+      navigate(redirectTo, {
+        replace: true,
+        state: {
+          fileKey: location.state?.fileKey || state.fileKey,
+          reportId: location.state?.reportId || state.reportId,
+        },
+      });
     } catch (err) {
       console.error('Profile save error:', err);
       setError('An error occurred while saving profile');
+      setIsLoading(false);
     }
   };
 
+  // Form submit handler for OTP flow
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!otpSent) sendOtp();
@@ -266,36 +338,28 @@ const Login = React.memo(({ onClose, returnTo }) => {
 
   return (
     <div className="login-popup-container">
-      <div
-        className="login-popup"
-        style={{ display: isModalOpen ? 'block' : 'none' }}
-      >
+      <div className="login-popup" style={{ display: isModalOpen ? 'block' : 'none' }}>
+        {/* Title area */}
         {!isLoading && !error && !needsProfile && (
           <div className="login-title">
             <h3>{otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
           </div>
         )}
 
+        {/* OTP + phone flows */}
         {!needsProfile && (
           <>
             <div className="login-paragraph">
-              {!otpSent && (
-                <p>
-                  We will send you a <strong>One Time Password</strong>
-                </p>
-              )}
+              {!otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
             </div>
+
             <form onSubmit={handleSubmit}>
               {!otpSent ? (
                 <div
                   className="login-phone-input d-flex justify-content-center align-items-center gap-2"
                   style={{ width: '80%', margin: 'auto' }}
                 >
-                  <select
-                    className="form-select w-auto"
-                    aria-label="Country code"
-                    disabled
-                  >
+                  <select className="form-select w-auto" aria-label="Country code" disabled>
                     <option defaultValue>+91</option>
                   </select>
                   <input
@@ -323,12 +387,9 @@ const Login = React.memo(({ onClose, returnTo }) => {
                   />
                 </div>
               )}
+
               <div className="text-center mt-3">
-                <button
-                  type="submit"
-                  className="btn btn-primary w-50"
-                  disabled={isLoading}
-                >
+                <button type="submit" className="btn btn-primary w-50" disabled={isLoading}>
                   {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
                 </button>
               </div>
@@ -336,6 +397,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
           </>
         )}
 
+        {/* Profile completion form appears here if needed */}
         {needsProfile && (
           <div className="profile-completion-form text-center mt-3">
             <h4>Complete Your Profile</h4>
@@ -353,9 +415,11 @@ const Login = React.memo(({ onClose, returnTo }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <button className="btn btn-success w-50" onClick={saveProfile}>
-              Save Profile
-            </button>
+            <div style={{ marginTop: 8 }}>
+              <button className="btn btn-success w-50" onClick={saveProfile} disabled={isLoading}>
+                Save Profile
+              </button>
+            </div>
           </div>
         )}
 
