@@ -86,7 +86,7 @@ const Login = React.memo(({ onClose, returnTo }) => {
     }
   };
 
-  // Verify OTP (unchanged, still handles profile fetch & redirect)
+  // Verify OTP
   const verifyOtp = async () => {
     if (!otp || otp.length !== 6 || !/^\d+$/.test(otp)) {
       setError('Please enter a valid 6-digit OTP');
@@ -321,8 +321,9 @@ const Login = React.memo(({ onClose, returnTo }) => {
   return (
     <div className="login-popup-container">
       <div className="login-popup" style={{ display: isModalOpen ? 'block' : 'none' }}>
+        {/* Phone + OTP flow */}
         {!needsProfile && (
-          <>
+          <div className="login-content">
             <div className="login-title">
               <h3>{otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
             </div>
@@ -333,18 +334,14 @@ const Login = React.memo(({ onClose, returnTo }) => {
                 </p>
               )}
             </div>
-        
+
             <form onSubmit={handleSubmit}>
               {!otpSent ? (
                 <div
                   className="login-phone-input d-flex justify-content-center align-items-center gap-2"
                   style={{ width: '80%', margin: 'auto' }}
                 >
-                  <select
-                    className="form-select w-auto"
-                    aria-label="Country code"
-                    disabled
-                  >
+                  <select className="form-select w-auto" aria-label="Country code" disabled>
                     <option defaultValue>+91</option>
                   </select>
                   <input
@@ -372,19 +369,17 @@ const Login = React.memo(({ onClose, returnTo }) => {
                   />
                 </div>
               )}
-        
+
               <div className="text-center mt-3">
-                <button
-                  type="submit"
-                  className="btn btn-primary w-50"
-                  disabled={isLoading}
-                >
+                <button type="submit" className="btn btn-primary w-50" disabled={isLoading}>
                   {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
                 </button>
               </div>
             </form>
-          </>
+          </div>
         )}
+
+        {/* Profile completion form */}
         {needsProfile && (
           <div className="profile-completion-form">
             <h4>Complete Your Profile</h4>
