@@ -3,8 +3,6 @@
   text-align: center;
   background: white;
   padding: 20px;
-  border-radius: 8px; /* ensure consistent rounded look */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* add soft shadow */
 }
 
 .login-title {
