@@ -30,12 +30,6 @@
   box-sizing: border-box;
 }
 
-/* Slight subtle border to match site aesthetic */
-.login-popup,
-.profile-completion-form {
-  border: 1px solid rgba(2,99,199,0.05);
-}
-
 /* Title region */
 .login-title h3,
 .profile-completion-form h4 {
