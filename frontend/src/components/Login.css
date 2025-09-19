@@ -1,215 +1,339 @@
-/* .login-popup-container {
+/* ===========================
+   Login & Profile Modal Styles
+   =========================== */
+
+/* Modal container overlay */
+.login-popup-container {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
-} */
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.45);
+  z-index: 2000;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-/* .login-popup-container:not(.success-popup-container) {
-  background: rgba(0, 0, 0, 0.5);
-} */
-
-.login-popup {
-  margin: auto;
+/* Base modal box (used for OTP and profile form) */
+.login-popup,
+.profile-completion-form {
+  width: 92%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 22px 26px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
   text-align: center;
-  background: white;
-  padding: 20px;
+  animation: modalPop 220ms cubic-bezier(.2,.8,.2,1);
+  color: #222;
+  box-sizing: border-box;
 }
 
-.login-title {
-  font-family: 'Baskerville Old Face';
-  font-style: normal;
-  font-weight: 400;
-  font-size: 32px;
-  margin-bottom: 8px;
-  letter-spacing: 0.01em;
-  color: #293750;
+/* Slight subtle border to match site aesthetic */
+.login-popup,
+.profile-completion-form {
+  border: 1px solid rgba(2,99,199,0.05);
 }
 
-.login-paragraph {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 400;
+/* Title region */
+.login-title h3,
+.profile-completion-form h4 {
+  margin: 0 0 10px;
   font-size: 18px;
-  margin-bottom: 42px;
-  letter-spacing: 0.03em;
-  color: #293750;
+  font-weight: 600;
+  color: #0f1724; /* near-black */
+  letter-spacing: -0.2px;
 }
 
-.login-button {
-  background: #0263C7;
-  box-shadow: 4px 4px 15px rgba(78, 78, 78, 0.25);
-  border-radius: 9px;
-  padding: 8px 16px;
-  gap: 10px;
-  width: 114px;
-  height: 38px;
-  border: none;
-  color: white;
-  text-align: center;
-  cursor: pointer;
+/* Supporting paragraph under title */
+.login-paragraph,
+.profile-completion-form p {
+  margin: 0 0 14px;
+  color: #505a66;
+  font-size: 14px;
+  line-height: 1.3;
 }
 
-.login-button:hover {
-  background: #0250a3;
-}
-
-.login-button:disabled {
-  background: #a3b8d5;
-  cursor: not-allowed;
-}
-
-.login-phone-input {
-  display: flex;
-  justify-content: space-between;
-}
-
+/* Input wrappers (keeps layout consistent) */
+.login-phone-input,
 .otp-fields {
   display: flex;
-  justify-content: space-around;
-  width: 50%;
-  margin: auto;
-  margin-bottom: 30px;
-}
-
-.otp-fields input {
-  width: 50%;
-  border: none;
-  border-bottom: 1px solid grey;
-  text-align: center;
-}
-
-.otp-fields input:focus {
-  outline: none;
-}
-
-.user-details input {
-  border: none;
-  border-bottom: 1px solid grey;
-  text-align: center;
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-}
-
-.user-details input:focus {
-  outline: none;
-  border-bottom: 1px solid #0263c7;
-}
-
-.success-popup-container {
-  background: none;
-}
-
-/* .success-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1001;
-  background: transparent;
-  padding: 0;
-} */
-
-.success-message {
-  display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #e6f4ea;
-  padding: 15px;
+  gap: 10px;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 360px;
+  box-sizing: border-box;
+}
+
+/* Select (country code) inside the phone input */
+.login-phone-input .form-select,
+.login-phone-input select {
+  width: 86px;
+  min-width: 78px;
+  max-width: 100px;
+  padding: 8px 6px;
   border-radius: 8px;
-  margin: 20px auto;
-  width: 260px;
-  animation: fadeIn 0.5s ease-in;
+  border: 1px solid #d0d7df;
+  background: #fafafa;
+  text-align: center;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
-.success-message p {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 600;
-  font-size: 18px;
-  color: #28a745;
-  margin-left: 10px;
+/* Text inputs look and feel */
+.login-phone-input input,
+.otp-fields input,
+.profile-completion-form .form-control,
+.login-popup input.form-control,
+.login-popup .form-control {
+  width: 100%;
+  max-width: 260px;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #d0d7df;
+  background: #fff;
+  color: #111827;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .06s ease;
+  text-align: center;
 }
 
-.checkmark {
-  width: 40px;
-  height: 40px;
+/* Focus states for inputs - accessible and visible */
+.login-phone-input input:focus,
+.otp-fields input:focus,
+.profile-completion-form .form-control:focus,
+.login-popup .form-control:focus {
+  border-color: rgba(2,99,199,0.85);
+  box-shadow: 0 4px 18px rgba(2,99,199,0.08);
 }
 
-.checkmark-circle {
-  stroke: #28a745;
-  stroke-width: 2;
-  stroke-miterlimit: 10;
-  stroke-dasharray: 166;
-  stroke-dashoffset: 166;
-  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+/* Buttons (base) - keep consistent with site */
+.login-popup .btn,
+.profile-completion-form .btn {
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 120px;
+  transition: transform .06s ease, box-shadow .12s ease, opacity .12s ease;
+  border: none;
 }
 
-.checkmark-check {
-  stroke: #28a745;
-  stroke-width: 2;
-  stroke-miterlimit: 10;
-  stroke-dasharray: 48;
-  stroke-dashoffset: 48;
-  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+/* Primary action (send/verify) */
+.login-popup .btn.btn-primary,
+.login-popup .btn.btn-primary:focus,
+.login-popup .btn.btn-primary:hover {
+  background: #0263c7;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(2,99,199,0.16);
 }
 
-@keyframes stroke {
-  100% {
-    stroke-dashoffset: 0;
-  }
+/* Success button for profile save */
+.profile-completion-form .btn.btn-success,
+.profile-completion-form .btn-success:focus,
+.profile-completion-form .btn-success:hover {
+  background: #2ea44f;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(46,164,79,0.14);
 }
 
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+/* Disabled button state */
+.login-popup .btn[disabled],
+.profile-completion-form .btn[disabled] {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Text helper classes (keardown) */
+.text-center { text-align: center; }
+.mb-2 { margin-bottom: 8px; }
+.mt-3 { margin-top: 12px; }
+
+/* Error & loading messages */
+.error-message {
+  margin-top: 12px;
+  color: #c53030;
+  font-size: 13px;
 }
 
 .loading-message {
-  font-family: 'Open Sans';
-  font-size: 16px;
-  color: #293750;
   margin-top: 10px;
+  color: #555;
+  font-size: 13px;
 }
 
-/* Profile form styling similar to OTP form */
-.profile-completion-form {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.profile-completion-form input {
-  width: 80%;
-  margin: 8px auto;
-  padding: 10px;
-  font-size: 16px;
-  text-align: center;
-}
-
-/* Toast styling */
+/* Toast message (success) */
 .toast-message {
   position: fixed;
-  bottom: 20px;
   left: 50%;
+  bottom: 30px;
   transform: translateX(-50%);
   background: #28a745;
-  color: white;
-  padding: 10px 20px;
+  color: #fff;
+  padding: 10px 16px;
   border-radius: 8px;
-  font-weight: bold;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  animation: fadeInOut 3s forwards;
+  box-shadow: 0 6px 22px rgba(2,16,52,0.18);
+  font-weight: 500;
+  z-index: 4000;
+  font-size: 14px;
+  animation: toastIn 320ms ease-out;
 }
 
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-  10% { opacity: 1; transform: translateX(-50%) translateY(0); }
-  90% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+/* Styling to make profile form match height/spacing of OTP flow */
+.profile-completion-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Form inputs inside profile area */
+.profile-completion-form .form-control {
+  width: 100%;
+  max-width: 320px;
+  text-align: left; /* name/email usually left aligned in forms */
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d0d7df;
+}
+
+/* Make placeholder text subtle */
+.profile-completion-form .form-control::placeholder,
+.login-popup input::placeholder {
+  color: #9aa3ad;
+}
+
+/* Profile title and small description */
+.profile-completion-form h4 {
+  width: 100%;
+  text-align: center;
+  color: #0f1724;
+  margin-bottom: 6px;
+}
+
+/* Small helper text in profile form */
+.profile-completion-form .helper {
+  font-size: 13px;
+  color: #5b6770;
+  margin-bottom: 10px;
+}
+
+/* Layout for Save button (centered & same width as OTP) */
+.profile-completion-form .btn.w-50,
+.login-popup .btn.w-50 {
+  width: 50%;
+  max-width: 180px;
+}
+
+/* Ensure form-control inside login-popup doesn't inherit large bootstrap styles */
+.login-popup .form-control,
+.login-popup select.form-select {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* small icon, select style overrides */
+.login-phone-input .form-select::-ms-expand {
+  display: none;
+}
+
+/* Accessibility: visible focus outline for keyboard users */
+.login-popup :focus-visible,
+.profile-completion-form :focus-visible {
+  outline: 3px solid rgba(2,99,199,0.12);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Subtle modal divider if needed */
+.login-popup .divider,
+.profile-completion-form .divider {
+  height: 1px;
+  width: 100%;
+  max-width: 360px;
+  margin: 14px auto;
+  background: linear-gradient(90deg, rgba(2,99,199,0.04), rgba(2,99,199,0.02));
+}
+
+/* Responsive tweak: smaller screens */
+@media (max-width: 480px) {
+  .login-popup, .profile-completion-form {
+    padding: 16px;
+    border-radius: 10px;
+  }
+  .login-popup .btn.w-50, .profile-completion-form .btn.w-50 {
+    width: 65%;
+  }
+  .login-phone-input .form-select {
+    display: none; /* keep mobile simpler if you want */
+  }
+}
+
+/* subtle animations */
+@keyframes modalPop {
+  from { opacity: 0; transform: translateY(6px) scale(.995); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* extra utilities in case your markup uses them */
+.d-flex { display: flex; }
+.justify-content-center { justify-content: center; }
+.align-items-center { align-items: center; }
+.gap-2 { gap: 8px; }
+
+/* Overwrite default bootstrap ghost styles inside modal (if bootstrap is present) */
+.login-popup .btn-primary,
+.profile-completion-form .btn-primary {
+  background: #0263c7 !important;
+  border-color: #0263c7 !important;
+  color: #fff !important;
+}
+
+/* Ensure disabled inputs have slightly different background */
+.login-popup input[disabled],
+.profile-completion-form input[disabled],
+.login-popup select[disabled] {
+  background: #f5f7fa;
+  color: #9aa3ad;
+}
+
+/* Focus ring for buttons */
+.login-popup .btn:focus,
+.profile-completion-form .btn:focus {
+  box-shadow: 0 8px 24px rgba(2,99,199,0.12);
+  transform: translateY(-1px);
+}
+
+/* Margins for top-level container text */
+.login-popup .login-paragraph,
+.profile-completion-form .login-paragraph {
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+/* small caption link styles */
+.login-popup .small-link,
+.profile-completion-form .small-link {
+  color: #0263c7;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* final safety: high z-index and pointer cursor for overlay */
+.login-popup-container,
+.login-popup,
+.profile-completion-form {
+  z-index: 2000;
 }
