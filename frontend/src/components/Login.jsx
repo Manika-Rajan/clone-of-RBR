@@ -210,6 +210,14 @@ const Login = React.memo(({ onClose, returnTo }) => {
 
   // Save profile
   const saveProfile = async () => {
+    if (!name.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    if (!email.trim()) {
+      setError('Please enter your email');
+      return;
+    }
     if (!name || !email) {
       setError('Please provide both name and email');
       return;
