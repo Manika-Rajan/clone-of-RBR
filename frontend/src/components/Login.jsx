@@ -381,27 +381,27 @@ const Login = React.memo(({ onClose, returnTo }) => {
 
         {/* Profile completion form */}
         {needsProfile && (
-          <div className="profile-completion-form">
-            <h4>Complete Your Profile</h4>
-            <input
-              type="text"
-              className="form-control mb-2"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <input
-              type="email"
-              className="form-control mb-2"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <button className="btn btn-success w-50" onClick={saveProfile} disabled={isLoading}>
-              Save Profile
-            </button>
-          </div>
-        )}
+            <form className="profile-completion-form" onSubmit={(e) => { e.preventDefault(); saveProfile(); }}>
+              <h4>Complete Your Profile</h4>
+              <input
+                type="text"
+                className="form-control mb-2"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <input
+                type="email"
+                className="form-control mb-2"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <button className="btn btn-success w-50" type="submit" disabled={isLoading}>
+                Save Profile
+              </button>
+            </form>
+          )}
 
         {error && <p className="error-message text-danger mt-2">{error}</p>}
         {isLoading && <p className="loading-message">Processing...</p>}
