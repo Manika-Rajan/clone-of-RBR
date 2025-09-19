@@ -20,10 +20,10 @@
 .profile-completion-form {
   width: 92%;
   max-width: 420px;
-  background: #ffffff;
+  background: #fdfdfd; /* softer than pure white */
   border-radius: 12px;
   padding: 22px 26px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.24); /* slightly deeper */
   text-align: center;
   animation: modalPop 220ms cubic-bezier(.2,.8,.2,1);
   color: #222;
