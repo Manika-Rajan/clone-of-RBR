@@ -155,27 +155,6 @@
   margin-top: 10px;
 }
 
-/* Profile form styled same as OTP form */
-.profile-completion-form {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.profile-completion-form input {
-  border: none;
-  border-bottom: 1px solid grey;
-  text-align: center;
-  width: 80%;
-  padding: 10px;
-  margin: 8px auto;
-  font-size: 16px;
-}
-
-.profile-completion-form input:focus {
-  outline: none;
-  border-bottom: 1px solid #0263c7;
-}
-
 
 /* Toast styling */
 .toast-message {
