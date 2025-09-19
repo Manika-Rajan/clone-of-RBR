@@ -3,7 +3,10 @@
   text-align: center;
   background: white;
   padding: 20px;
+  border-radius: 8px; /* keep a subtle roundness */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* softer + tighter shadow */
 }
+
 
 .login-title {
   font-family: 'Baskerville Old Face';
