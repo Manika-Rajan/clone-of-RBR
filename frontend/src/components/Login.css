@@ -25,7 +25,8 @@
   color: #293750;
 }
 
-.login-button {
+.login-button,
+.profile-completion-form button {
   background: #0263C7;
   box-shadow: 4px 4px 15px rgba(78, 78, 78, 0.25);
   border-radius: 9px;
@@ -39,11 +40,13 @@
   cursor: pointer;
 }
 
-.login-button:hover {
+.login-button:hover,
+.profile-completion-form button:hover {
   background: #0250a3;
 }
 
-.login-button:disabled {
+.login-button:disabled,
+.profile-completion-form button:disabled {
   background: #a3b8d5;
   cursor: not-allowed;
 }
@@ -194,4 +197,34 @@
   10% { opacity: 1; transform: translateX(-50%) translateY(0); }
   90% { opacity: 1; }
   100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+}
+
+/* Profile form styled same as OTP form */
+.profile-completion-form {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.profile-completion-form h4 {
+  font-family: 'Baskerville Old Face';
+  font-weight: 400;
+  font-size: 28px;
+  margin-bottom: 16px;
+  color: #293750;
+}
+
+.profile-completion-form input {
+  border: none;
+  border-bottom: 1px solid grey;
+  text-align: center;
+  width: 80%;
+  padding: 10px;
+  margin: 12px auto;
+  font-size: 16px;
+  font-family: 'Open Sans';
+}
+
+.profile-completion-form input:focus {
+  outline: none;
+  border-bottom: 1px solid #0263c7;
 }
