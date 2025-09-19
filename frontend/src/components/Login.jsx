@@ -163,8 +163,8 @@ const Login = React.memo(({ onClose, returnTo }) => {
 
           if (!userProfile.name || !userProfile.email) {
             setNeedsProfile(true);
-            setName(userProfile.name || '');
-            setEmail(userProfile.email || '');
+            setName(''); // always empty for profile form
+            setEmail(userProfile.email || ''); // prefill email if available
             setIsLoading(false);
             return;
           }
