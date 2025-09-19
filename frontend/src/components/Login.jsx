@@ -326,17 +326,30 @@ const Login = React.memo(({ onClose, returnTo }) => {
             <div className="login-title">
               <h3>{otpSent ? 'Verify OTP' : 'Please Enter Your Mobile Number'}</h3>
             </div>
-            {!otpSent && <p>We will send you a <strong>One Time Password</strong></p>}
-
+            <div className="login-paragraph">
+              {!otpSent && (
+                <p>
+                  We will send you a <strong>One Time Password</strong>
+                </p>
+              )}
+            </div>
+        
             <form onSubmit={handleSubmit}>
               {!otpSent ? (
-                <div className="login-phone-input">
-                  <select className="form-select w-auto" disabled>
+                <div
+                  className="login-phone-input d-flex justify-content-center align-items-center gap-2"
+                  style={{ width: '80%', margin: 'auto' }}
+                >
+                  <select
+                    className="form-select w-auto"
+                    aria-label="Country code"
+                    disabled
+                  >
                     <option defaultValue>+91</option>
                   </select>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-center"
                     placeholder="Enter Your 10 digit Mobile Number"
                     value={phone}
                     onChange={handleChange(setPhone)}
@@ -346,10 +359,10 @@ const Login = React.memo(({ onClose, returnTo }) => {
                   />
                 </div>
               ) : (
-                <div className="otp-fields">
+                <div className="otp-fields d-flex justify-content-center mt-3">
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-center"
                     placeholder="Enter 6-digit OTP"
                     value={otp}
                     onChange={handleChange(setOtp)}
@@ -359,16 +372,19 @@ const Login = React.memo(({ onClose, returnTo }) => {
                   />
                 </div>
               )}
-
+        
               <div className="text-center mt-3">
-                <button type="submit" className="btn btn-primary w-50" disabled={isLoading}>
+                <button
+                  type="submit"
+                  className="btn btn-primary w-50"
+                  disabled={isLoading}
+                >
                   {otpSent ? 'VERIFY OTP' : 'SEND OTP'}
                 </button>
               </div>
             </form>
           </>
         )}
-
         {needsProfile && (
           <div className="profile-completion-form">
             <h4>Complete Your Profile</h4>
