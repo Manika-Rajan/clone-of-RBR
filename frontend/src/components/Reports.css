@@ -424,3 +424,57 @@ letter-spacing: 0.03em;
     stroke-dashoffset: 280;
   }
 }
+/* Tablet and below */
+@media (max-width: 992px) {
+  .after-head {
+    margin: 10px 20px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .all-filters {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+  }
+}
+
+/* Mobile: clean Google-style view */
+@media (max-width: 768px) {
+  .search-hero {
+    padding: 30px 15px;
+  }
+
+  .search-hero-heading {
+    font-size: 20px;
+  }
+
+  .search-hero-sub {
+    font-size: 13px;
+  }
+
+  .search-hero-bar {
+    flex-direction: column;
+    gap: 10px;
+    border-radius: 16px;
+    padding: 10px;
+  }
+
+  .search-hero-bar input,
+  .search-hero-bar button {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  /* Filters and other sections go below search */
+  .filters,
+  .all-filters,
+  .all-select-filters {
+    margin-top: 20px;
+    padding: 0 10px;
+  }
+
+  .generate-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
