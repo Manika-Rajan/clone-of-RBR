@@ -18,16 +18,19 @@
     color: #293750;
 }
 .after-head {
-  margin: 1px 49px 22px 160px;
+  margin: 1px auto 22px auto;
   font-family: OpenSans;
   font-size: 16px;
   font-weight: normal;
   font-style: normal;
   line-height: 1.5;
   letter-spacing: 0.48px;
-  text-align: left;
+  text-align: center;
   color: #293750;
   max-width: 900px;  /* keep it readable */
+  padding: 0 20px;   /* breathing room */
+  word-wrap: break-word;
+  white-space: normal;
 }
 .before-head{
     
