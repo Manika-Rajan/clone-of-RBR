@@ -460,18 +460,25 @@ letter-spacing: 0.03em;
   font-size: 15px;
   color: #555;
   margin-bottom: 18px;
-  max-width: 800px;   /* keep it constrained */
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
   padding: 0 20px;
-  text-align: center; /* force center alignment */
-  word-wrap: break-word; /* allow wrapping if needed */
+  text-align: center;
+  line-height: 1.5;
+
+  /* ensure wrapping always works */
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
+/* Mobile tweaks */
 @media (max-width: 768px) {
   .search-hero-sub {
     font-size: 14px;
     line-height: 1.4;
+    max-width: 100%;   /* don’t restrict */
     padding: 0 12px;
   }
 }
