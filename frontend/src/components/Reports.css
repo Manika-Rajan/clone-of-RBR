@@ -428,7 +428,7 @@ letter-spacing: 0.03em;
 @media (max-width: 992px) {
   .after-head {
     margin: 10px 20px;
-    font-size: 14px;
+    font-size: 15px;
     text-align: center;
   }
 
@@ -440,6 +440,14 @@ letter-spacing: 0.03em;
 
 /* Mobile: clean Google-style view */
 @media (max-width: 768px) {
+  .after-head {
+    margin: 8px 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: center;
+    padding: 0 10px;
+    word-wrap: break-word;
+  }
   .search-hero {
     padding: 30px 15px;
   }
