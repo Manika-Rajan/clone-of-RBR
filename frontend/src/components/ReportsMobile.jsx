@@ -23,20 +23,23 @@ const ReportsMobile = () => {
   const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
   const inputRef = useRef(null);
+  const wrapperRef = useRef(null); // for outside click
   const modalBtnRef = useRef(null);
 
   // Basic type-ahead (local)
   const matches = useMemo(() => {
     const v = q.trim().toLowerCase();
     if (v.length < 2) return [];
-    return SUGGESTIONS.filter((s) => s.toLowerCase().includes(v)).slice(0, 5);
+    return SUGGESTIONS.filter((s) => s.toLowerCase().includes(v)).slice(0, 6);
   }, [q]);
 
   const onSubmit = (e) => {
     e.preventDefault();
     const query = q.trim();
     if (!query) return;
+
     if (window.gtag) {
       window.gtag("event", "report_search", {
         event_category: "engagement",
@@ -50,12 +53,33 @@ const ReportsMobile = () => {
     setShowSuggestions(false);
   };
 
-  // Close modal helpers
   const closeModal = () => {
     setOpenModal(false);
-    // Return focus to input for good UX
     setTimeout(() => inputRef.current?.focus(), 0);
   };
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (!wrapperRef.current) return;
+      if (!wrapperRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("touchstart", handleClick, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("touchstart", handleClick);
+    };
+  }, []);
+
+  // Close suggestions on scroll (keeps UI tidy)
+  useEffect(() => {
+    const onScroll = () => setShowSuggestions(false);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // ESC to close modal
   useEffect(() => {
@@ -67,7 +91,10 @@ const ReportsMobile = () => {
   }, [openModal]);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-24">
+    <div
+      className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-24"
+      style={{ paddingBottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       {/* Header */}
       <header className="w-full flex justify-between items-center mb-6">
         <div className="text-xl font-extrabold text-gray-900 tracking-tight">
@@ -91,51 +118,56 @@ const ReportsMobile = () => {
         business.
       </p>
 
-      {/* Search */}
-      <form onSubmit={onSubmit} className="w-full mb-3">
+      {/* Search (relative so dropdown can be absolute) */}
+      <form onSubmit={onSubmit} className="w-full mb-3" ref={wrapperRef}>
         <label htmlFor="mobile-search" className="sr-only">
           Search reports
         </label>
-        <div className="w-full flex">
-          <input
-            ref={inputRef}
-            id="mobile-search"
-            type="text"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onFocus={() => setShowSuggestions(true)}
-            placeholder="e.g., FMCG market report, IT industry analysis…"
-            inputMode="search"
-            enterKeyHint="search"
-            className="flex-grow px-3 py-3 border border-gray-300 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-3 rounded-r-xl font-semibold text-sm sm:text-base active:scale-[0.98]"
-          >
-            Search
-          </button>
-        </div>
 
-        {/* Suggestions dropdown */}
-        {showSuggestions && matches.length > 0 && (
-          <div className="w-full border border-t-0 border-gray-200 rounded-b-xl bg-white shadow-sm -mt-[2px]">
-            {matches.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => {
-                  setQ(m);
-                  setShowSuggestions(false);
-                  setTimeout(() => inputRef.current?.focus(), 0);
-                }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
-              >
-                {m}
-              </button>
-            ))}
+        <div className="relative w-full">
+          {/* Input row */}
+          <div className="w-full flex">
+            <input
+              ref={inputRef}
+              id="mobile-search"
+              type="text"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder="e.g., FMCG market report, IT industry analysis…"
+              inputMode="search"
+              enterKeyHint="search"
+              className="flex-grow px-3 py-3 border border-gray-300 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-3 rounded-r-xl font-semibold text-sm sm:text-base active:scale-[0.98]"
+            >
+              Search
+            </button>
           </div>
-        )}
+
+          {/* Suggestions dropdown — absolutely positioned overlay */}
+          {showSuggestions && matches.length > 0 && (
+            <div className="absolute left-0 right-0 top-full z-30 border border-t-0 border-gray-200 rounded-b-xl bg-white shadow-lg max-h-48 overflow-auto">
+              {matches.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()} // keep focus for click
+                  onClick={() => {
+                    setQ(m);
+                    setShowSuggestions(false);
+                    setTimeout(() => inputRef.current?.focus(), 0);
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </form>
 
       {/* Example chips */}
@@ -193,16 +225,11 @@ const ReportsMobile = () => {
       </section>
 
       {/* Sticky bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-sm flex justify-around text-gray-700 text-sm py-3">
-        <button type="button" className="px-2 font-medium">
-          Search
-        </button>
-        <button type="button" className="px-2 font-medium">
-          Reports
-        </button>
-        <button type="button" className="px-2 font-medium">
-          Contact
-        </button>
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-sm flex justify-around text-gray-700 text-sm py-3"
+           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <button type="button" className="px-2 font-medium">Search</button>
+        <button type="button" className="px-2 font-medium">Reports</button>
+        <button type="button" className="px-2 font-medium">Contact</button>
       </nav>
 
       {/* Modal: Coming soon */}
