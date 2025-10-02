@@ -44,19 +44,17 @@ const ReportsMobile = () => {
   const matches = useMemo(() => {
     const v = q.trim().toLowerCase();
     if (v.length < 2) return [];
-    return SUGGESTIONS.filter((s) =>
-      s.toLowerCase().includes(v)
-    ).slice(0, 6);
+    return SUGGESTIONS.filter((s) => s.toLowerCase().includes(v)).slice(0, 6);
   }, [q]);
 
-  // Compute absolute screen position of input (for portal dropdown)
+  // Compute screen position of input (for body-portal dropdown)
   const computeDropdownPos = useCallback(() => {
     const el = inputRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     setDropdownRect({
       left: rect.left + window.scrollX,
-      top: rect.bottom + window.scrollY,
+      top: rect.bottom + window.scrollY, // directly under the input
       width: rect.width,
     });
   }, []);
@@ -65,6 +63,7 @@ const ReportsMobile = () => {
     e.preventDefault();
     const query = q.trim();
     if (!query) return;
+
     if (window.gtag) {
       window.gtag("event", "report_search", {
         event_category: "engagement",
@@ -73,7 +72,7 @@ const ReportsMobile = () => {
         search_term: query,
       });
     }
-    // Show “coming soon” modal
+    // Show “coming soon” modal instead of navigating
     setOpenModal(true);
     setShowSuggestions(false);
   };
@@ -89,7 +88,7 @@ const ReportsMobile = () => {
     setShowSuggestions(true);
   };
 
-  // Close suggestions on outside click (because we render to body)
+  // Close suggestions on outside click (portal -> body)
   useEffect(() => {
     const handleClick = (e) => {
       const insideDropdown = dropdownRef.current?.contains(e.target);
@@ -128,10 +127,7 @@ const ReportsMobile = () => {
   }, [openModal]);
 
   return (
-    <div
-      className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-24"
-      style={{ paddingBottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}
-    >
+    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-10">
       {/* Header */}
       <header className="w-full flex justify-between items-center mb-6">
         <div className="text-xl font-extrabold text-gray-900 tracking-tight">
@@ -236,30 +232,14 @@ const ReportsMobile = () => {
         </div>
       </section>
 
-      {/* Sticky bottom nav */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-sm flex justify-around text-gray-700 text-sm py-3"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-      >
-        <button type="button" className="px-2 font-medium">
-          Search
-        </button>
-        <button type="button" className="px-2 font-medium">
-          Reports
-        </button>
-        <button type="button" className="px-2 font-medium">
-          Contact
-        </button>
-      </nav>
-
-      {/* === Suggestions rendered via PORTAL (never affects layout) === */}
+      {/* === Suggestions via PORTAL (never affects layout) === */}
       {showSuggestions && matches.length > 0 &&
         createPortal(
           <div
             ref={dropdownRef}
-            className="z-[9999] border border-gray-200 rounded-b-xl bg-white shadow-lg max-h-48 overflow-auto"
+            className="z-[9999] border border-gray-200 bg-white shadow-lg max-h-48 overflow-auto rounded-b-xl"
             style={{
-              position: "absolute",
+              position: "fixed",        // <— fixed: independent of layout
               left: dropdownRect.left,
               top: dropdownRect.top,
               width: dropdownRect.width,
