@@ -32,7 +32,14 @@ function AppContent() {
         
       <Routes>
         <Route path="/about" element={<About />} />
-        <Route path="/" element={<Reports />} />
+
+        {/* ✅ Root route now detects mobile */}
+        <Route 
+          path="/" 
+          element={isMobile ? <ReportsMobile /> : <Reports />} 
+        />
+            
+        // <Route path="/" element={<Reports />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/report-display' element={<ReportsDisplay />} />
         <Route path="/careers" element={<Careers />} />
