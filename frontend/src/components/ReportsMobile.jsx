@@ -1,5 +1,5 @@
 // clone-of-RBR/frontend/src/components/ReportsMobile.jsx
-import React, { useMemo, useState, useRef, useEffect } from "react";
+import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
 
 const EXAMPLES = [
   "FMCG market report",
@@ -24,9 +24,22 @@ const ReportsMobile = () => {
   const [openModal, setOpenModal] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // Fixed overlay dropdown positioning
   const inputRef = useRef(null);
-  const wrapperRef = useRef(null); // for outside click
+  const dropdownRef = useRef(null);
   const modalBtnRef = useRef(null);
+  const [dropdownRect, setDropdownRect] = useState({ left: 0, top: 0, width: 0 });
+
+  const computeDropdownPos = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setDropdownRect({
+      left: rect.left + window.scrollX,
+      top: rect.bottom + window.scrollY, // just under the input
+      width: rect.width,
+    });
+  }, []);
 
   // Basic type-ahead (local)
   const matches = useMemo(() => {
@@ -58,11 +71,19 @@ const ReportsMobile = () => {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
+  // Open suggestions on focus and compute position
+  const handleFocus = () => {
+    computeDropdownPos();
+    setShowSuggestions(true);
+  };
+
   // Close suggestions on outside click
   useEffect(() => {
     const handleClick = (e) => {
-      if (!wrapperRef.current) return;
-      if (!wrapperRef.current.contains(e.target)) {
+      if (!dropdownRef.current && !inputRef.current) return;
+      const insideDropdown = dropdownRef.current?.contains(e.target);
+      const insideInput = inputRef.current?.contains(e.target);
+      if (!insideDropdown && !insideInput) {
         setShowSuggestions(false);
       }
     };
@@ -74,12 +95,21 @@ const ReportsMobile = () => {
     };
   }, []);
 
-  // Close suggestions on scroll (keeps UI tidy)
+  // Recompute position on scroll/resize and also close on scroll (optional)
   useEffect(() => {
-    const onScroll = () => setShowSuggestions(false);
+    const onScroll = () => {
+      setShowSuggestions(false); // keep UI tidy during scroll
+    };
+    const onResize = () => {
+      computeDropdownPos();
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [computeDropdownPos]);
 
   // ESC to close modal
   useEffect(() => {
@@ -118,55 +148,30 @@ const ReportsMobile = () => {
         business.
       </p>
 
-      {/* Search (relative so dropdown can be absolute) */}
-      <form onSubmit={onSubmit} className="w-full mb-3" ref={wrapperRef}>
+      {/* Search */}
+      <form onSubmit={onSubmit} className="w-full mb-3">
         <label htmlFor="mobile-search" className="sr-only">
           Search reports
         </label>
-
-        <div className="relative w-full">
-          {/* Input row */}
-          <div className="w-full flex">
-            <input
-              ref={inputRef}
-              id="mobile-search"
-              type="text"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onFocus={() => setShowSuggestions(true)}
-              placeholder="e.g., FMCG market report, IT industry analysis…"
-              inputMode="search"
-              enterKeyHint="search"
-              className="flex-grow px-3 py-3 border border-gray-300 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-            />
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-3 rounded-r-xl font-semibold text-sm sm:text-base active:scale-[0.98]"
-            >
-              Search
-            </button>
-          </div>
-
-          {/* Suggestions dropdown — absolutely positioned overlay */}
-          {showSuggestions && matches.length > 0 && (
-            <div className="absolute left-0 right-0 top-full z-30 border border-t-0 border-gray-200 rounded-b-xl bg-white shadow-lg max-h-48 overflow-auto">
-              {matches.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()} // keep focus for click
-                  onClick={() => {
-                    setQ(m);
-                    setShowSuggestions(false);
-                    setTimeout(() => inputRef.current?.focus(), 0);
-                  }}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          )}
+        <div className="w-full flex">
+          <input
+            ref={inputRef}
+            id="mobile-search"
+            type="text"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onFocus={handleFocus}
+            placeholder="e.g., FMCG market report, IT industry analysis…"
+            inputMode="search"
+            enterKeyHint="search"
+            className="flex-grow px-3 py-3 border border-gray-300 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-3 rounded-r-xl font-semibold text-sm sm:text-base active:scale-[0.98]"
+          >
+            Search
+          </button>
         </div>
       </form>
 
@@ -225,12 +230,49 @@ const ReportsMobile = () => {
       </section>
 
       {/* Sticky bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-sm flex justify-around text-gray-700 text-sm py-3"
-           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <button type="button" className="px-2 font-medium">Search</button>
-        <button type="button" className="px-2 font-medium">Reports</button>
-        <button type="button" className="px-2 font-medium">Contact</button>
+      <nav
+        className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-sm flex justify-around text-gray-700 text-sm py-3"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <button type="button" className="px-2 font-medium">
+          Search
+        </button>
+        <button type="button" className="px-2 font-medium">
+          Reports
+        </button>
+        <button type="button" className="px-2 font-medium">
+          Contact
+        </button>
       </nav>
+
+      {/* Fixed-position Suggestions Overlay */}
+      {showSuggestions && matches.length > 0 && (
+        <div
+          ref={dropdownRef}
+          className="fixed z-50 border border-gray-200 rounded-b-xl bg-white shadow-lg max-h-48 overflow-auto"
+          style={{
+            left: dropdownRect.left,
+            top: dropdownRect.top,
+            width: dropdownRect.width,
+          }}
+        >
+          {matches.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()} // keep focus for click
+              onClick={() => {
+                setQ(m);
+                setShowSuggestions(false);
+                setTimeout(() => inputRef.current?.focus(), 0);
+              }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Modal: Coming soon */}
       {openModal && (
