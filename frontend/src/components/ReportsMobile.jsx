@@ -1,5 +1,12 @@
 // clone-of-RBR/frontend/src/components/ReportsMobile.jsx
-import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import React, {
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
+import { createPortal } from "react-dom";
 
 const EXAMPLES = [
   "FMCG market report",
@@ -23,36 +30,41 @@ const ReportsMobile = () => {
   const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [dropdownRect, setDropdownRect] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+  });
 
-  // Fixed overlay dropdown positioning
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
   const modalBtnRef = useRef(null);
-  const [dropdownRect, setDropdownRect] = useState({ left: 0, top: 0, width: 0 });
 
+  // Filter suggestions
+  const matches = useMemo(() => {
+    const v = q.trim().toLowerCase();
+    if (v.length < 2) return [];
+    return SUGGESTIONS.filter((s) =>
+      s.toLowerCase().includes(v)
+    ).slice(0, 6);
+  }, [q]);
+
+  // Compute absolute screen position of input (for portal dropdown)
   const computeDropdownPos = useCallback(() => {
     const el = inputRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     setDropdownRect({
       left: rect.left + window.scrollX,
-      top: rect.bottom + window.scrollY, // just under the input
+      top: rect.bottom + window.scrollY,
       width: rect.width,
     });
   }, []);
-
-  // Basic type-ahead (local)
-  const matches = useMemo(() => {
-    const v = q.trim().toLowerCase();
-    if (v.length < 2) return [];
-    return SUGGESTIONS.filter((s) => s.toLowerCase().includes(v)).slice(0, 6);
-  }, [q]);
 
   const onSubmit = (e) => {
     e.preventDefault();
     const query = q.trim();
     if (!query) return;
-
     if (window.gtag) {
       window.gtag("event", "report_search", {
         event_category: "engagement",
@@ -61,7 +73,7 @@ const ReportsMobile = () => {
         search_term: query,
       });
     }
-    // Show the "coming soon" modal instead of navigating
+    // Show “coming soon” modal
     setOpenModal(true);
     setShowSuggestions(false);
   };
@@ -71,16 +83,15 @@ const ReportsMobile = () => {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
-  // Open suggestions on focus and compute position
+  // Open suggestions on focus and position them
   const handleFocus = () => {
     computeDropdownPos();
     setShowSuggestions(true);
   };
 
-  // Close suggestions on outside click
+  // Close suggestions on outside click (because we render to body)
   useEffect(() => {
     const handleClick = (e) => {
-      if (!dropdownRef.current && !inputRef.current) return;
       const insideDropdown = dropdownRef.current?.contains(e.target);
       const insideInput = inputRef.current?.contains(e.target);
       if (!insideDropdown && !insideInput) {
@@ -95,19 +106,15 @@ const ReportsMobile = () => {
     };
   }, []);
 
-  // Recompute position on scroll/resize and also close on scroll (optional)
+  // Recompute position on resize; close on scroll for tidiness
   useEffect(() => {
-    const onScroll = () => {
-      setShowSuggestions(false); // keep UI tidy during scroll
-    };
-    const onResize = () => {
-      computeDropdownPos();
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const onResize = () => computeDropdownPos();
+    const onScroll = () => setShowSuggestions(false);
     window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
-      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll);
     };
   }, [computeDropdownPos]);
 
@@ -245,34 +252,38 @@ const ReportsMobile = () => {
         </button>
       </nav>
 
-      {/* Fixed-position Suggestions Overlay */}
-      {showSuggestions && matches.length > 0 && (
-        <div
-          ref={dropdownRef}
-          className="fixed z-50 border border-gray-200 rounded-b-xl bg-white shadow-lg max-h-48 overflow-auto"
-          style={{
-            left: dropdownRect.left,
-            top: dropdownRect.top,
-            width: dropdownRect.width,
-          }}
-        >
-          {matches.map((m) => (
-            <button
-              key={m}
-              type="button"
-              onMouseDown={(e) => e.preventDefault()} // keep focus for click
-              onClick={() => {
-                setQ(m);
-                setShowSuggestions(false);
-                setTimeout(() => inputRef.current?.focus(), 0);
-              }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
-            >
-              {m}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* === Suggestions rendered via PORTAL (never affects layout) === */}
+      {showSuggestions && matches.length > 0 &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="z-[9999] border border-gray-200 rounded-b-xl bg-white shadow-lg max-h-48 overflow-auto"
+            style={{
+              position: "absolute",
+              left: dropdownRect.left,
+              top: dropdownRect.top,
+              width: dropdownRect.width,
+            }}
+          >
+            {matches.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()} // prevent blur before click
+                onClick={() => {
+                  setQ(m);
+                  setShowSuggestions(false);
+                  setTimeout(() => inputRef.current?.focus(), 0);
+                }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+              >
+                {m}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )
+      }
 
       {/* Modal: Coming soon */}
       {openModal && (
