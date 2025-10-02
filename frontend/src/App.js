@@ -5,6 +5,7 @@ import TermsAndConditions from './components/TermsAndConditions';
 import Navbar from './components/Navbar';
 import Reports from './components/Reports';
 import ReportsMobile from './components/ReportsMobile';
+import { isMobile } from 'react-device-detect';
 import ProfilePage from './components/ProfilePage';
 import ReportsDisplay from './components/ReportsDisplay';
 import Payment from './components/Payment';
@@ -39,7 +40,7 @@ function AppContent() {
           element={isMobile ? <ReportsMobile /> : <Reports />} 
         />
             
-        // <Route path="/" element={<Reports />} />
+        {/* <Route path="/" element={<Reports />} /> */}
         <Route path='/contact' element={<Contact />} />
         <Route path='/report-display' element={<ReportsDisplay />} />
         <Route path="/careers" element={<Careers />} />
