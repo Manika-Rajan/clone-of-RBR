@@ -4,6 +4,7 @@ import Contact from './components/Contact';
 import TermsAndConditions from './components/TermsAndConditions';
 import Navbar from './components/Navbar';
 import Reports from './components/Reports';
+import ReportsMobile from './components/ReportsMobile';
 import ProfilePage from './components/ProfilePage';
 import ReportsDisplay from './components/ReportsDisplay';
 import Payment from './components/Payment';
