@@ -1,16 +1,6 @@
 /* Define a reusable navbar height (optional, helps with consistency) */
 :root { --navbar-height: 56px; }
 
-/* Let Bootstrap's .fixed-top do its job; just raise stacking and ensure background */
-.navbar {
-  z-index: 3000;   /* above your .popup-overlay (1000) */
-  background: #fff;
-}
-
-/* Push content down so it's not hidden behind the fixed navbar */
-body, #root, .App {
-  padding-top: var(--navbar-height, 56px);
-}
 
 .filters{
   margin: auto;
@@ -519,4 +509,18 @@ letter-spacing: 0.03em;
     width: 100%;
     justify-content: center;
   }
+}
+
+
+/* Respect Bootstrap's fixed-top navbar and make sure it's above everything */
+.navbar.fixed-top {
+  position: fixed !important;
+  top: 0; left: 0; right: 0;
+  z-index: 3000 !important;   /* above .popup-overlay's 1000 */
+  background: #fff;           /* ensure visible on any bg */
+}
+
+/* Prevent content from hiding under the fixed navbar */
+body, #root, .App {
+  padding-top: var(--navbar-height, 56px);
 }
