@@ -357,7 +357,6 @@ const Reports = () => {
 
   return (
     <>
-      <Navbar reports />
           <div className="search-hero">
             <h2 className="search-hero-heading">All Your Market Questions, Answered Instantly</h2>
             <p className="search-hero-sub">
