@@ -1,3 +1,14 @@
+/* Define a reusable navbar height (optional, helps with consistency) */
+:root { --navbar-height: 56px; }
+
+/* Ensure any header/nav (incl. .navbar) stays above overlays/content */
+header, nav, .navbar {
+  position: sticky;      /* or 'relative' if yours is already fixed */
+  top: 0;
+  z-index: 1500;         /* higher than .popup-overlay (1000) */
+  background: #fff;      /* avoid transparency over hero backgrounds */
+}
+
 .filters{
   margin: auto;
 }
@@ -479,15 +490,6 @@ letter-spacing: 0.03em;
   word-wrap: break-word;
 }
 
-/* Mobile tweaks */
-@media (max-width: 768px) {
-  .search-hero-sub {
-    font-size: 14px;
-    line-height: 1.4;
-    max-width: 100%;   /* don’t restrict */
-    padding: 0 12px;
-  }
-}
 
   .search-hero-bar {
     flex-direction: column;
