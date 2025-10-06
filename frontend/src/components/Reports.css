@@ -246,12 +246,11 @@ letter-spacing: 0.03em;
 
 /* Popup overlay styling */
 .popup-overlay {
-  
   position: fixed;
-  top: var(--navbar-height); /* start below navbar */
+  top: var(--navbar-height, 56px); /* start below navbar */
   left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - var(--navbar-height, 56px));
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
