@@ -1,7 +1,3 @@
-/* Define a reusable navbar height (optional, helps with consistency) */
-:root { --navbar-height: 56px; }
-
-
 .filters{
   margin: auto;
 }
@@ -21,20 +17,17 @@
     text-align: left;
     color: #293750;
 }
-.after-head {
-  margin: 1px auto 22px auto;
-  font-family: OpenSans;
-  font-size: 16px;
-  font-weight: normal;
-  font-style: normal;
-  line-height: 1.5;
-  letter-spacing: 0.48px;
-  text-align: center;
-  color: #293750;
-  max-width: 900px;  /* keep it readable */
-  padding: 0 20px;   /* breathing room */
-  word-wrap: break-word;
-  white-space: normal;
+.after-head{
+    margin: 1px 49px 22px 160px;
+    font-family: OpenSans;
+    font-size: 16px;
+    font-weight: normal;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: normal;
+    letter-spacing: 0.48px;
+    text-align: left;
+    color: #293750;
 }
 .before-head{
     
@@ -251,15 +244,15 @@ letter-spacing: 0.03em;
 /* Popup overlay styling */
 .popup-overlay {
   position: fixed;
-  top: var(--navbar-height, 56px); /* start below navbar */
+  top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - var(--navbar-height, 56px));
+  height: 100%;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* can even be lower than the navbar */
+  z-index: 2000;
 }
 
 /* Popup box */
@@ -430,97 +423,4 @@ letter-spacing: 0.03em;
   100% {
     stroke-dashoffset: 280;
   }
-}
-/* Tablet and below */
-@media (max-width: 992px) {
-  .after-head {
-    margin: 10px 20px;
-    font-size: 15px;
-    text-align: center;
-  }
-
-  .all-filters {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
-  }
-}
-
-/* Mobile: clean Google-style view */
-@media (max-width: 768px) {
-  .after-head {
-    margin: 10px auto;   /* center the block */
-    font-size: 14px;
-    line-height: 1.4;
-    text-align: center;
-    padding: 0 12px;
-    max-width: 100%;     /* full width allowed */
-    white-space: normal;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-  }
-  .search-hero {
-    padding: 30px 15px;
-  }
-
-  .search-hero-heading {
-    font-size: 20px;
-  }
-
-.search-hero-sub {
-  font-size: 15px;
-  color: #555;
-  margin-bottom: 18px;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 0 20px;
-  text-align: center;
-  line-height: 1.5;
-
-  /* ensure wrapping always works */
-  white-space: normal;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-}
-
-
-  .search-hero-bar {
-    flex-direction: column;
-    gap: 10px;
-    border-radius: 16px;
-    padding: 10px;
-  }
-
-  .search-hero-bar input,
-  .search-hero-bar button {
-    width: 100%;
-    font-size: 1rem;
-  }
-
-  /* Filters and other sections go below search */
-  .filters,
-  .all-filters,
-  .all-select-filters {
-    margin-top: 20px;
-    padding: 0 10px;
-  }
-
-  .generate-btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-
-/* Respect Bootstrap's fixed-top navbar and make sure it's above everything */
-.navbar.fixed-top {
-  position: fixed !important;
-  top: 0; left: 0; right: 0;
-  z-index: 3000 !important;   /* above .popup-overlay's 1000 */
-  background: #fff;           /* ensure visible on any bg */
-}
-
-/* Prevent content from hiding under the fixed navbar */
-body, #root, .App {
-  padding-top: var(--navbar-height, 56px);
 }
