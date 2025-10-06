@@ -12,50 +12,10 @@ import black from '../assets/black.svg';
 import { useNavigate } from 'react-router-dom';
 import { Store } from '../Store';
 
-
-const placeholderExamples = [
-  "How much demand is there for paper cups in Hyderabad?",
-  "List of raw material suppliers for car manufacturing",
-  "Top-selling ceramic products in Delhi",
-  "Demand for LED lights in Bangalore and Mumbai"
-];
-
-const LoaderRing = () => (
-  <svg className="loader-ring" viewBox="0 0 100 100">
-    <circle
-      className="loader-ring__bg"
-      cx="50"
-      cy="50"
-      r="45"
-      fill="none"
-      stroke="#e6e6e6"
-      strokeWidth="8"
-    />
-    <circle
-      className="loader-ring__progress"
-      cx="50"
-      cy="50"
-      r="45"
-      fill="none"
-      stroke="#0263c7"
-      strokeWidth="8"
-      strokeLinecap="round"
-      strokeDasharray="283"    /* 2πr (r=45 → circumference ≈ 283) */
-      strokeDashoffset="75"
-    />
-  </svg>
-);
-
-
-
 const Reports = () => {
   const navigate = useNavigate();
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { totalPrice } = state;
-
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchMessage, setSearchMessage] = useState("");
-
 
   const [generate, setGenerate] = useState(false);
   const [select_industry, setSelect_industry] = useState([]);
@@ -80,9 +40,8 @@ const Reports = () => {
   const [nogenerate, setNoGenerate] = useState(false);
   const [price, setPrice] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastReportId, setLastReportId] = useState(0); // Track the last used ID 
-  const [placeholder, setPlaceholder] = useState(placeholderExamples[0]);
-  
+  const [lastReportId, setLastReportId] = useState(0); // Track the last used ID
+
   useEffect(() => {
     const filters = {
       industry: select_industry,
@@ -94,7 +53,6 @@ const Reports = () => {
     setSelectedFilters(filters);
     console.log('Updated selectedFilters:', filters);
 
-
     const hasFilters =
       select_industry.length > 0 ||
       select_city.length > 0 ||
@@ -104,19 +62,6 @@ const Reports = () => {
     setGenerate(hasFilters);
   }, [select_industry, select_city, select_competitors, select_market, select_pain]);
 
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setPlaceholder((prev) => {
-          let nextIndex = placeholderExamples.indexOf(prev) + 1;
-          if (nextIndex >= placeholderExamples.length) nextIndex = 0;
-          return placeholderExamples[nextIndex];
-        });
-      }, 5000); // change every 5 seconds
-    
-      return () => clearInterval(interval);
-    }, []);
-
-  
   const generateReport = async () => {
     setIsLoading(true);
     try {
@@ -293,99 +238,30 @@ const Reports = () => {
     });
   };
 
-  const handleSearch = async (query) => {
-   const trimmed = query.trim();
-
-      if (!trimmed) {
-        alert("Please enter text to search.");
-        return;
-      }
-
-      setSearchLoading(true);
-      setSearchMessage(""); // reset before new search
-  
-    try {
-      console.log("Sending search query:", trimmed);
-  
-      const payload = {
-        search_query: trimmed,
-        user: {
-              name: state.userInfo?.name || "Unknown",
-              email: state.userInfo?.email || "",
-              phone: state.userInfo?.phone || "", // ✅ include phone here
-              userId: state.userInfo?.userId || state.userInfo?.phone || ""
-            }
-      };
-  
-      const response = await fetch(
-        "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/search-log",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed with status ${response.status}, body: ${errorText}`);
-      }
-  
-      const data = await response.json();
-      console.log("Search log API response:", data);
-
-      // ✅ professional confirmation message
-      setSearchMessage(
-          "ℹ️ We’re sorry, the specific data you requested isn’t available right now. Our research team has logged your query, these insights will be added within the next 72 hours. Please revisit soon—we’ll make sure it’s worth your while."
-        );
-  
-      // (Optional) parse query into filters like before
-        if (trimmed.toLowerCase().includes("ceramic")) setSelect_industry(["Ceramics"]);
-        if (trimmed.toLowerCase().includes("steel")) setSelect_industry(["Steel"]);
-        if (trimmed.toLowerCase().includes("india")) setSelect_city(["India"]);
-        if (trimmed.toLowerCase().includes("delhi")) setSelect_city(["Delhi"]);
-      setNoSearch(false);
-  
-    } catch (err) {
-      console.error("Error logging search:", err);
-      setSearchMessage("⚠️ Something went wrong while processing your request. Please try again later.");
-      } finally {
-        setSearchLoading(false);
-      }
-  };
-
-
   return (
     <>
+      <Navbar reports />
           <div className="search-hero">
-            <h2 className="search-hero-heading">All Your Market Questions, Answered Instantly</h2>
-            <p className="search-hero-sub">
-            From suppliers to sales trends, uncover data that powers smarter business decisions — no waiting, no guesswork.
-            </p>
-            <p className="example-text">e.g., {placeholder}</p>
+            <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
+            <p className="search-hero-sub">Type your requirement and generate a tailored report in minutes</p>
             <div className="search-hero-bar">
               <input
                 type="text"
-                placeholder={placeholder}
+                placeholder="e.g. ceramics market in Delhi"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    const query = e.target.value.trim().toLowerCase();
-                    if (!query) {
-                      alert("Please enter text to search");
-                      return;
-                    }
-                    handleSearch(query);
+                    // handle parsing into filters...
                   }
                 }}
               />
               <button
                 onClick={() => {
-                  const query = document.querySelector('.search-hero-bar input').value.trim().toLowerCase();
-                  if (!query) {
-                    alert("Please enter text to search");
-                    return;
-                  }
-                  handleSearch(query);
+                  const query = document.querySelector('.search-hero-bar input').value.toLowerCase();
+                  if (query.includes('ceramic')) setSelect_industry(['Ceramics']);
+                  if (query.includes('steel')) setSelect_industry(['Steel']);
+                  if (query.includes('india')) setSelect_city(['India']);
+                  if (query.includes('delhi')) setSelect_city(['Delhi']);
+                  setNoSearch(false);
                 }}
               >
                 <svg className="search-icon" viewBox="0 0 24 24">
@@ -393,44 +269,9 @@ const Reports = () => {
                 </svg>
                 Search
               </button>
-              
-              {/* Popup overlay for loader */}
-              {searchLoading && (
-                <div className="popup-overlay">
-                  <div className="popup-box">
-                    <LoaderRing />
-              
-                    <p style={{ marginTop: "12px", fontSize: "14px", color: "#333" }}>
-                      Fetching your request...
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              
-             {/* Popup overlay for response */}
-              {!searchLoading && searchMessage && (
-                <div className="popup-overlay">
-                  <div className="popup-box enhanced">
-                    <h2 className="popup-title">📊 This Data is coming soon</h2>
-                    <p className="popup-message">
-                      {searchMessage}
-                    </p>
-                    <div className="popup-footer">
-                      <button
-                        className="popup-button"
-                        onClick={() => setSearchMessage("")}
-                      >
-                        Okay, I’ll check back
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-
             </div>
-          </div> {/* ✅ closes .search-hero */}
+          </div>
+
       
       {popup && (
         <div className="nav-popup row">
