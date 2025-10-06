@@ -3,7 +3,7 @@ import Filters from './Filters';
 import PriceCard from './PriceCard';
 import './Reports.css';
 import india from '../assets/india.png';
-import Navbar from './Navbar';
+//import Navbar from './Navbar';
 import wrong from '../assets/wrong.svg';
 import HeadingAfter from './HeadingAfter';
 import HeadingBefore from './HeadingBefore';
@@ -240,7 +240,7 @@ const Reports = () => {
 
   return (
     <>
-      <Navbar reports />
+     
           <div className="search-hero">
             <h2 className="search-hero-heading">Search Market Reports Instantly</h2>
             <p className="search-hero-sub">Type your requirement and generate a tailored report in minutes</p>
