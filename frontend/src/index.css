@@ -21,7 +21,7 @@ code {
 @media (min-width: 768px) {
   .navbar .navbar-collapse {
     /*display: flex !important;*/
-    flex-basis: auto !important;
+    /*flex-basis: auto !important;*/
     visibility: visible !important;
     opacity: 1 !important;
   }
