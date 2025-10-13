@@ -12,17 +12,16 @@ const Navbar = (props) => {
   const [otp, sendOtp] = useState(false);
   const [verify, setVerify] = useState(false);
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { name, isLogin } = state.userInfo;   // ✅ already correct
+  const { name, isLogin } = state;
   console.log("Navbar - isLogin:", isLogin);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Force re-render when login state or name changes
   useEffect(() => {
-    console.log("Navbar rerendered - isLogin:", isLogin, "name:", name);
-  }, [isLogin, name]);   // added `name` here
+    console.log("Navbar rerendered - isLogin:", isLogin);
+  }, [isLogin]);
 
   const hideNavbar = location.pathname === "/report-display";
 
@@ -84,8 +83,7 @@ const Navbar = (props) => {
                   <li className="nav-item dropdown">
                     <div className="dropdown-toggle user-menu" onClick={toggleDropdown}>
                       <img src={avatar} className="avatar" alt="User Avatar" />
-                      {/* ✅ Instantly show updated name */}
-                      <span className="user-name">{name?.trim() || "User"}</span>
+                      <span className="user-name">{name || "User"}</span>
                     </div>
                     {dropdownOpen && (
                       <ul className="dropdown-menu show">
@@ -133,6 +131,7 @@ const Navbar = (props) => {
               }}
             />
           )}
+          {/* Removed EmailVerify since it’s not needed */}
         </ModalBody>
       </Modal>
     </>
