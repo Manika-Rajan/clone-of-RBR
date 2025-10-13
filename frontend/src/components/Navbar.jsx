@@ -8,23 +8,21 @@ import avatar from '../assets/avatar.svg';
 
 const Navbar = (props) => {
   const [openModel, setOpenModel] = useState(false);
+  const [login, setLogin] = useState(true);
+  const [otp, sendOtp] = useState(false);
+  const [verify, setVerify] = useState(false);
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { userInfo } = state;
-  const isLogin = userInfo?.isLogin || false;
-  const name = userInfo?.name || "User";
-  console.log("Navbar - isLogin:", isLogin, "openModel:", openModel);
+  const { name, isLogin } = state.userInfo;   // ✅ already correct
+  console.log("Navbar - isLogin:", isLogin);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ✅ Force re-render when login state or name changes
   useEffect(() => {
-    console.log("Navbar useEffect - isLogin:", isLogin, "Route:", location.pathname, "openModel:", openModel);
-    if (isLogin && location.pathname !== "/login" && openModel) {
-      console.log("Closing modal due to login and route change");
-      setOpenModel(false);
-    }
-  }, [isLogin, location.pathname, openModel]);
+    console.log("Navbar rerendered - isLogin:", isLogin, "name:", name);
+  }, [isLogin, name]);   // added `name` here
 
   const hideNavbar = location.pathname === "/report-display";
 
@@ -40,6 +38,9 @@ const Navbar = (props) => {
 
   const resetModal = () => {
     console.log("🔄 Resetting modal...");
+    setLogin(true);
+    sendOtp(false);
+    setVerify(false);
   };
 
   if (hideNavbar) {
@@ -81,9 +82,10 @@ const Navbar = (props) => {
                 </li>
                 {isLogin ? (
                   <li className="nav-item dropdown">
-                    <div className="dropdown-toggle user-menu" onClick={toggleDropdown} style={{ marginRight: '40px' }}>
+                    <div className="dropdown-toggle user-menu" onClick={toggleDropdown}>
                       <img src={avatar} className="avatar" alt="User Avatar" />
-                      <span className="user-name">{name}</span>
+                      {/* ✅ Instantly show updated name */}
+                      <span className="user-name">{name?.trim() || "User"}</span>
                     </div>
                     {dropdownOpen && (
                       <ul className="dropdown-menu show">
@@ -116,7 +118,6 @@ const Navbar = (props) => {
       <Modal
         isOpen={openModel}
         toggle={() => {
-          console.log("Toggling modal, new state:", !openModel);
           setOpenModel(!openModel);
           resetModal();
         }}
@@ -124,13 +125,14 @@ const Navbar = (props) => {
         style={{ maxWidth: '650px', width: '100%', marginTop: '15%' }}
       >
         <ModalBody>
-          <Login
-            onClose={() => {
-              console.log("onClose triggered from Login");
-              setOpenModel(false);
-              resetModal();
-            }}
-          />
+          {login && (
+            <Login
+              onClose={() => {
+                setOpenModel(false);
+                resetModal();
+              }}
+            />
+          )}
         </ModalBody>
       </Modal>
     </>
