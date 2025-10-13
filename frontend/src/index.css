@@ -37,3 +37,54 @@ code {
 .navbar .dropdown-menu {
   z-index: 2000;
 }
+
+/* ===== NAVBAR EMERGENCY PATCH (scoped to .header) ===== */
+.header { position: relative; z-index: 1000; }
+.header .navbar { background: #f8f9fa !important; }
+
+/* Make sure the collapsible area is visible on desktop */
+@media (min-width: 768px) {
+  .header .navbar .navbar-collapse {
+    display: flex !important;
+    flex-basis: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Force links to actually appear (color/visibility/opacity) */
+.header .navbar .nav-link,
+.header .navbar-nav .nav-link,
+.header .navbar .navbar-nav .nav-link {
+  color: #212529 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  text-decoration: none !important;
+}
+
+/* Keep items laid out and not pushed off-screen */
+.header .navbar .navbar-nav {
+  gap: 1.25rem !important;
+}
+
+/* Keep dropdown above everything */
+.header .navbar .dropdown-menu {
+  z-index: 2000 !important;
+}
+
+/* (Very likely culprit) prevent the left text block from overlaying the menu */
+.header .nav-left .text {
+  position: static !important;     /* undo any absolute/fixed */
+  margin-top: 0 !important;        /* undo negative margins */
+  z-index: 0 !important;
+}
+
+/* Safety: some global resets hide anchors; undo that just in case */
+.header a.nav-link,
+.header li.nav-item {
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
