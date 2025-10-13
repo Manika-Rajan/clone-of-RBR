@@ -15,3 +15,15 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
+/* --- NAVBAR: minimal, no bold/underline jump, aligned baseline --- */
+.header .navbar .nav-link,
+.header .navbar .nav-link:visited {
+  color: #212529 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  line-height: 1.25rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0.25rem 0 !important;
+  margin: 0 !important;
+}
