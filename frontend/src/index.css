@@ -22,11 +22,6 @@ code {
   opacity: 1 !important;
 }
 
-/* Active link hint (optional) */
-.navbar .nav-link.active {
-  font-weight: 600;
-  text-decoration: underline;
-}
 
 /* Make sure list items actually render */
 .navbar .navbar-nav .nav-item {
@@ -110,11 +105,6 @@ code {
   border-bottom: 2px solid transparent;   /* reserve space to avoid jump */
 }
 
-/* Active state: no bold, no underline; use a clean bottom border */
-.header .navbar .nav-link.active {
-  font-weight: 500 !important;            /* keep same weight as others */
-  border-bottom-color: #0d6efd !important;/* active indicator */
-}
 
 /* (Optional) Slightly darker color on hover/active for feedback */
 .header .navbar .nav-link:hover,
