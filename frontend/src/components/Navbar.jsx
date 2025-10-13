@@ -1,10 +1,13 @@
-import React, { useContext, useState, useEffect } from 'react';
-import logo from '../assets/logo.svg';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import Login from './Login';
+import React, { useContext, useState, useEffect } from "react";
+import logo from "../assets/logo.svg";
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
+import Login from "./Login";
 import { Modal, ModalBody } from "reactstrap";
-import { Store } from '../Store';
-import avatar from '../assets/avatar.svg';
+import { Store } from "../Store";
+import avatar from "../assets/avatar.svg";
+
+// If you aren't already importing bootstrap JS bundle somewhere (e.g. index.js), add:
+// import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const Navbar = (props) => {
   const [openModel, setOpenModel] = useState(false);
@@ -12,90 +15,141 @@ const Navbar = (props) => {
   const [otp, sendOtp] = useState(false);
   const [verify, setVerify] = useState(false);
   const { state, dispatch: cxtDispatch } = useContext(Store);
-  const { name, isLogin } = state.userInfo;   // ✅ already correct
-  console.log("Navbar - isLogin:", isLogin);
+  const userInfo = state?.userInfo || {};
+  const { name = "", isLogin = false } = userInfo;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Force re-render when login state or name changes
   useEffect(() => {
     console.log("Navbar rerendered - isLogin:", isLogin, "name:", name);
-  }, [isLogin, name]);   // added `name` here
+  }, [isLogin, name]);
 
   const hideNavbar = location.pathname === "/report-display";
 
-  const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
-  };
+  const toggleDropdown = () => setDropdownOpen((v) => !v);
 
   const handleLogout = () => {
-    cxtDispatch({ type: "LOGOUT" });
+    cxtDispatch?.({ type: "LOGOUT" });
     setDropdownOpen(false);
-    navigate('/');
+    navigate("/");
   };
 
   const resetModal = () => {
-    console.log("🔄 Resetting modal...");
     setLogin(true);
     sendOtp(false);
     setVerify(false);
   };
 
-  if (hideNavbar) {
-    return null;
-  }
+  if (hideNavbar) return null;
 
   return (
     <>
-      <div className='header'>
-        <nav className="navbar navbar-expand-lg bg-light fixed-top">
+      <div className="header">
+        {/* Use navbar-light bg-light so toggler + links are visible */}
+        <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
           <div className="container-fluid">
-            <div className="nav-left">
-              <div className="logo">
-                <Link to="/" className="navbar-brand">
-                  <img src={logo} alt="" style={{ width: "60px", height: "60px" }} />
-                </Link>
-              </div>
-              <div className="text">
-                <p className='nav-title'>Rajan Business Report Services</p>
-                <p className='text-desc' style={{ marginTop: "-20px" }}>A product by Rajan Business Ideas</p>
-              </div>
+            {/* Left block: logo + title */}
+            <div className="d-flex align-items-center">
+              <Link to="/" className="navbar-brand d-flex align-items-center">
+                <img
+                  src={logo}
+                  alt="Logo"
+                  style={{ width: 60, height: 60 }}
+                  className="me-2"
+                />
+                <span className="fw-semibold">Rajan Business Report Services</span>
+              </Link>
+              <small className="text-muted ms-2 d-none d-md-inline">
+                A product by Rajan Business Ideas
+              </small>
             </div>
-            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-              <span className="navbar-toggler-icon"></span>
+
+            {/* Collapser */}
+            <button
+              className="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span className="navbar-toggler-icon" />
             </button>
+
+            {/* Right side items */}
             <div className="collapse navbar-collapse" id="navbarSupportedContent">
-              <ul className="navbar-nav ms-auto">
-                <li className="nav-item" style={{ marginRight: "80px" }}>
-                  <Link to="/about" className="nav-link" aria-current="page">About</Link>
-                  <div className={props.about ? "active" : ""}></div>
+              <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-4 mt-3 mt-lg-0">
+                {/* Use NavLink so active route is styled */}
+                <li className="nav-item">
+                  <NavLink
+                    to="/about"
+                    className={({ isActive }) =>
+                      "nav-link" + (isActive || props.about ? " active" : "")
+                    }
+                  >
+                    About
+                  </NavLink>
                 </li>
-                <li className="nav-item" style={{ marginRight: "80px" }}>
-                  <Link to="/" className="nav-link">Reports</Link>
-                  <div className={props.reports ? "active" : ""}></div>
+
+                <li className="nav-item">
+                  <NavLink
+                    to="/"
+                    end
+                    className={({ isActive }) =>
+                      "nav-link" + (isActive || props.reports ? " active" : "")
+                    }
+                  >
+                    Reports
+                  </NavLink>
                 </li>
-                <li className="nav-item" style={{ marginRight: "80px" }}>
-                  <Link to="/contact" className="nav-link">Contact</Link>
-                  <div className={props.contact ? "active" : ""}></div>
+
+                <li className="nav-item">
+                  <NavLink
+                    to="/contact"
+                    className={({ isActive }) =>
+                      "nav-link" + (isActive || props.contact ? " active" : "")
+                    }
+                  >
+                    Contact
+                  </NavLink>
                 </li>
+
                 {isLogin ? (
                   <li className="nav-item dropdown">
-                    <div className="dropdown-toggle user-menu" onClick={toggleDropdown}>
-                      <img src={avatar} className="avatar" alt="User Avatar" />
-                      {/* ✅ Instantly show updated name */}
-                      <span className="user-name">{name?.trim() || "User"}</span>
-                    </div>
+                    <button
+                      className="btn btn-link nav-link d-flex align-items-center p-0"
+                      onClick={toggleDropdown}
+                      aria-expanded={dropdownOpen ? "true" : "false"}
+                    >
+                      <img
+                        src={avatar}
+                        className="rounded-circle me-2"
+                        alt="User Avatar"
+                        style={{ width: 32, height: 32 }}
+                      />
+                      <span className="text-nowrap">{name?.trim() || "User"}</span>
+                    </button>
+
                     {dropdownOpen && (
-                      <ul className="dropdown-menu show">
+                      <ul
+                        className="dropdown-menu dropdown-menu-end show"
+                        style={{ position: "absolute", zIndex: 2000 }}
+                        onMouseLeave={() => setDropdownOpen(false)}
+                      >
                         <li>
-                          <Link to="/profile" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                          <Link
+                            to="/profile"
+                            className="dropdown-item"
+                            onClick={() => setDropdownOpen(false)}
+                          >
                             My Profile
                           </Link>
                         </li>
                         <li>
-                          <button className="dropdown-item logout-btn" onClick={handleLogout}>
+                          <button className="dropdown-item" onClick={handleLogout}>
                             Logout
                           </button>
                         </li>
@@ -104,10 +158,15 @@ const Navbar = (props) => {
                   </li>
                 ) : (
                   <li className="nav-item">
-                    <button className="nav-link login-btn" onClick={() => {
-                      resetModal();
-                      setOpenModel(true);
-                    }}>LOGIN</button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        resetModal();
+                        setOpenModel(true);
+                      }}
+                    >
+                      LOGIN
+                    </button>
                   </li>
                 )}
               </ul>
@@ -115,6 +174,7 @@ const Navbar = (props) => {
           </div>
         </nav>
       </div>
+
       <Modal
         isOpen={openModel}
         toggle={() => {
@@ -122,7 +182,7 @@ const Navbar = (props) => {
           resetModal();
         }}
         size="lg"
-        style={{ maxWidth: '650px', width: '100%', marginTop: '15%' }}
+        style={{ maxWidth: "650px", width: "100%", marginTop: "15%" }}
       >
         <ModalBody>
           {login && (
