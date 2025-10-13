@@ -27,3 +27,11 @@ code {
   padding: 0.25rem 0 !important;
   margin: 0 !important;
 }
+
+/* Active looks the same (no bold/underline/border) */
+.header .navbar .nav-link.active,
+.header .navbar .nav-link[aria-current="page"] {
+  color: #212529 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
