@@ -35,3 +35,13 @@ code {
   font-weight: 500 !important;
   text-decoration: none !important;
 }
+
+/* Use gap for spacing, not huge right margins */
+.header .navbar .navbar-nav {
+  gap: 24px !important;
+}
+.header .navbar .navbar-nav .nav-item {
+  margin-right: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
