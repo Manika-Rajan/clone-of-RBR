@@ -22,7 +22,7 @@ code {
   .navbar .navbar-collapse {
     /*display: flex !important;*/
     /*flex-basis: auto !important;*/
-    visibility: visible !important;
+    /*visibility: visible !important;*/
     opacity: 1 !important;
   }
 
