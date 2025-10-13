@@ -15,3 +15,25 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Force nav links to be visible on light backgrounds */
+.navbar .nav-link {
+  color: #212529 !important;
+  opacity: 1 !important;
+}
+
+/* Active link hint (optional) */
+.navbar .nav-link.active {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Make sure list items actually render */
+.navbar .navbar-nav .nav-item {
+  display: block !important;
+}
+
+/* Safety: keep dropdown on top of content */
+.navbar .dropdown-menu {
+  z-index: 2000;
+}
