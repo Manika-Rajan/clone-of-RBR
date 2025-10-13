@@ -50,3 +50,55 @@ code {
 .header .navbar .dropdown-menu {
   z-index: 2000 !important;
 }
+
+
+/* === FINAL, DESKTOP-SAFE NAV OVERRIDES === */
+
+/* Always show the collapsed area on desktop/laptop widths */
+@media (min-width: 768px) {
+  .navbar .navbar-collapse {
+    display: flex !important;
+    flex-basis: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  .navbar .navbar-nav {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 24px !important;
+  }
+  .navbar .nav-item {
+    margin-right: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+}
+
+/* Ensure the links are actually visible and aligned */
+.navbar .nav-link {
+  color: #212529 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1.25rem !important;
+  padding: 0.25rem 0 !important;
+  margin: 0 !important;
+}
+
+/* Active link: ONLY color change (no bold/underline/border) */
+.navbar .nav-link.active,
+.navbar .nav-link[aria-current="page"] {
+  color: #0d6efd !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+
+/* Keep dropdown above everything */
+.navbar .dropdown-menu {
+  z-index: 2000 !important;
+}
+
+/* Safety: don't let any parent clip the menu */
+.header { overflow: visible !important; }
+
