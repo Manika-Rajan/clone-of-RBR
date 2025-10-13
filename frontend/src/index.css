@@ -25,15 +25,6 @@ code {
     visibility: visible !important;
     opacity: 1 !important;
   }
-  .navbar .navbar-nav {
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 24px !important;
-  }
-  .navbar .nav-item {
-    margin-right: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-  }
+
 }
 
