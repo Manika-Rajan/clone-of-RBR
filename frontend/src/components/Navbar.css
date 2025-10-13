@@ -1,4 +1,4 @@
-```css
+
 /* Navbar container */
 .navbar {
   background-color: #ffffff;
@@ -149,4 +149,8 @@
     text-align: left;
   }
 }
-```
+
+/* Kill any leftover big margins & let gap handle spacing */
+.nav-item, .nav-item.dropdown { margin-right: 0 !important; }
+.navbar-nav { gap: 24px !important; }
+
