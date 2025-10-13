@@ -88,3 +88,37 @@ code {
   visibility: visible !important;
   pointer-events: auto !important;
 }
+
+/* --- NAVBAR TIDY FIX: keep links aligned, no baseline jump --- */
+
+/* Make each nav item and link align on the same baseline */
+.header .navbar .navbar-nav .nav-item {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Normalize link sizing + layout */
+.header .navbar .nav-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0.25rem 0 !important;
+  line-height: 1 !important;
+  font-weight: 500 !important;            /* consistent weight */
+  color: #212529 !important;
+  text-decoration: none !important;
+  border-bottom: 2px solid transparent;   /* reserve space to avoid jump */
+}
+
+/* Active state: no bold, no underline; use a clean bottom border */
+.header .navbar .nav-link.active {
+  font-weight: 500 !important;            /* keep same weight as others */
+  border-bottom-color: #0d6efd !important;/* active indicator */
+}
+
+/* (Optional) Slightly darker color on hover/active for feedback */
+.header .navbar .nav-link:hover,
+.header .navbar .nav-link.active:hover {
+  color: #0b5ed7 !important;
+}
+
