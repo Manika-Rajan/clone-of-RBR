@@ -79,29 +79,29 @@ const Navbar = () => {
             {/* Collapsible content */}
             <div className="collapse navbar-collapse" id="navbarSupportedContent">
               <ul className="navbar-nav ms-auto align-items-md-center mt-3 mt-md-0">
-                <li className="nav-item">
+                <li className="nav-item me-md-4">
                   <NavLink
                     to="/about"
-                    className={({isActive}) => "nav-link" + (isActive ? " active" : "")}
+                    className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
                   >
                     About
                   </NavLink>
                 </li>
 
-                <li className="nav-item">
+                <li className="nav-item me-md-4">
                   <NavLink
                     to="/"
                     end
-                    className={({isActive}) => "nav-link" + (isActive ? " active" : "")}
+                    className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
                   >
                     Reports
                   </NavLink>
                 </li>
 
-                <li className="nav-item">
+                <li className="nav-item me-md-4">
                   <NavLink
                     to="/contact"
-                    className={({isActive}) => "nav-link" + (isActive ? " active" : "")}
+                    className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
                   >
                     Contact
                   </NavLink>
