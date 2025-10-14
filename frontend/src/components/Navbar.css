@@ -25,7 +25,7 @@
   transition: background var(--speed) ease, box-shadow var(--speed) ease, transform var(--speed) ease;
 }
 
-/* subtle lift when scrolled (optional: add .scrolled in JS if you want) */
+/* optional: add/remove .scrolled via JS if desired */
 .navbar.scrolled {
   background: rgba(255,255,255,0.9) !important;
   box-shadow: var(--shadow-lg);
@@ -37,28 +37,40 @@
   padding-right: 32px !important;
 }
 
-/* ===== LEFT: LOGO + TEXT (harmless if unused) ===== */
+/* ===== LEFT: LOGO + TEXT ===== */
 .nav-left { display: flex; align-items: center; gap: 12px; }
+
 .logo img {
-  width: 52px; height: 52px; border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
   box-shadow: 0 2px 10px rgba(2,6,23,0.08);
 }
-.text { margin-left: 2px; }
-.nav-title {
-  font-size: 18px; font-weight: 700; margin: 0;
-  color: var(--ink-900); letter-spacing: 0.2px;
-}
-.text-desc { font-size: 13px; color: var(--ink-500); margin: 2px 0 0 0; }
 
-/* ===== NAV LINKS (base layout) ===== */
+.text { margin-left: 2px; }
+
+.nav-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink-900);
+  letter-spacing: 0.2px;
+}
+
+.text-desc {
+  font-size: 13px;
+  color: var(--ink-500);
+  margin: 2px 0 0 0;
+}
+
+/* ===== NAV LINKS ===== */
 .navbar-nav {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;        /* keep About/Reports/Contact on one row */
-  gap: 0;                   /* we’ll rely on me-md-4 from JSX */
+  gap: 28px; /* works fine with your current JSX */
 }
 
-.nav-item { display: flex; align-items: center; }
+.nav-item { margin-right: 0; }
 
 .nav-link {
   position: relative;
@@ -66,47 +78,42 @@
   color: var(--ink-700) !important;
   font-size: 15.5px;
   font-weight: 600;
-  padding: 10px 6px;
-  line-height: 1.2;
-  white-space: nowrap;
+  padding: 10px 2px;
+  transition: color var(--speed) ease, opacity var(--speed) ease;
   outline: none;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  transition: color var(--speed) ease, transform var(--speed) ease;
 }
 
-/* ==== Refined centered underline (shorter, premium) ==== */
-.nav-link::after {
+/* animated underline — scoped to anchors to avoid styling the avatar button */
+a.nav-link::after {
   content: "";
   position: absolute;
-  left: 50%;
-  bottom: 2px;
-  width: 58%;
-  height: 2.5px;
-  background: currentColor;      /* matches text color */
-  transform: translateX(-50%) scaleX(0);
-  transform-origin: center;
+  left: 0;
+  bottom: 4px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
+  transform: scaleX(0);
+  transform-origin: left;
   transition: transform var(--speed) ease;
-  border-radius: 3px;
-  opacity: .9;
+  border-radius: 2px;
+  opacity: 0.95;
 }
 
-.nav-link:hover,
-.nav-link:focus-visible { color: var(--ink-900) !important; }
-.nav-link:hover::after,
-.nav-link:focus-visible::after { transform: translateX(-50%) scaleX(1); }
-
-.nav-link.active {
-  color: #0d6efd !important;     /* Bootstrap primary for active */
-  transform: translateY(-0.5px);
+a.nav-link:hover,
+a.nav-link:focus-visible {
+  color: var(--ink-900) !important;
 }
-.nav-link.active::after { transform: translateX(-50%) scaleX(1); }
 
-/* focus ring for accessibility */
-.nav-link:focus-visible {
+a.nav-link:hover::after,
+a.nav-link:focus-visible::after,
+a.nav-link.active::after {
+  transform: scaleX(1);
+}
+
+/* focus ring for accessibility (anchors only) */
+a.nav-link:focus-visible {
   box-shadow: 0 0 0 6px var(--ring);
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 /* ===== LOGIN CTA ===== */
@@ -131,8 +138,12 @@ button.btn.btn-primary {
 .nav-item.dropdown { position: relative; }
 
 .dropdown-toggle.user-menu {
-  display: flex; align-items: center; gap: 10px; cursor: pointer;
-  padding: 8px 10px; border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 12px;
   transition: background var(--speed) ease, box-shadow var(--speed) ease;
 }
 .dropdown-toggle.user-menu:hover {
@@ -141,13 +152,22 @@ button.btn.btn-primary {
 }
 
 .avatar {
-  width: 38px; height: 38px; border-radius: 50%;
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px rgba(59,130,246,0.25);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px rgba(59, 130, 246, 0.25);
 }
 
 .user-name {
-  font-size: 15px; font-weight: 700; color: var(--ink-900);
-  max-width: 18ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-900);
+  max-width: 18ch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ===== DROPDOWN MENU ===== */
@@ -175,8 +195,10 @@ button.btn.btn-primary {
 }
 
 .dropdown-item {
-  padding: 10px 12px; border-radius: 10px;
-  color: var(--ink-900); font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--ink-900);
+  font-weight: 600;
   transition: background var(--speed) ease, color var(--speed) ease;
 }
 .dropdown-item:hover,
@@ -197,17 +219,10 @@ button.btn.btn-primary {
 .navbar-toggler:focus { box-shadow: 0 0 0 6px var(--ring) !important; }
 
 /* ===== RESPONSIVE ===== */
-
-/* Medium screens: slightly reduce me-md-4 effect so three items never overflow */
-@media (min-width: 768px) and (max-width: 1199.98px) {
-  .navbar .nav-item.me-md-4 { margin-right: 1.25rem !important; } /* default is 1.5rem */
-}
-
-/* Mobile (collapsed menu) */
-@media (max-width: 991.98px) {
+@media (max-width: 991px) {
   .container-fluid { padding-left: 16px !important; padding-right: 16px !important; }
-  .navbar-nav { align-items: flex-start; gap: 12px; padding: 10px 2px; }
-  .nav-link { padding: 10px 4px; }
+  .navbar-nav { align-items: flex-start; gap: 8px; padding: 10px 2px; }
+  .nav-link { padding: 10px 0; }
   .dropdown-toggle.user-menu { padding-left: 0; }
   .navbar-nav .nav-item.dropdown .dropdown-menu {
     right: 0 !important; left: 0 !important; width: 100%; transform-origin: top center;
@@ -232,75 +247,7 @@ button.btn.btn-primary {
 
 /* ===== MOTION PREFERENCES ===== */
 @media (prefers-reduced-motion: reduce) {
-  .navbar, .nav-link, .dropdown-menu, .btn.btn-primary {
+  .navbar, a.nav-link, .dropdown-menu, .btn.btn-primary {
     transition: none !important; animation: none !important;
   }
-}
-
-/* === Scope underline ONLY to the 3 page links (About / Reports / Contact) === */
-/* Top-level route links: <ul class="navbar-nav"> <li class="nav-item"> <NavLink class="nav-link"> */
-.navbar .navbar-nav > .nav-item > .nav-link {
-  position: relative;
-  text-decoration: none;
-  color: var(--ink-700) !important;
-  font-size: 15.5px;
-  font-weight: 600;
-  padding: 10px 6px;
-  line-height: 1.2;
-  white-space: nowrap;
-  outline: none;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  transition: color var(--speed) ease, transform var(--speed) ease;
-}
-
-/* Centered, shorter underline just for those links */
-.navbar .navbar-nav > .nav-item > .nav-link::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 2px;
-  width: 58%;
-  height: 2.5px;
-  background: currentColor;
-  transform: translateX(-50%) scaleX(0);
-  transform-origin: center;
-  transition: transform var(--speed) ease;
-  border-radius: 3px;
-  opacity: .9;
-}
-
-.navbar .navbar-nav > .nav-item > .nav-link:hover,
-.navbar .navbar-nav > .nav-item > .nav-link:focus-visible {
-  color: var(--ink-900) !important;
-}
-.navbar .navbar-nav > .nav-item > .nav-link:hover::after,
-.navbar .navbar-nav > .nav-item > .nav-link:focus-visible::after {
-  transform: translateX(-50%) scaleX(1);
-}
-
-.navbar .navbar-nav > .nav-item > .nav-link.active {
-  color: #0d6efd !important;   /* Bootstrap primary */
-  transform: translateY(-0.5px);
-}
-.navbar .navbar-nav > .nav-item > .nav-link.active::after {
-  transform: translateX(-50%) scaleX(1);
-}
-
-/* Accessible focus ring just for the top-level page links */
-.navbar .navbar-nav > .nav-item > .nav-link:focus-visible {
-  box-shadow: 0 0 0 6px var(--ring);
-  border-radius: 8px;
-}
-
-/* === Explicitly disable underline & effects on the avatar button === */
-/* Your JSX uses: <button class="btn btn-link nav-link d-flex ..."> inside .nav-item.dropdown */
-.navbar .nav-item.dropdown .btn.btn-link.nav-link {
-  color: var(--ink-900) !important;
-  padding: 6px 8px;
-  line-height: 1.2;
-}
-.navbar .nav-item.dropdown .btn.btn-link.nav-link::after {
-  content: none !important;
 }
