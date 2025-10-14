@@ -299,3 +299,27 @@ button.btn.btn-primary {
 .nav-link.active::after {
   transform: scaleX(1);
 }
+
+/* === Tabs: always bold, no underline; active = theme blue === */
+/* Only target the three page links (anchors), not the avatar button */
+a.nav-link {
+  font-weight: 700;                 /* always bold */
+  color: var(--ink-700) !important; /* default text */
+}
+
+/* kill the underline animation */
+a.nav-link::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* hover/focus: darker text, still bold */
+a.nav-link:hover,
+a.nav-link:focus-visible {
+  color: var(--ink-900) !important;
+}
+
+/* active page link: theme blue, still bold */
+a.nav-link.active {
+  color: var(--brand-600) !important;   /* or var(--brand-500) if you prefer lighter */
+}
