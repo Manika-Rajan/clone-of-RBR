@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";            // ⬅️ added
 import { Store } from "../Store"; // ⬅️ to pull user info for payload
 
 const EXAMPLES = [
+  "Paper Manufacturing in India",
   "FMCG market report",
   "IT industry analysis India",
   "EV charging stations India",
