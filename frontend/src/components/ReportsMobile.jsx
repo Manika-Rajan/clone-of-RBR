@@ -31,27 +31,27 @@ const SUGGESTIONS = [
   "Pharma competitor analysis",
 ];
 
-// Simple preview mapping for quick demo navigation
+// Simple preview mapping for quick demo navigation (⛳ now using bucket ROOT keys)
 const PREVIEW_MAP = [
   {
     match: "ev charging",
-    fileKey: "rbrfinalfiles/sample-previews/ev_charging_preview.pdf",
+    fileKey: "ev_charging_preview.pdf",   // ⬅️ moved to root
     id: "RBR1001",
   },
   {
     match: "fmcg",
-    fileKey: "rbrfinalfiles/sample-previews/fmcg_preview.pdf",
+    fileKey: "fmcg_preview.pdf",          // ⬅️ moved to root
     id: "RBR1002",
   },
   {
     match: "pharma",
-    fileKey: "rbrfinalfiles/sample-previews/pharma_preview.pdf",
+    fileKey: "pharma_preview.pdf",        // ⬅️ moved to root
     id: "RBR1003",
   },
 ];
 
 const DEFAULT_PREVIEW = {
-  fileKey: "rbrfinalfiles/sample-previews/paper_industry_preview.pdf",
+  fileKey: "paper_industry_preview.pdf",  // ⬅️ moved to root
   id: "RBR1999",
 };
 
