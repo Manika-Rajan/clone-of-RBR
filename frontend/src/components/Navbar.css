@@ -236,3 +236,71 @@ button.btn.btn-primary {
     transition: none !important; animation: none !important;
   }
 }
+
+/* === Scope underline ONLY to the 3 page links (About / Reports / Contact) === */
+/* Top-level route links: <ul class="navbar-nav"> <li class="nav-item"> <NavLink class="nav-link"> */
+.navbar .navbar-nav > .nav-item > .nav-link {
+  position: relative;
+  text-decoration: none;
+  color: var(--ink-700) !important;
+  font-size: 15.5px;
+  font-weight: 600;
+  padding: 10px 6px;
+  line-height: 1.2;
+  white-space: nowrap;
+  outline: none;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  transition: color var(--speed) ease, transform var(--speed) ease;
+}
+
+/* Centered, shorter underline just for those links */
+.navbar .navbar-nav > .nav-item > .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 58%;
+  height: 2.5px;
+  background: currentColor;
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  transition: transform var(--speed) ease;
+  border-radius: 3px;
+  opacity: .9;
+}
+
+.navbar .navbar-nav > .nav-item > .nav-link:hover,
+.navbar .navbar-nav > .nav-item > .nav-link:focus-visible {
+  color: var(--ink-900) !important;
+}
+.navbar .navbar-nav > .nav-item > .nav-link:hover::after,
+.navbar .navbar-nav > .nav-item > .nav-link:focus-visible::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+.navbar .navbar-nav > .nav-item > .nav-link.active {
+  color: #0d6efd !important;   /* Bootstrap primary */
+  transform: translateY(-0.5px);
+}
+.navbar .navbar-nav > .nav-item > .nav-link.active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* Accessible focus ring just for the top-level page links */
+.navbar .navbar-nav > .nav-item > .nav-link:focus-visible {
+  box-shadow: 0 0 0 6px var(--ring);
+  border-radius: 8px;
+}
+
+/* === Explicitly disable underline & effects on the avatar button === */
+/* Your JSX uses: <button class="btn btn-link nav-link d-flex ..."> inside .nav-item.dropdown */
+.navbar .nav-item.dropdown .btn.btn-link.nav-link {
+  color: var(--ink-900) !important;
+  padding: 6px 8px;
+  line-height: 1.2;
+}
+.navbar .nav-item.dropdown .btn.btn-link.nav-link::after {
+  content: none !important;
+}
