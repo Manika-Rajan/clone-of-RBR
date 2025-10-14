@@ -334,3 +334,26 @@ a.nav-link.active {
   color: var(--brand-600) !important;
   font-weight: 700 !important;
 }
+
+/* === Tabs: semibold (600), no underline; active = theme blue === */
+a.nav-link {
+  font-weight: 600 !important;         /* semibold, not heavy */
+  color: var(--ink-700) !important;     /* default */
+}
+
+/* remove any underline pseudo */
+a.nav-link::after {
+  content: none !important;
+}
+
+/* hover/focus: a bit darker */
+a.nav-link:hover,
+a.nav-link:focus-visible {
+  color: var(--ink-900) !important;
+}
+
+/* active page: theme blue, still semibold */
+a.nav-link.active {
+  color: var(--brand-600) !important;
+  font-weight: 600 !important;
+}
