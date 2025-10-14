@@ -344,3 +344,29 @@ button.btn.btn-primary {
 @media (max-width: 991px) {
   .navbar .nav-link { padding: 10px 12px; }
 }
+
+/* === Fix: keep pill + text on one line and aligned === */
+.navbar .navbar-nav {
+  flex-wrap: nowrap;            /* don't wrap items to next line */
+}
+
+.navbar .nav-item {
+  display: flex;                 /* align the anchor inside the li */
+  align-items: center;
+}
+
+.navbar .nav-link {
+  display: inline-flex;          /* pill behaves as a single unit */
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;           /* never break the label */
+  line-height: 1;                /* avoid tall line box pushing text */
+  vertical-align: middle;
+  min-height: 36px;              /* consistent pill height */
+  padding: 10px 14px;            /* ensure inner space */
+}
+
+/* if something still nudges it down on small screens, tighten gaps */
+@media (max-width: 991px) {
+  .navbar .navbar-nav { gap: 10px; }
+}
