@@ -323,3 +323,14 @@ a.nav-link:focus-visible {
 a.nav-link.active {
   color: var(--brand-600) !important;   /* or var(--brand-500) if you prefer lighter */
 }
+
+/* Force bold on the three page links (anchors) */
+a.nav-link {
+  font-weight: 700 !important;  /* make it stick */
+}
+
+/* Active stays blue + bold */
+a.nav-link.active {
+  color: var(--brand-600) !important;
+  font-weight: 700 !important;
+}
