@@ -1,12 +1,16 @@
-// clone-of-RBR/frontend/src/components/ReportsMobile.jsx
+// RBR/frontend/src/components/ReportsMobile.jsx
+// Mobile landing page — now logs searches to your Lambda (S3) just like desktop Reports.jsx
+
 import React, {
   useMemo,
   useState,
   useRef,
   useEffect,
   useCallback,
+  useContext,
 } from "react";
 import { createPortal } from "react-dom";
+import { Store } from "../Store"; // ⬅️ to pull user info for payload
 
 const EXAMPLES = [
   "FMCG market report",
@@ -26,15 +30,43 @@ const SUGGESTIONS = [
   "Pharma competitor analysis",
 ];
 
+// Small loader ring (tailwind-friendly)
+const LoaderRing = () => (
+  <svg viewBox="0 0 100 100" className="w-14 h-14 animate-spin-slow">
+    <circle
+      cx="50"
+      cy="50"
+      r="45"
+      fill="none"
+      stroke="#e6e6e6"
+      strokeWidth="8"
+    />
+    <circle
+      cx="50"
+      cy="50"
+      r="45"
+      fill="none"
+      stroke="#0263c7"
+      strokeWidth="8"
+      strokeLinecap="round"
+      strokeDasharray="283"
+      strokeDashoffset="75"
+    />
+    <style>{`.animate-spin-slow{animation:spin 1.4s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+  </svg>
+);
+
 const ReportsMobile = () => {
+  const { state } = useContext(Store); // ⬅️ has userInfo (name, email, phone, userId)
+
   const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
+  const [modalMsg, setModalMsg] = useState("");
+
+  const [searchLoading, setSearchLoading] = useState(false);
+
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [dropdownRect, setDropdownRect] = useState({
-    left: 0,
-    top: 0,
-    width: 0,
-  });
+  const [dropdownRect, setDropdownRect] = useState({ left: 0, top: 0, width: 0 });
 
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -54,27 +86,75 @@ const ReportsMobile = () => {
     const rect = el.getBoundingClientRect();
     setDropdownRect({
       left: rect.left + window.scrollX,
-      top: rect.bottom + window.scrollY, // directly under the input
+      top: rect.bottom + window.scrollY,
       width: rect.width,
     });
   }, []);
+
+  const handleSearch = async (query) => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+
+    setSearchLoading(true);
+    setModalMsg("");
+    try {
+      if (window.gtag) {
+        window.gtag("event", "report_search", {
+          event_category: "engagement",
+          event_label: "mobile_reports_search",
+          value: 1,
+          search_term: trimmed,
+        });
+      }
+
+      const payload = {
+        search_query: trimmed,
+        user: {
+          name: state?.userInfo?.name || "Unknown",
+          email: state?.userInfo?.email || "",
+          phone: state?.userInfo?.phone || "",
+          userId: state?.userInfo?.userId || state?.userInfo?.phone || "",
+        },
+      };
+
+      const resp = await fetch(
+        "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/search-log",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!resp.ok) {
+        const t = await resp.text();
+        throw new Error(`Failed with status ${resp.status}, body: ${t}`);
+      }
+
+      await resp.json(); // not used UI-wise, but confirms success
+
+      // Mirror desktop confirmation
+      setModalMsg(
+        "ℹ️ We’re sorry, the specific data you requested isn’t available right now. Our research team has logged your query, these insights will be added within the next 72 hours. Please revisit soon—we’ll make sure it’s worth your while."
+      );
+      setOpenModal(true);
+    } catch (e) {
+      console.error("Error logging search (mobile):", e);
+      setModalMsg(
+        "⚠️ Something went wrong while processing your request. Please try again later."
+      );
+      setOpenModal(true);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   const onSubmit = (e) => {
     e.preventDefault();
     const query = q.trim();
     if (!query) return;
-
-    if (window.gtag) {
-      window.gtag("event", "report_search", {
-        event_category: "engagement",
-        event_label: "mobile_reports_search",
-        value: 1,
-        search_term: query,
-      });
-    }
-    // Show “coming soon” modal instead of navigating
-    setOpenModal(true);
-    setShowSuggestions(false);
+    // Instead of navigation, log + show modal (parity with desktop)
+    handleSearch(query);
   };
 
   const closeModal = () => {
@@ -93,9 +173,7 @@ const ReportsMobile = () => {
     const handleClick = (e) => {
       const insideDropdown = dropdownRef.current?.contains(e.target);
       const insideInput = inputRef.current?.contains(e.target);
-      if (!insideDropdown && !insideInput) {
-        setShowSuggestions(false);
-      }
+      if (!insideDropdown && !insideInput) setShowSuggestions(false);
     };
     document.addEventListener("mousedown", handleClick);
     document.addEventListener("touchstart", handleClick, { passive: true });
@@ -130,9 +208,7 @@ const ReportsMobile = () => {
     <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-10">
       {/* Header */}
       <header className="w-full flex justify-between items-center mb-6">
-        <div className="text-xl font-extrabold text-gray-900 tracking-tight">
-          RBR
-        </div>
+        <div className="text-xl font-extrabold text-gray-900 tracking-tight">RBR</div>
         <button
           className="text-gray-700 text-2xl p-2 leading-none"
           aria-label="Open menu"
@@ -171,9 +247,10 @@ const ReportsMobile = () => {
           />
           <button
             type="submit"
-            className="bg-blue-600 text-white px-4 py-3 rounded-r-xl font-semibold text-sm sm:text-base active:scale-[0.98]"
+            disabled={searchLoading}
+            className="bg-blue-600 text-white px-4 py-3 rounded-r-xl font-semibold text-sm sm:text-base active:scale-[0.98] disabled:opacity-60"
           >
-            Search
+            {searchLoading ? "Searching…" : "Search"}
           </button>
         </div>
       </form>
@@ -198,37 +275,16 @@ const ReportsMobile = () => {
 
       {/* Sample Reports */}
       <section className="w-full mb-8">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
-          Sample Reports
-        </h2>
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">Sample Reports</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <article
-              key={i}
-              className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col items-center"
-            >
-              {/* responsive aspect-ratio thumbnail */}
+            <article key={i} className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col items-center">
               <div className="w-full h-0 pb-[140%] bg-gray-200 rounded-md mb-2" />
-              <button
-                type="button"
-                className="text-blue-600 text-sm sm:text-base font-medium"
-              >
+              <button type="button" className="text-blue-600 text-sm sm:text-base font-medium">
                 View Summary
               </button>
             </article>
           ))}
-        </div>
-      </section>
-
-      {/* Trust */}
-      <section className="w-full mb-8 text-center px-2">
-        <p className="font-semibold text-gray-700 mb-3 text-sm sm:text-base">
-          Trusted by 500+ businesses in India
-        </p>
-        <div className="flex justify-center gap-4">
-          <div className="h-6 w-16 bg-gray-300 rounded" />
-          <div className="h-6 w-16 bg-gray-300 rounded" />
-          <div className="h-6 w-16 bg-gray-300 rounded" />
         </div>
       </section>
 
@@ -238,12 +294,7 @@ const ReportsMobile = () => {
           <div
             ref={dropdownRef}
             className="z-[9999] border border-gray-200 bg-white shadow-lg max-h-48 overflow-auto rounded-b-xl"
-            style={{
-              position: "fixed",        // <— fixed: independent of layout
-              left: dropdownRect.left,
-              top: dropdownRect.top,
-              width: dropdownRect.width,
-            }}
+            style={{ position: "fixed", left: dropdownRect.left, top: dropdownRect.top, width: dropdownRect.width }}
           >
             {matches.map((m) => (
               <button
@@ -262,10 +313,20 @@ const ReportsMobile = () => {
             ))}
           </div>,
           document.body
-        )
-      }
+        )}
 
-      {/* Modal: Coming soon */}
+      {/* Loader overlay */}
+      {searchLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative z-10 bg-white rounded-2xl p-6 shadow-xl w-[90%] max-w-xs text-center">
+            <div className="flex items-center justify-center mb-3"><LoaderRing /></div>
+            <div className="text-gray-800 text-sm">Fetching your request…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Result / Coming soon */}
       {openModal && (
         <div
           role="dialog"
@@ -273,22 +334,13 @@ const ReportsMobile = () => {
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
           onClick={closeModal}
         >
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/40" />
-          {/* Sheet / Dialog */}
           <div
             className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-lg font-semibold mb-2">
-              📊 This Data is coming soon
-            </div>
-            <p className="text-gray-700 text-sm leading-relaxed mb-4">
-              ℹ️ We’re sorry, the specific data you requested isn’t available
-              right now. Our research team has logged your query, these insights
-              will be added within the next 72 hours. Please revisit soon—we’ll
-              make sure it’s worth your while.
-            </p>
+            <div className="text-lg font-semibold mb-2">📊 This Data is coming soon</div>
+            <p className="text-gray-700 text-sm leading-relaxed mb-4">{modalMsg}</p>
             <button
               ref={modalBtnRef}
               onClick={closeModal}
