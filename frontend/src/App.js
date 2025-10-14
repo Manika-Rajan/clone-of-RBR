@@ -21,11 +21,15 @@ import { StoreProvider, useStore } from './Store';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PrivateRoute from "./components/PrivateRoute";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
+import ReportsDisplayMobile from './components/ReportsDisplayMobile';
+
 
 function AppContent() {
   const location = useLocation();
 
   const hideNavbarRoutes = ["/report-display", "/payment"];
+  const ReportDisplayResponsive = () => (isMobile ? <ReportsDisplayMobile /> : <ReportsDisplay />);
+
 
   return (
     <div className="App">
@@ -42,7 +46,7 @@ function AppContent() {
             
         {/* <Route path="/" element={<Reports />} /> */}
         <Route path='/contact' element={<Contact />} />
-        <Route path='/report-display' element={<ReportsDisplay />} />
+        <Route path="/report-display" element={<ReportDisplayResponsive />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/partner" element={<Partner />} />
         <Route path="/analytics" element={<PrivateRoute roleRequired="admin"> <AnalyticsDashboard /> </PrivateRoute> } />
