@@ -6,7 +6,7 @@ import Login from "./Login";
 import { Modal, ModalBody } from "reactstrap";
 import { Store } from "../Store";
 import avatar from "../assets/avatar.svg";
-import './navbar.css';
+import './Navbar.css';
 
 const Navbar = () => {
   const [openModel, setOpenModel] = useState(false);
