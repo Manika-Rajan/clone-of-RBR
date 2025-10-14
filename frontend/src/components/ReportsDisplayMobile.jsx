@@ -6,6 +6,7 @@ import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import { useStore } from "../Store";
 import { Modal, ModalBody } from "reactstrap";
+import Login from "./Login"; // ✅ critical import
 
 /**
  * Mobile-first Reports Display
@@ -24,7 +25,7 @@ const ReportsDisplayMobile = () => {
 
   // Store (same as your existing component)
   const { state, dispatch: cxtDispatch } = useStore();
-  const { isLogin = false, status = false, email = "" } = state || {};
+  const { status = false, email = "" } = state || {};
 
   // UI state
   const [openModel, setOpenModel] = useState(false);
@@ -224,8 +225,6 @@ const ReportsDisplayMobile = () => {
       >
         <ModalBody>
           {/* Your Login component should route to /payment after success */}
-          {/* Keep the same props you already used */}
-          {/* eslint-disable-next-line react/jsx-no-undef */}
           <Login onClose={() => setOpenModel(false)} returnTo="/payment" />
           {status && (
             <div style={{ textAlign: "center" }}>
