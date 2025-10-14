@@ -1,5 +1,5 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
-// Mobile landing page — now logs searches to your Lambda (S3) just like desktop Reports.jsx
+// Mobile landing page — logs searches and then navigates to the mobile report display
 
 import React, {
   useMemo,
@@ -10,6 +10,7 @@ import React, {
   useContext,
 } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";            // ⬅️ added
 import { Store } from "../Store"; // ⬅️ to pull user info for payload
 
 const EXAMPLES = [
@@ -30,17 +31,34 @@ const SUGGESTIONS = [
   "Pharma competitor analysis",
 ];
 
+// Simple preview mapping for quick demo navigation
+const PREVIEW_MAP = [
+  {
+    match: "ev charging",
+    fileKey: "rbrfinalfiles/sample-previews/ev_charging_preview.pdf",
+    id: "RBR1001",
+  },
+  {
+    match: "fmcg",
+    fileKey: "rbrfinalfiles/sample-previews/fmcg_preview.pdf",
+    id: "RBR1002",
+  },
+  {
+    match: "pharma",
+    fileKey: "rbrfinalfiles/sample-previews/pharma_preview.pdf",
+    id: "RBR1003",
+  },
+];
+
+const DEFAULT_PREVIEW = {
+  fileKey: "rbrfinalfiles/sample-previews/paper_industry_preview.pdf",
+  id: "RBR1999",
+};
+
 // Small loader ring (tailwind-friendly)
 const LoaderRing = () => (
   <svg viewBox="0 0 100 100" className="w-14 h-14 animate-spin-slow">
-    <circle
-      cx="50"
-      cy="50"
-      r="45"
-      fill="none"
-      stroke="#e6e6e6"
-      strokeWidth="8"
-    />
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#e6e6e6" strokeWidth="8" />
     <circle
       cx="50"
       cy="50"
@@ -58,6 +76,7 @@ const LoaderRing = () => (
 
 const ReportsMobile = () => {
   const { state } = useContext(Store); // ⬅️ has userInfo (name, email, phone, userId)
+  const navigate = useNavigate();      // ⬅️ added
 
   const [q, setQ] = useState("");
   const [openModal, setOpenModal] = useState(false);
@@ -131,13 +150,15 @@ const ReportsMobile = () => {
         throw new Error(`Failed with status ${resp.status}, body: ${t}`);
       }
 
-      await resp.json(); // not used UI-wise, but confirms success
+      await resp.json(); // confirms success
 
-      // Mirror desktop confirmation
-      setModalMsg(
-        "ℹ️ We’re sorry, the specific data you requested isn’t available right now. Our research team has logged your query, these insights will be added within the next 72 hours. Please revisit soon—we’ll make sure it’s worth your while."
-      );
-      setOpenModal(true);
+      // 🔁 After a successful log, pick a preview and navigate to the viewer
+      const ql = trimmed.toLowerCase();
+      const match = PREVIEW_MAP.find((m) => ql.includes(m.match));
+      const { fileKey, id: reportId } = match || DEFAULT_PREVIEW;
+
+      navigate("/report-display", { state: { fileKey, reportId } });
+      return; // Stop here; no modal on success
     } catch (e) {
       console.error("Error logging search (mobile):", e);
       setModalMsg(
@@ -151,9 +172,10 @@ const ReportsMobile = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
+    if (searchLoading) return; // prevent double submit
     const query = q.trim();
     if (!query) return;
-    // Instead of navigation, log + show modal (parity with desktop)
+    setShowSuggestions(false); // close suggestions on submit
     handleSearch(query);
   };
 
@@ -278,7 +300,10 @@ const ReportsMobile = () => {
         <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">Sample Reports</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <article key={i} className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col items-center">
+            <article
+              key={i}
+              className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col items-center"
+            >
               <div className="w-full h-0 pb-[140%] bg-gray-200 rounded-md mb-2" />
               <button type="button" className="text-blue-600 text-sm sm:text-base font-medium">
                 View Summary
@@ -289,12 +314,18 @@ const ReportsMobile = () => {
       </section>
 
       {/* === Suggestions via PORTAL (never affects layout) === */}
-      {showSuggestions && matches.length > 0 &&
+      {showSuggestions &&
+        matches.length > 0 &&
         createPortal(
           <div
             ref={dropdownRef}
             className="z-[9999] border border-gray-200 bg-white shadow-lg max-h-48 overflow-auto rounded-b-xl"
-            style={{ position: "fixed", left: dropdownRect.left, top: dropdownRect.top, width: dropdownRect.width }}
+            style={{
+              position: "fixed",
+              left: dropdownRect.left,
+              top: dropdownRect.top,
+              width: dropdownRect.width,
+            }}
           >
             {matches.map((m) => (
               <button
@@ -320,13 +351,15 @@ const ReportsMobile = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative z-10 bg-white rounded-2xl p-6 shadow-xl w-[90%] max-w-xs text-center">
-            <div className="flex items-center justify-center mb-3"><LoaderRing /></div>
+            <div className="flex items-center justify-center mb-3">
+              <LoaderRing />
+            </div>
             <div className="text-gray-800 text-sm">Fetching your request…</div>
           </div>
         </div>
       )}
 
-      {/* Modal: Result / Coming soon */}
+      {/* Modal: Error only (success navigates) */}
       {openModal && (
         <div
           role="dialog"
@@ -339,14 +372,14 @@ const ReportsMobile = () => {
             className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-lg font-semibold mb-2">📊 This Data is coming soon</div>
+            <div className="text-lg font-semibold mb-2">Notice</div>
             <p className="text-gray-700 text-sm leading-relaxed mb-4">{modalMsg}</p>
             <button
               ref={modalBtnRef}
               onClick={closeModal}
               className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
             >
-              Okay, I’ll check back
+              Okay
             </button>
           </div>
         </div>
