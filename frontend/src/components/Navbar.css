@@ -298,3 +298,49 @@ button.btn.btn-primary {
     animation: none !important;
   }
 }
+
+/* === Nav: Pill Tabs === */
+.navbar .nav-link {
+  --tab-bg: transparent;
+  --tab-text: #334155;
+  --tab-text-active: #0b1220;
+  --tab-fill: rgba(59,130,246,0.12);                /* hover bg */
+  --tab-fill-active: linear-gradient(90deg,#3b82f6,#2563eb);
+  --tab-shadow: 0 6px 18px rgba(37,99,235,0.18);
+
+  position: relative;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--tab-text) !important;
+  background: var(--tab-bg);
+  transition: background .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+/* remove underline animation from earlier rules if present */
+.navbar .nav-link::after { display: none !important; }
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus-visible {
+  background: var(--tab-fill);
+  color: var(--tab-text-active) !important;
+  transform: translateY(-1px);
+}
+
+.navbar .nav-link.active {
+  color: #ffffff !important;
+  background: var(--tab-fill-active);
+  box-shadow: var(--tab-shadow);
+  transform: translateY(-1px);
+}
+
+/* optional tiny glow ring on focus */
+.navbar .nav-link:focus-visible {
+  box-shadow: 0 0 0 6px rgba(59,130,246,.18), var(--tab-shadow);
+}
+
+/* tighter on mobile */
+@media (max-width: 991px) {
+  .navbar .nav-link { padding: 10px 12px; }
+}
