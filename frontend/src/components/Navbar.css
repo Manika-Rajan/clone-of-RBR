@@ -25,7 +25,7 @@
   transition: background var(--speed) ease, box-shadow var(--speed) ease, transform var(--speed) ease;
 }
 
-/* optional: add/remove .scrolled via JS if desired */
+/* subtle lift on appear / stronger when scrolled (optional JS below) */
 .navbar.scrolled {
   background: rgba(255,255,255,0.9) !important;
   box-shadow: var(--shadow-lg);
@@ -38,7 +38,11 @@
 }
 
 /* ===== LEFT: LOGO + TEXT ===== */
-.nav-left { display: flex; align-items: center; gap: 12px; }
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
 .logo img {
   width: 52px;
@@ -67,10 +71,12 @@
 .navbar-nav {
   display: flex;
   align-items: center;
-  gap: 28px; /* works fine with your current JSX */
+  gap: 28px; /* replaces hard 80px margins */
 }
 
-.nav-item { margin-right: 0; }
+.nav-item {
+  margin-right: 0; /* gap handles spacing */
+}
 
 .nav-link {
   position: relative;
@@ -83,8 +89,8 @@
   outline: none;
 }
 
-/* animated underline — scoped to anchors to avoid styling the avatar button */
-a.nav-link::after {
+/* animated underline */
+.nav-link::after {
   content: "";
   position: absolute;
   left: 0;
@@ -99,19 +105,18 @@ a.nav-link::after {
   opacity: 0.95;
 }
 
-a.nav-link:hover,
-a.nav-link:focus-visible {
+.nav-link:hover,
+.nav-link:focus-visible {
   color: var(--ink-900) !important;
 }
-
-a.nav-link:hover::after,
-a.nav-link:focus-visible::after,
-a.nav-link.active::after {
+.nav-link:hover::after,
+.nav-link:focus-visible::after,
+.nav-link.active::after {
   transform: scaleX(1);
 }
 
-/* focus ring for accessibility (anchors only) */
-a.nav-link:focus-visible {
+/* focus ring for accessibility */
+.nav-link:focus-visible {
   box-shadow: 0 0 0 6px var(--ring);
   border-radius: 10px;
 }
@@ -132,7 +137,9 @@ button.btn.btn-primary {
   box-shadow: 0 10px 26px rgba(37, 99, 235, 0.35);
   filter: saturate(1.05);
 }
-.btn.btn-primary:active { transform: translateY(0); }
+.btn.btn-primary:active {
+  transform: translateY(0);
+}
 
 /* ===== USER PROFILE ===== */
 .nav-item.dropdown { position: relative; }
@@ -178,20 +185,27 @@ button.btn.btn-primary {
 .navbar-nav .nav-item.dropdown .dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0 !important; left: auto !important;
-  display: block;
-  opacity: 0; pointer-events: none;
+  right: 0 !important;   /* align to right edge of toggle */
+  left: auto !important;
+  display: block;        /* we control visibility with opacity & pointer-events */
+  opacity: 0;
+  pointer-events: none;
   transform: translateY(6px) scale(0.98);
   transform-origin: top right;
   background: var(--surface);
   border: 1px solid rgba(2, 6, 23, 0.06);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
-  min-width: 180px; padding: 8px; z-index: 1000;
+  min-width: 180px;
+  padding: 8px;
+  z-index: 1000;
   transition: opacity var(--speed) ease, transform var(--speed) ease;
 }
+
 .navbar-nav .nav-item.dropdown .dropdown-menu.show {
-  opacity: 1; pointer-events: auto; animation: fadeSlide var(--speed) ease;
+  opacity: 1;
+  pointer-events: auto;
+  animation: fadeSlide var(--speed) ease;
 }
 
 .dropdown-item {
@@ -202,30 +216,57 @@ button.btn.btn-primary {
   transition: background var(--speed) ease, color var(--speed) ease;
 }
 .dropdown-item:hover,
-.dropdown-item:focus-visible { background: rgba(2, 6, 23, 0.04); color: var(--ink-900); }
+.dropdown-item:focus-visible {
+  background: rgba(2, 6, 23, 0.04);
+  color: var(--ink-900);
+}
 
 .logout-btn {
-  border: none; background: transparent; width: 100%; text-align: left;
-  cursor: pointer; color: #dc2626; font-weight: 700;
-  padding: 10px 12px; border-radius: 10px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: #dc2626;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-radius: 10px;
   transition: background var(--speed) ease, transform var(--speed) ease;
 }
 .logout-btn:hover { background: rgba(220, 38, 38, 0.08); }
 
 /* ===== BOOTSTRAP TOGGLER (visual touch) ===== */
 .navbar-toggler {
-  border-radius: 12px; border-color: rgba(2,6,23,0.12) !important; padding: 6px 9px;
+  border-radius: 12px;
+  border-color: rgba(2,6,23,0.12) !important;
+  padding: 6px 9px;
 }
-.navbar-toggler:focus { box-shadow: 0 0 0 6px var(--ring) !important; }
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 6px var(--ring) !important;
+}
 
-/* ===== RESPONSIVE ===== */
+/* ===== MOBILE ===== */
 @media (max-width: 991px) {
-  .container-fluid { padding-left: 16px !important; padding-right: 16px !important; }
-  .navbar-nav { align-items: flex-start; gap: 8px; padding: 10px 2px; }
-  .nav-link { padding: 10px 0; }
-  .dropdown-toggle.user-menu { padding-left: 0; }
+  .container-fluid {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .navbar-nav {
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 2px;
+  }
+  .nav-link {
+    padding: 10px 0;
+  }
+  .dropdown-toggle.user-menu {
+    padding-left: 0;
+  }
   .navbar-nav .nav-item.dropdown .dropdown-menu {
-    right: 0 !important; left: 0 !important; width: 100%; transform-origin: top center;
+    right: 0 !important;
+    left: 0 !important;
+    width: 100%;
+    transform-origin: top center;
   }
 }
 
@@ -239,7 +280,9 @@ button.btn.btn-primary {
     --ink-500: #94a3b8;
     --ring: rgba(59,130,246,0.35);
   }
-  .navbar { border-bottom-color: rgba(148,163,184,0.12); }
+  .navbar {
+    border-bottom-color: rgba(148,163,184,0.12);
+  }
   .logo img { box-shadow: 0 2px 10px rgba(0,0,0,0.45); }
   .dropdown-item:hover { background: rgba(255,255,255,0.06); }
   .logout-btn:hover { background: rgba(220, 38, 38, 0.18); }
@@ -247,7 +290,283 @@ button.btn.btn-primary {
 
 /* ===== MOTION PREFERENCES ===== */
 @media (prefers-reduced-motion: reduce) {
-  .navbar, a.nav-link, .dropdown-menu, .btn.btn-primary {
-    transition: none !important; animation: none !important;
+  .navbar,
+  .nav-link,
+  .dropdown-menu,
+  .btn.btn-primary {
+    transition: none !important;
+    animation: none !important;
   }
+}
+
+/* === Nav: Pill Tabs === */
+.navbar .nav-link {
+  --tab-bg: transparent;
+  --tab-text: #334155;
+  --tab-text-active: #0b1220;
+  --tab-fill: rgba(59,130,246,0.12);                /* hover bg */
+  --tab-fill-active: linear-gradient(90deg,#3b82f6,#2563eb);
+  --tab-shadow: 0 6px 18px rgba(37,99,235,0.18);
+
+  position: relative;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--tab-text) !important;
+  background: var(--tab-bg);
+  transition: background .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+/* remove underline animation from earlier rules if present */
+.navbar .nav-link::after { display: none !important; }
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus-visible {
+  background: var(--tab-fill);
+  color: var(--tab-text-active) !important;
+  transform: translateY(-1px);
+}
+
+.navbar .nav-link.active {
+  color: #ffffff !important;
+  background: var(--tab-fill-active);
+  box-shadow: var(--tab-shadow);
+  transform: translateY(-1px);
+}
+
+/* optional tiny glow ring on focus */
+.navbar .nav-link:focus-visible {
+  box-shadow: 0 0 0 6px rgba(59,130,246,.18), var(--tab-shadow);
+}
+
+/* tighter on mobile */
+@media (max-width: 991px) {
+  .navbar .nav-link { padding: 10px 12px; }
+}
+
+/* === Fix: keep pill + text on one line and aligned === */
+.navbar .navbar-nav {
+  flex-wrap: nowrap;            /* don't wrap items to next line */
+}
+
+.navbar .nav-item {
+  display: flex;                 /* align the anchor inside the li */
+  align-items: center;
+}
+
+.navbar .nav-link {
+  display: inline-flex;          /* pill behaves as a single unit */
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;           /* never break the label */
+  line-height: 1;                /* avoid tall line box pushing text */
+  vertical-align: middle;
+  min-height: 36px;              /* consistent pill height */
+  padding: 10px 14px;            /* ensure inner space */
+}
+
+/* if something still nudges it down on small screens, tighten gaps */
+@media (max-width: 991px) {
+  .navbar .navbar-nav { gap: 10px; }
+}
+
+/* ===============================
+   AURORA CAPSULES — premium pills
+   (drop-in, no JSX change needed)
+   =============================== */
+
+.navbar .nav-link {
+  /* layout (keeps the bubble intact) */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  line-height: 1;
+
+  /* sizing */
+  --pill-h: 38px;
+  min-height: var(--pill-h);
+  padding: 10px 16px;
+  border-radius: 999px;
+
+  /* typography */
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: #0f172a !important;
+
+  /* glassy base + subtle border via pseudo */
+  position: relative;
+  background: rgba(59,130,246,0.08);  /* faint glass */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  /* motion */
+  transition: transform .18s ease, box-shadow .22s ease, color .18s ease, background .22s ease;
+  box-shadow: 0 1px 0 rgba(2,6,23,0.06) inset, 0 6px 18px rgba(2,6,23,0.06);
+}
+
+/* gradient outline (mask trick) */
+.navbar .nav-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  padding: 1px; /* border thickness */
+  background: linear-gradient(135deg, #60a5fa, #2563eb 40%, #8b5cf6);
+  -webkit-mask: 
+     linear-gradient(#000 0 0) content-box, 
+     linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: .85;
+  pointer-events: none;
+}
+
+/* hover: lift + stronger glow */
+.navbar .nav-link:hover,
+.navbar .nav-link:focus-visible {
+  transform: translateY(-1px);
+  background: rgba(59,130,246,0.12);
+  box-shadow: 0 10px 24px rgba(37,99,235,0.15), 0 1px 0 rgba(2,6,23,0.05) inset;
+  color: #0b1220 !important;
+}
+
+/* active: filled gradient + sheen */
+.navbar .nav-link.active {
+  color: #fff !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb 45%, #7c3aed);
+  box-shadow: 0 14px 34px rgba(37,99,235,0.30), 0 1px 0 rgba(255,255,255,0.12) inset;
+}
+
+/* animated sheen (active only) */
+.navbar .nav-link.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(255,255,255,.0) 25%, rgba(255,255,255,.28) 50%, rgba(255,255,255,.0) 75%);
+  background-size: 250% 250%;
+  animation: sheen 2.2s ease-in-out infinite;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: .65;
+}
+
+@keyframes sheen {
+  0%   { background-position: 120% 0%; }
+  50%  { background-position: 0% 0%;   }
+  100% { background-position: -120% 0%; }
+}
+
+/* tiny status dot for active (tasteful) */
+.navbar .nav-link.active > span::after,
+.navbar .nav-link.active::before {
+  /* if your link text isn’t wrapped in <span>, the ::before below still gives a glow ring */
+}
+.navbar .nav-link.active::before {
+  /* brighten the border on active */
+  background: linear-gradient(135deg, #93c5fd, #3b82f6 40%, #a78bfa);
+  opacity: 1;
+}
+
+/* compact on smaller screens */
+@media (max-width: 991px) {
+  .navbar .nav-link { padding: 10px 14px; --pill-h: 36px; }
+}
+
+/* prefers-reduced-motion: keep it classy */
+@media (prefers-reduced-motion: reduce) {
+  .navbar .nav-link,
+  .navbar .nav-link.active::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* =========================
+   1) RESET earlier pill look
+   ========================= */
+.navbar .nav-link {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* kill any previous gradient border/sheen pseudo-elements */
+.navbar .nav-link::before {
+  content: none !important;
+}
+
+/* ===============================
+   2) CLEAN "PRO UNDERLINE" STYLE
+   =============================== */
+.navbar .navbar-nav {
+  gap: 22px;            /* consistent spacing between items */
+  flex-wrap: nowrap;    /* keep them on one row at desktop */
+}
+
+.navbar .nav-item {
+  display: flex;        /* keeps anchor vertically centered */
+  align-items: center;
+}
+
+.navbar .nav-link {
+  display: inline-block;
+  position: relative;
+  line-height: 1.2;
+  white-space: nowrap;
+  padding: 10px 4px;           /* tight, elegant */
+  color: #1f2937 !important;   /* slate-800 */
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: color .18s ease, opacity .18s ease, transform .18s ease;
+}
+
+/* underline (thick, short, centered) */
+.navbar .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 60%;
+  height: 2.5px;
+  background: currentColor;     /* matches text color */
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  transition: transform .18s ease;
+  border-radius: 3px;
+  opacity: .9;
+}
+
+/* hover/focus: darker text, show underline */
+.navbar .nav-link:hover,
+.navbar .nav-link:focus-visible {
+  color: #0f172a !important;    /* slate-900 */
+}
+.navbar .nav-link:hover::after,
+.navbar .nav-link:focus-visible::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* active: use brand color for text + underline, slight raise */
+.navbar .nav-link.active {
+  color: #0d6efd !important;    /* Bootstrap primary */
+  transform: translateY(-0.5px);
+}
+.navbar .nav-link.active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* accessibility focus ring without shifting layout */
+.navbar .nav-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 6px rgba(13,110,253,0.18);
+  border-radius: 8px;
+}
+
+/* mobile tweaks */
+@media (max-width: 991px) {
+  .navbar .navbar-nav { gap: 12px; }
+  .navbar .nav-link { padding: 10px 2px; }
 }
