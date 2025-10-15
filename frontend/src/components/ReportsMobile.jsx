@@ -1,7 +1,6 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
 // Mobile landing — logs searches; navigates only if a known report's preview exists.
-// If no exact match, asks your /suggest Lambda (DynamoDB-backed) and shows a classic
-// “Did you mean…?” popup (ice-blue, max 3 items).
+// If no exact match, calls /suggest (POST) and shows a classic “Did you mean…?” popup (ice-blue).
 
 import React, {
   useMemo,
@@ -34,20 +33,19 @@ const SUGGESTIONS = [
   "Pharma competitor analysis",
 ];
 
-/**
- * Router of known reports — we navigate only if query clearly matches one of these.
- * Add/change keywords here as you add reports.
- */
+// Router of known reports — navigate only if query clearly matches one of these.
 const ROUTER = [
-  { slug: "ev_charging",    keywords: ["ev charging", "charging station"],              title: "EV Charging Stations in India", icon: "🔌" },
-  { slug: "fmcg",           keywords: ["fmcg"],                                         title: "FMCG Market Report India",      icon: "🛒" },
-  { slug: "pharma",         keywords: ["pharma", "pharmaceutical"],                     title: "Pharma Competitor Analysis",    icon: "💊" },
-  // removed the single-word "paper" so partials like "paper clip" don't auto-resolve
-  { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing"],        title: "Paper Industry in India",       icon: "📄" },
+  { slug: "ev_charging",    keywords: ["ev charging", "charging station"] },
+  { slug: "fmcg",           keywords: ["fmcg"] },
+  { slug: "pharma",         keywords: ["pharma", "pharmaceutical"] },
+  // No plain "paper" (so "paper clip" doesn’t auto-resolve)
+  { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing"] },
 ];
 
-// 🔗 Suggest API
-const SUGGEST_API = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/suggest";
+// Endpoints
+const SEARCH_LOG_URL = "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/search-log";
+const PRESIGN_URL    = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL";
+const SUGGEST_URL    = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/suggest";
 
 // Loader
 const LoaderRing = () => (
@@ -79,7 +77,7 @@ const ReportsMobile = () => {
 
   // Suggestion modal (classic)
   const [suggestOpen, setSuggestOpen] = useState(false);
-  const [suggestItems, setSuggestItems] = useState([]); // [{title, asQuery, icon, chips:[], slug}]
+  const [suggestItems, setSuggestItems] = useState([]); // [{title, asQuery}]
   const [lastQuery, setLastQuery] = useState("");
 
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -118,57 +116,28 @@ const ReportsMobile = () => {
     return null;
   };
 
-  // 🔎 Ask your suggest Lambda (DynamoDB-backed) using GET to avoid CORS preflight
-  async function fetchSuggestions(query, limit = 3) {
+  // 🔎 ask /suggest for up to 3 items
+  const fetchSuggestions = async (query) => {
     try {
-      const url = new URL(SUGGEST_API);
-      url.searchParams.set("q", query);
-      url.searchParams.set("limit", String(limit));
-
-      const r = await fetch(url.toString(), { method: "GET" }); // no headers → simple request
-      if (!r.ok) return { items: [], exact_match: false };
-
-      // Some API Gateway setups return the Lambda "body" directly (already JSON),
-      // others wrap as { body: "..." }. Handle both safely:
-      const raw = await r.text();
-      const parsed = raw ? JSON.parse(raw) : {};
-      if (parsed && typeof parsed.items === "undefined" && typeof parsed.body === "string") {
-        // Wrapped response
-        return JSON.parse(parsed.body);
-      }
-      return parsed || { items: [], exact_match: false };
-    } catch {
+      const resp = await fetch(SUGGEST_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ q: query, limit: 3 }),
+      });
+      if (!resp.ok) return { items: [], exact_match: false };
+      const data = await resp.json();
+      // data.body may be a JSON string if API Gateway didn’t use Lambda proxy integration;
+      // but your response already returns parsed JSON body from Lambda.
+      const body = typeof data.body === "string" ? JSON.parse(data.body) : data;
+      const items = body.items || [];
+      return { items, exact_match: !!body.exact_match };
+    } catch (e) {
+      console.error("suggest error:", e);
       return { items: [], exact_match: false };
     }
-  }
+  };
 
-  // Small helper: presign preview and “probe” before navigating
-  async function canPreview(slug) {
-    const previewKey = `${slug}_preview.pdf`;
-    try {
-      const presignResp = await fetch(
-        "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ file_key: previewKey }),
-        }
-      );
-      if (!presignResp.ok) return false;
-      const presignData = await presignResp.json();
-      const url = presignData?.presigned_url;
-      if (!url) return false;
-
-      // Tiny GET with Range; HEAD can 403 on some S3 configs
-      const probe = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1" } });
-      const ct = (probe.headers.get("content-type") || "").toLowerCase();
-      return (probe.ok && (probe.status === 200 || probe.status === 206) && ct.includes("pdf"));
-    } catch {
-      return false;
-    }
-  }
-
-  // log → (resolve) → presign/probe → navigate OR suggest / modal
+  // log → (resolve) → presign → tiny GET probe → navigate OR suggest / modal
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -178,7 +147,6 @@ const ReportsMobile = () => {
     setModalMsg("");
     setSuggestOpen(false);
     try {
-      // analytics
       window.gtag?.("event", "report_search", {
         event_category: "engagement",
         event_label: "mobile_reports_search",
@@ -196,38 +164,33 @@ const ReportsMobile = () => {
           userId: state?.userInfo?.userId || state?.userInfo?.phone || "",
         },
       };
-      const logResp = await fetch(
-        "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/search-log",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const logResp = await fetch(SEARCH_LOG_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       if (!logResp.ok) {
         const t = await logResp.text();
         throw new Error(`Failed search-log ${logResp.status}, body: ${t}`);
       }
       await logResp.json();
 
-      // 1) Decide slug strictly (no fallback)
-      const directSlug = resolveSlug(trimmed);
-      if (!directSlug) {
-        // 🔎 Ask backend for up to 3 suggestions from DynamoDB
-        const { items } = await fetchSuggestions(trimmed, 3);
+      // 1) Try strict router first (no fallback)
+      const reportSlug = resolveSlug(trimmed);
+      if (!reportSlug) {
+        // 1a) Ask suggest API
+        const { items } = await fetchSuggestions(trimmed);
         if (items && items.length > 0) {
-          // Map API items to the popup structure
-          const uiItems = items.slice(0, 3).map((it) => ({
-            title: it.title || it.slug?.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) || it.slug,
-            asQuery: it.title || it.slug?.replace(/_/g, " ") || it.slug,
-            icon: "📄",
-            chips: [],
-            slug: it.slug,
+          // Map API -> modal items (max 3 already enforced)
+          const mapped = items.slice(0, 3).map((it) => ({
+            title: it.title || it.slug,
+            asQuery: it.title || it.slug, // re-search using title
           }));
-          setSuggestItems(uiItems);
+          setSuggestItems(mapped);
           setSuggestOpen(true);
-          return; // wait for user tap
+          return;
         }
+        // 1b) Nothing to suggest → coming soon
         setModalMsg("📢 We don’t have a ready-made report for that yet. We’ve logged your request and will add it soon.");
         setOpenModal(true);
         return;
@@ -236,15 +199,44 @@ const ReportsMobile = () => {
       const reportId = `RBR1${Math.floor(Math.random() * 900 + 100)}`;
 
       // 2) Pre-check preview availability BEFORE navigating
-      const ok = await canPreview(directSlug);
-      if (!ok) {
+      const previewKey = `${reportSlug}_preview.pdf`;
+      const presignResp = await fetch(PRESIGN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file_key: previewKey }),
+      });
+
+      if (!presignResp.ok) {
+        setModalMsg("📢 This report preview isn’t ready yet. Our team is adding it shortly.");
+        setOpenModal(true);
+        return;
+      }
+
+      const presignData = await presignResp.json();
+      const url = presignData?.presigned_url;
+      if (!url) {
         setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
         setOpenModal(true);
         return;
       }
 
+      // 3) Tiny GET with Range (HEAD often 403 on presigned URLs)
+      try {
+        const probe = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1" } });
+        const ct = (probe.headers.get("content-type") || "").toLowerCase();
+        if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.includes("pdf")) {
+          setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+          setOpenModal(true);
+          return;
+        }
+      } catch {
+        // If probe hiccups (network), still try to navigate — viewer will error if really missing
+        navigate("/report-display", { state: { reportSlug, reportId } });
+        return;
+      }
+
       // ✅ preview exists → navigate
-      navigate("/report-display", { state: { reportSlug: directSlug, reportId } });
+      navigate("/report-display", { state: { reportSlug, reportId } });
     } catch (e) {
       console.error("Error during search flow:", e);
       setModalMsg("⚠️ Something went wrong while processing your request. Please try again later.");
@@ -314,17 +306,6 @@ const ReportsMobile = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-10">
-      {/* A tiny style block just to make <mark> pretty in suggestions (kept) */}
-      <style>{`
-        .nice-mark mark {
-          background: linear-gradient(90deg, #e0f2ff, #f1f5ff);
-          color: #0b63c7;
-          padding: 0 6px;
-          border-radius: 9999px;
-          font-weight: 600;
-        }
-      `}</style>
-
       {/* Header */}
       <header className="w-full flex justify-between items-center mb-6">
         <div className="text-xl font-extrabold text-gray-900 tracking-tight">RBR</div>
@@ -440,7 +421,7 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* Did you mean modal (classic, max 3 suggestions from DynamoDB) */}
+      {/* Did you mean modal (classic, max 3 suggestions) */}
       {suggestOpen && (
         <div
           role="dialog"
@@ -477,43 +458,19 @@ const ReportsMobile = () => {
                   key={s.title}
                   type="button"
                   className="w-full text-left rounded-xl border border-blue-100 bg-white/80 hover:bg-white hover:border-blue-200 hover:shadow-md active:scale-[0.99] transition-all p-3 flex items-center gap-3"
-                  onClick={async () => {
+                  onClick={() => {
                     setSuggestOpen(false);
-                    const chosenSlug = s.slug || resolveSlug(s.asQuery) || null;
-                    if (chosenSlug) {
-                      const ok = await canPreview(chosenSlug);
-                      if (ok) {
-                        const reportId = `RBR1${Math.floor(Math.random() * 900 + 100)}`;
-                        navigate("/report-display", { state: { reportSlug: chosenSlug, reportId } });
-                        return;
-                      }
-                      setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
-                      setOpenModal(true);
-                    } else {
-                      setQ(s.asQuery);
-                      handleSearch(s.asQuery);
-                    }
+                    setQ(s.asQuery);
+                    handleSearch(s.asQuery);
                   }}
                 >
                   <div className="shrink-0 h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <span>{s.icon || "📄"}</span>
+                    <span>📊</span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-gray-900 truncate">
                       {s.title}
                     </div>
-                    {s.chips?.length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1.5">
-                        {s.chips.slice(0, 2).map((c) => (
-                          <span
-                            key={c}
-                            className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
-                          >
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                   <div className="shrink-0 text-blue-400">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
