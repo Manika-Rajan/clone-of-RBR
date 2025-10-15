@@ -1,5 +1,6 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
-// Mobile landing page — logs searches and only navigates if a known report's preview exists
+// Mobile landing page — logs searches; navigates only if a known report's preview exists.
+// If no exact match, shows a "Did you mean...?" suggestion sheet based on partial overlap.
 
 import React, {
   useMemo,
@@ -33,15 +34,14 @@ const SUGGESTIONS = [
 ];
 
 /**
- * Router of known reports — we will only navigate if the query
- * clearly matches one of these slugs. No default fallback.
+ * Router of known reports — we navigate only if query clearly matches one of these.
  * Add/change keywords here as you add reports.
  */
 const ROUTER = [
-  { slug: "ev_charging",     keywords: ["ev charging", "charging station"] },
-  { slug: "fmcg",            keywords: ["fmcg"] },
-  { slug: "pharma",          keywords: ["pharma", "pharmaceutical"] },
-  { slug: "paper_industry",  keywords: ["paper industry", "paper manufacturing"] },
+  { slug: "ev_charging",    keywords: ["ev charging", "charging station"], title: "EV Charging Stations in India" },
+  { slug: "fmcg",           keywords: ["fmcg"],                           title: "FMCG Market Report India" },
+  { slug: "pharma",         keywords: ["pharma", "pharmaceutical"],       title: "Pharma Competitor Analysis" },
+  { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing"], title: "Paper Industry in India" },
 ];
 
 // Loader
@@ -72,6 +72,10 @@ const ReportsMobile = () => {
   const [modalMsg, setModalMsg] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
 
+  // Suggestion sheet (for "Did you mean…?")
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [suggestItems, setSuggestItems] = useState([]); // [{title, asQuery}]
+
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [dropdownRect, setDropdownRect] = useState({ left: 0, top: 0, width: 0 });
 
@@ -79,14 +83,13 @@ const ReportsMobile = () => {
   const dropdownRef = useRef(null);
   const modalBtnRef = useRef(null);
 
-  // Suggestions
+  // Autocomplete (static) chips under the input
   const matches = useMemo(() => {
     const v = q.trim().toLowerCase();
     if (v.length < 2) return [];
     return SUGGESTIONS.filter((s) => s.toLowerCase().includes(v)).slice(0, 6);
   }, [q]);
 
-  // Dropdown pos
   const computeDropdownPos = useCallback(() => {
     const el = inputRef.current;
     if (!el) return;
@@ -106,16 +109,75 @@ const ReportsMobile = () => {
         return entry.slug;
       }
     }
-    return null; // no match → show "coming soon"
+    return null;
   };
 
-  // log → identify slug → presign → tiny GET probe → navigate OR show modal
+  // Helper: build “Did you mean…?” suggestions by partial overlap
+  // Strategy: split query into tokens; if a ROUTER entry has any keyword sharing any token, propose it.
+  const buildDidYouMean = (query) => {
+    const tokens = query
+      .toLowerCase()
+      .split(/[^a-z0-9]+/i)
+      .filter(Boolean);
+
+    if (tokens.length === 0) return [];
+
+    const intersects = (a, b) => a.some((x) => b.includes(x));
+
+    const candidates = [];
+    for (const entry of ROUTER) {
+      // build token bag for the entry (all keywords tokenized)
+      const entryTokens = Array.from(
+        new Set(
+          entry.keywords.flatMap((kw) =>
+            kw
+              .toLowerCase()
+              .split(/[^a-z0-9]+/i)
+              .filter(Boolean)
+          )
+        )
+      );
+      if (intersects(tokens, entryTokens)) {
+        candidates.push({
+          title: entry.title,
+          asQuery: entry.title, // what we will re-search with
+        });
+      }
+    }
+
+    // if we still have room, add a couple of sensible, generic variations for common stems
+    const bag = new Set(tokens);
+    if (candidates.length < 5) {
+      if (bag.has("paper")) {
+        candidates.push(
+          { title: "Paper cup manufacturing", asQuery: "paper cup manufacturing" },
+          { title: "New paper industry in India", asQuery: "new paper industry in India" }
+        );
+      }
+      if (bag.has("fmcg")) {
+        candidates.push({ title: "FMCG growth forecast India", asQuery: "FMCG growth forecast India" });
+      }
+    }
+
+    // dedupe by title and limit to 5
+    const seen = new Set();
+    const unique = candidates.filter((c) => {
+      if (seen.has(c.title)) return false;
+      seen.add(c.title);
+      return true;
+    });
+
+    return unique.slice(0, 5);
+  };
+
+  // core: log → (resolve) → presign → tiny GET probe → navigate OR suggest / modal
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
 
     setSearchLoading(true);
     setModalMsg("");
+    setSuggestOpen(false);
     try {
       // analytics
       window.gtag?.("event", "report_search", {
@@ -152,6 +214,14 @@ const ReportsMobile = () => {
       // 1) Decide slug strictly (no fallback)
       const reportSlug = resolveSlug(trimmed);
       if (!reportSlug) {
+        // Try “Did you mean…?”
+        const suggestions = buildDidYouMean(trimmed);
+        if (suggestions.length > 0) {
+          setSuggestItems(suggestions);
+          setSuggestOpen(true);
+          return; // stop here; wait for user tap
+        }
+        // No good suggestions → show "coming soon"
         setModalMsg("📢 We don’t have a ready-made report for that yet. We’ve logged your request and will add it soon.");
         setOpenModal(true);
         return;
@@ -160,8 +230,6 @@ const ReportsMobile = () => {
 
       // 2) Pre-check preview availability BEFORE navigating
       const previewKey = `${reportSlug}_preview.pdf`;
-      console.log("[ReportsMobile] presign previewKey:", previewKey);
-
       const presignResp = await fetch(
         "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL",
         {
@@ -179,7 +247,6 @@ const ReportsMobile = () => {
 
       const presignData = await presignResp.json();
       const url = presignData?.presigned_url;
-      console.log("[ReportsMobile] presigned preview URL:", url);
 
       if (!url) {
         setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
@@ -194,7 +261,6 @@ const ReportsMobile = () => {
           headers: { Range: "bytes=0-1" },
         });
         const ct = (probe.headers.get("content-type") || "").toLowerCase();
-        console.log("[ReportsMobile] probe status/ct:", probe.status, ct);
 
         if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.includes("pdf")) {
           setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
@@ -202,7 +268,6 @@ const ReportsMobile = () => {
           return;
         }
       } catch (probeErr) {
-        console.warn("[ReportsMobile] probe error:", probeErr);
         // Be lenient: try to navigate; viewer will show an error if truly missing
         navigate("/report-display", { state: { reportSlug, reportId } });
         return;
@@ -265,15 +330,19 @@ const ReportsMobile = () => {
     };
   }, [computeDropdownPos]);
 
-  // ESC to close modal
+  // ESC to close modal/sheet
   useEffect(() => {
     const onKey = (ev) => {
-      if (ev.key === "Escape") closeModal();
+      if (ev.key === "Escape") {
+        if (suggestOpen) setSuggestOpen(false);
+        if (openModal) setOpenModal(false);
+      }
     };
-    if (openModal) document.addEventListener("keydown", onKey);
+    if (openModal || suggestOpen) document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [openModal]);
+  }, [openModal, suggestOpen]);
 
+  // ===== UI =====
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-10">
       {/* Header */}
@@ -336,7 +405,7 @@ const ReportsMobile = () => {
         ))}
       </div>
 
-      {/* Suggestions via PORTAL */}
+      {/* Inline autocomplete suggestions via PORTAL */}
       {showSuggestions && matches.length > 0 &&
         createPortal(
           <div
@@ -386,6 +455,48 @@ const ReportsMobile = () => {
             </p>
             <button ref={modalBtnRef} onClick={closeModal} className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]">
               Okay
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* "Did you mean...?" suggestion sheet */}
+      {suggestOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          onClick={() => setSuggestOpen(false)}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-lg font-semibold mb-2">Did you mean…?</div>
+            <div className="flex flex-col gap-2 mb-3">
+              {suggestItems.map((s) => (
+                <button
+                  key={s.title}
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50"
+                  onClick={() => {
+                    setSuggestOpen(false);
+                    setQ(s.asQuery);
+                    // Immediately trigger a new search with the selected suggestion
+                    handleSearch(s.asQuery);
+                  }}
+                >
+                  {s.title}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSuggestOpen(false)}
+              className="w-full bg-gray-100 text-gray-800 font-semibold py-2.5 rounded-xl active:scale-[0.98]"
+            >
+              None of these
             </button>
           </div>
         </div>
