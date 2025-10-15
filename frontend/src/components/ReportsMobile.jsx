@@ -1,5 +1,5 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
-// Mobile landing page — logs searches and only navigates if preview PDF exists
+// Mobile landing page — logs searches and only navigates if a known report's preview exists
 
 import React, {
   useMemo,
@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Store } from "../Store";
 
 const EXAMPLES = [
-  "Paper Manufacturing in India",
+  "Paper industry in India",
   "FMCG market report",
   "IT industry analysis India",
   "EV charging stations India",
@@ -32,13 +32,17 @@ const SUGGESTIONS = [
   "Pharma competitor analysis",
 ];
 
-// Decide which report slug to open (fallback to paper_industry)
-const PREVIEW_MAP = [
-  { match: "ev charging", slug: "ev_charging" },
-  { match: "fmcg",        slug: "fmcg" },
-  { match: "pharma",      slug: "pharma" },
+/**
+ * Router of known reports — we will only navigate if the query
+ * clearly matches one of these slugs. No default fallback.
+ * Add/change keywords here as you add reports.
+ */
+const ROUTER = [
+  { slug: "ev_charging",     keywords: ["ev charging", "charging station"] },
+  { slug: "fmcg",            keywords: ["fmcg"] },
+  { slug: "pharma",          keywords: ["pharma", "pharmaceutical"] },
+  { slug: "paper_industry",  keywords: ["paper industry", "paper manufacturing"] },
 ];
-const DEFAULT_REPORT = { slug: "paper_industry", id: "RBR1999" };
 
 // Loader
 const LoaderRing = () => (
@@ -94,7 +98,18 @@ const ReportsMobile = () => {
     });
   }, []);
 
-  // log → presign → tiny GET probe → navigate OR show modal
+  // Helper: resolve a slug from the free-text query (case-insensitive)
+  const resolveSlug = (query) => {
+    const ql = query.toLowerCase();
+    for (const entry of ROUTER) {
+      if (entry.keywords.some((kw) => ql.includes(kw))) {
+        return entry.slug;
+      }
+    }
+    return null; // no match → show "coming soon"
+  };
+
+  // log → identify slug → presign → tiny GET probe → navigate OR show modal
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -134,17 +149,19 @@ const ReportsMobile = () => {
       }
       await logResp.json();
 
-      // decide slug
-      const ql = trimmed.toLowerCase();
-      const found = PREVIEW_MAP.find((m) => ql.includes(m.match));
-      const reportSlug = found?.slug || DEFAULT_REPORT.slug;
-      const reportId = found ? `RBR1${Math.floor(Math.random()*900+100)}` : DEFAULT_REPORT.id;
+      // 1) Decide slug strictly (no fallback)
+      const reportSlug = resolveSlug(trimmed);
+      if (!reportSlug) {
+        setModalMsg("📢 We don’t have a ready-made report for that yet. We’ve logged your request and will add it soon.");
+        setOpenModal(true);
+        return;
+      }
+      const reportId = `RBR1${Math.floor(Math.random() * 900 + 100)}`;
 
-      // pre-check preview availability BEFORE navigating
+      // 2) Pre-check preview availability BEFORE navigating
       const previewKey = `${reportSlug}_preview.pdf`;
       console.log("[ReportsMobile] presign previewKey:", previewKey);
 
-      // ask presign lambda for preview key
       const presignResp = await fetch(
         "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL",
         {
@@ -170,29 +187,28 @@ const ReportsMobile = () => {
         return;
       }
 
-      // 🔁 Use a tiny GET with Range instead of HEAD (HEAD often 403 on presigned)
+      // 3) Tiny GET with Range (HEAD often 403 on presigned URLs)
       try {
         const probe = await fetch(url, {
           method: "GET",
-          headers: { Range: "bytes=0-1" }, // pulls 2 bytes max (fast)
+          headers: { Range: "bytes=0-1" },
         });
-        const ct = probe.headers.get("content-type") || "";
+        const ct = (probe.headers.get("content-type") || "").toLowerCase();
         console.log("[ReportsMobile] probe status/ct:", probe.status, ct);
 
-        // accept 200 or 206 (Partial Content) and content-type containing "pdf"
-        if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.toLowerCase().includes("pdf")) {
+        if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.includes("pdf")) {
           setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
           setOpenModal(true);
           return;
         }
       } catch (probeErr) {
         console.warn("[ReportsMobile] probe error:", probeErr);
-        // If probing fails (network/CORS), be lenient and navigate — viewer will show real error if any
+        // Be lenient: try to navigate; viewer will show an error if truly missing
         navigate("/report-display", { state: { reportSlug, reportId } });
         return;
       }
 
-      // ✅ preview exists → navigate (display will fetch again & render)
+      // ✅ preview exists → navigate (display will fetch the same key again)
       navigate("/report-display", { state: { reportSlug, reportId } });
     } catch (e) {
       console.error("Error during search flow:", e);
@@ -287,7 +303,7 @@ const ReportsMobile = () => {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onFocus={handleFocus}
-            placeholder="e.g., FMCG market report, IT industry analysis…"
+            placeholder="e.g., paper industry, FMCG, pharma…"
             inputMode="search"
             enterKeyHint="search"
             className="flex-grow px-3 py-3 border border-gray-300 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
