@@ -41,10 +41,9 @@ const ROUTER = [
   { slug: "ev_charging",    keywords: ["ev charging", "charging station"],              title: "EV Charging Stations in India", icon: "🔌" },
   { slug: "fmcg",           keywords: ["fmcg"],                                         title: "FMCG Market Report India",      icon: "🛒" },
   { slug: "pharma",         keywords: ["pharma", "pharmaceutical"],                     title: "Pharma Competitor Analysis",    icon: "💊" },
-  // ⬇️ removed the single-word "paper" so partials like "paper clip" don't auto-resolve
+  // removed the single-word "paper" so partials like "paper clip" don't auto-resolve
   { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing"],        title: "Paper Industry in India",       icon: "📄" },
 ];
-
 
 // Loader
 const LoaderRing = () => (
@@ -135,7 +134,6 @@ const ReportsMobile = () => {
         new Set(entry.keywords.flatMap((kw) => tokenize(kw)))
       );
       if (intersects(tokens, entryTokens)) {
-        // Build chip list = intersection tokens
         const chips = Array.from(
           new Set(entryTokens.filter((t) => tokens.includes(t)))
         ).slice(0, 3);
@@ -155,14 +153,11 @@ const ReportsMobile = () => {
         { title: "Paper cup manufacturing", asQuery: "paper cup manufacturing", icon: "🥤", chips: ["paper", "manufacturing"] },
         { title: "New paper industry in India", asQuery: "new paper industry in India", icon: "📰", chips: ["paper", "industry"] },
       ];
-      // Avoid duplicates by title
       const seen = new Set(candidates.map((c) => c.title));
       for (const x of extras) {
         if (!seen.has(x.title)) candidates.push(x);
       }
     }
-
-    // Limit to 5
     return candidates.slice(0, 5);
   };
 
@@ -176,7 +171,6 @@ const ReportsMobile = () => {
     setModalMsg("");
     setSuggestOpen(false);
     try {
-      // analytics
       window.gtag?.("event", "report_search", {
         event_category: "engagement",
         event_label: "mobile_reports_search",
@@ -184,7 +178,6 @@ const ReportsMobile = () => {
         search_term: trimmed,
       });
 
-      // log to your search-log Lambda
       const payload = {
         search_query: trimmed,
         user: {
@@ -251,24 +244,17 @@ const ReportsMobile = () => {
 
       // 3) Tiny GET with Range (HEAD often 403 on presigned URLs)
       try {
-        const probe = await fetch(url, {
-          method: "GET",
-          headers: { Range: "bytes=0-1" },
-        });
+        const probe = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1" } });
         const ct = (probe.headers.get("content-type") || "").toLowerCase();
-
         if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.includes("pdf")) {
           setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
           setOpenModal(true);
           return;
         }
-      } catch (probeErr) {
-        // Be lenient: try to navigate; viewer will show an error if truly missing
+      } catch {
         navigate("/report-display", { state: { reportSlug, reportId } });
         return;
       }
-
-      // ✅ preview exists → navigate (display will fetch the same key again)
       navigate("/report-display", { state: { reportSlug, reportId } });
     } catch (e) {
       console.error("Error during search flow:", e);
@@ -465,7 +451,7 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* "Did you mean...?" suggestion sheet — polished UI */}
+      {/* "Did you mean...?" suggestion sheet — ICE-BLUE background */}
       {suggestOpen && (
         <div
           role="dialog"
@@ -490,18 +476,17 @@ const ReportsMobile = () => {
               </div>
             </div>
 
-            {/* Body */}
-            <div className="bg-white p-5 nice-mark">
+            {/* Body — ICE BLUE */}
+            <div className="bg-[#EAF6FF] p-5 nice-mark">
               <div className="flex flex-col gap-3">
                 {suggestItems.map((s) => (
                   <button
                     key={s.title}
                     type="button"
-                    className="group w-full text-left rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-md active:scale-[0.99] transition-all p-4 flex items-center gap-3"
+                    className="group w-full text-left rounded-2xl border border-blue-100 bg-white/70 hover:bg-white hover:border-blue-200 hover:shadow-md active:scale-[0.99] transition-all p-4 flex items-center gap-3"
                     onClick={() => {
                       setSuggestOpen(false);
                       setQ(s.asQuery);
-                      // Immediately trigger a new search with the selected suggestion
                       handleSearch(s.asQuery);
                     }}
                   >
@@ -527,13 +512,13 @@ const ReportsMobile = () => {
                           ))}
                         </div>
                       )}
-                      <div className="mt-1 text-xs text-gray-500">
+                      <div className="mt-1 text-xs text-gray-600">
                         Tap to open preview
                       </div>
                     </div>
 
                     {/* Chevron */}
-                    <div className="shrink-0 text-gray-400 group-hover:text-blue-500">
+                    <div className="shrink-0 text-blue-400 group-hover:text-blue-600">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                         <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
@@ -543,13 +528,13 @@ const ReportsMobile = () => {
               </div>
 
               {/* Divider */}
-              <div className="my-4 h-px bg-gray-100" />
+              <div className="my-4 h-px bg-blue-100" />
 
-              {/* None of these */}
+              {/* None of these — ICE BLUE tone */}
               <button
                 type="button"
                 onClick={() => setSuggestOpen(false)}
-                className="w-full border border-gray-200 hover:border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-800 font-semibold py-2.5 rounded-2xl active:scale-[0.98] transition-all"
+                className="w-full border border-blue-100 hover:border-blue-200 bg-[#DFF1FF] hover:bg-[#D6ECFF] text-blue-900 font-semibold py-2.5 rounded-2xl active:scale-[0.98] transition-all"
               >
                 None of these
               </button>
