@@ -1,6 +1,7 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
 // Mobile landing — logs searches; navigates only if a known report's preview exists.
 // If no exact match, calls /suggest (POST) and shows a classic “Did you mean…?” popup (ice-blue).
+// Tapping a suggestion now navigates directly to the report (no re-search loop).
 
 import React, {
   useMemo,
@@ -52,15 +53,9 @@ const LoaderRing = () => (
   <svg viewBox="0 0 100 100" className="w-14 h-14 animate-spin-slow">
     <circle cx="50" cy="50" r="45" fill="none" stroke="#e6e6e6" strokeWidth="8" />
     <circle
-      cx="50"
-      cy="50"
-      r="45"
-      fill="none"
-      stroke="#0263c7"
-      strokeWidth="8"
-      strokeLinecap="round"
-      strokeDasharray="283"
-      strokeDashoffset="75"
+      cx="50" cy="50" r="45"
+      fill="none" stroke="#0263c7" strokeWidth="8"
+      strokeLinecap="round" strokeDasharray="283" strokeDashoffset="75"
     />
     <style>{`.animate-spin-slow{animation:spin 1.4s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
   </svg>
@@ -77,7 +72,8 @@ const ReportsMobile = () => {
 
   // Suggestion modal (classic)
   const [suggestOpen, setSuggestOpen] = useState(false);
-  const [suggestItems, setSuggestItems] = useState([]); // [{title, asQuery}]
+  // items: [{title, slug}]
+  const [suggestItems, setSuggestItems] = useState([]);
   const [lastQuery, setLastQuery] = useState("");
 
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -126,10 +122,8 @@ const ReportsMobile = () => {
       });
       if (!resp.ok) return { items: [], exact_match: false };
       const data = await resp.json();
-      // data.body may be a JSON string if API Gateway didn’t use Lambda proxy integration;
-      // but your response already returns parsed JSON body from Lambda.
       const body = typeof data.body === "string" ? JSON.parse(data.body) : data;
-      const items = body.items || [];
+      const items = (body.items || []).slice(0, 3);
       return { items, exact_match: !!body.exact_match };
     } catch (e) {
       console.error("suggest error:", e);
@@ -137,7 +131,58 @@ const ReportsMobile = () => {
     }
   };
 
-  // log → (resolve) → presign → tiny GET probe → navigate OR suggest / modal
+  // 🔗 Given a slug, verify preview existence and navigate
+  const goToReportBySlug = async (reportSlug) => {
+    if (!reportSlug) return;
+    setSearchLoading(true);
+    try {
+      const reportId = `RBR1${Math.floor(Math.random() * 900 + 100)}`;
+      const previewKey = `${reportSlug}_preview.pdf`;
+
+      const presignResp = await fetch(PRESIGN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file_key: previewKey }),
+      });
+
+      if (!presignResp.ok) {
+        setModalMsg("📢 This report preview isn’t ready yet. Our team is adding it shortly.");
+        setOpenModal(true);
+        return;
+      }
+
+      const presignData = await presignResp.json();
+      const url = presignData?.presigned_url;
+      if (!url) {
+        setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+        setOpenModal(true);
+        return;
+      }
+
+      // Small probe (be lenient; navigate even if probe fails network-wise)
+      try {
+        const probe = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1" } });
+        const ct = (probe.headers.get("content-type") || "").toLowerCase();
+        if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.includes("pdf")) {
+          setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+          setOpenModal(true);
+          return;
+        }
+      } catch {
+        // ignore transient probe errors; still navigate
+      }
+
+      navigate("/report-display", { state: { reportSlug, reportId } });
+    } catch (e) {
+      console.error("goToReportBySlug error:", e);
+      setModalMsg("⚠️ Something went wrong while opening the report. Please try again.");
+      setOpenModal(true);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // log → (resolve) → navigate OR suggest
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -181,12 +226,12 @@ const ReportsMobile = () => {
         // 1a) Ask suggest API
         const { items } = await fetchSuggestions(trimmed);
         if (items && items.length > 0) {
-          // Map API -> modal items (max 3 already enforced)
-          const mapped = items.slice(0, 3).map((it) => ({
+          // Map API -> modal items with slug (so clicks can jump straight to report)
+          const mapped = items.map((it) => ({
             title: it.title || it.slug,
-            asQuery: it.title || it.slug, // re-search using title
+            slug: it.slug, // crucial
           }));
-          setSuggestItems(mapped);
+          setSuggestItems(mapped.slice(0, 3));
           setSuggestOpen(true);
           return;
         }
@@ -196,47 +241,8 @@ const ReportsMobile = () => {
         return;
       }
 
-      const reportId = `RBR1${Math.floor(Math.random() * 900 + 100)}`;
-
-      // 2) Pre-check preview availability BEFORE navigating
-      const previewKey = `${reportSlug}_preview.pdf`;
-      const presignResp = await fetch(PRESIGN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file_key: previewKey }),
-      });
-
-      if (!presignResp.ok) {
-        setModalMsg("📢 This report preview isn’t ready yet. Our team is adding it shortly.");
-        setOpenModal(true);
-        return;
-      }
-
-      const presignData = await presignResp.json();
-      const url = presignData?.presigned_url;
-      if (!url) {
-        setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
-        setOpenModal(true);
-        return;
-      }
-
-      // 3) Tiny GET with Range (HEAD often 403 on presigned URLs)
-      try {
-        const probe = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1" } });
-        const ct = (probe.headers.get("content-type") || "").toLowerCase();
-        if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.includes("pdf")) {
-          setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
-          setOpenModal(true);
-          return;
-        }
-      } catch {
-        // If probe hiccups (network), still try to navigate — viewer will error if really missing
-        navigate("/report-display", { state: { reportSlug, reportId } });
-        return;
-      }
-
-      // ✅ preview exists → navigate
-      navigate("/report-display", { state: { reportSlug, reportId } });
+      // 2) We have a slug → go open the report
+      await goToReportBySlug(reportSlug);
     } catch (e) {
       console.error("Error during search flow:", e);
       setModalMsg("⚠️ Something went wrong while processing your request. Please try again later.");
@@ -453,15 +459,15 @@ const ReportsMobile = () => {
             </p>
 
             <div className="space-y-2">
-              {suggestItems.slice(0, 3).map((s) => (
+              {suggestItems.map((s) => (
                 <button
-                  key={s.title}
+                  key={s.slug || s.title}
                   type="button"
                   className="w-full text-left rounded-xl border border-blue-100 bg-white/80 hover:bg-white hover:border-blue-200 hover:shadow-md active:scale-[0.99] transition-all p-3 flex items-center gap-3"
                   onClick={() => {
                     setSuggestOpen(false);
-                    setQ(s.asQuery);
-                    handleSearch(s.asQuery);
+                    // Navigate directly using the slug
+                    goToReportBySlug(s.slug || resolveSlug(s.title || ""));
                   }}
                 >
                   <div className="shrink-0 h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center">
