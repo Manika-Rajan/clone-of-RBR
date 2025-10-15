@@ -1,5 +1,5 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
-// Mobile landing page — logs searches and then navigates to the mobile report display
+// Mobile landing page — logs searches and only navigates if preview PDF exists
 
 import React, {
   useMemo,
@@ -32,17 +32,15 @@ const SUGGESTIONS = [
   "Pharma competitor analysis",
 ];
 
-// ⬇️ Simple mapping to decide which report slug to open.
-// Default falls back to "paper_industry".
+// Decide which report slug to open (fallback to paper_industry)
 const PREVIEW_MAP = [
   { match: "ev charging", slug: "ev_charging" },
   { match: "fmcg",        slug: "fmcg" },
   { match: "pharma",      slug: "pharma" },
 ];
-
 const DEFAULT_REPORT = { slug: "paper_industry", id: "RBR1999" };
 
-// Small loader ring (tailwind-friendly)
+// Loader
 const LoaderRing = () => (
   <svg viewBox="0 0 100 100" className="w-14 h-14 animate-spin-slow">
     <circle cx="50" cy="50" r="45" fill="none" stroke="#e6e6e6" strokeWidth="8" />
@@ -77,12 +75,14 @@ const ReportsMobile = () => {
   const dropdownRef = useRef(null);
   const modalBtnRef = useRef(null);
 
+  // Suggestions
   const matches = useMemo(() => {
     const v = q.trim().toLowerCase();
     if (v.length < 2) return [];
     return SUGGESTIONS.filter((s) => s.toLowerCase().includes(v)).slice(0, 6);
   }, [q]);
 
+  // Dropdown pos
   const computeDropdownPos = useCallback(() => {
     const el = inputRef.current;
     if (!el) return;
@@ -94,6 +94,7 @@ const ReportsMobile = () => {
     });
   }, []);
 
+  // ⬇️ core: log → pre-sign → HEAD probe → navigate OR show modal
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -101,6 +102,7 @@ const ReportsMobile = () => {
     setSearchLoading(true);
     setModalMsg("");
     try {
+      // analytics
       window.gtag?.("event", "report_search", {
         event_category: "engagement",
         event_label: "mobile_reports_search",
@@ -108,6 +110,7 @@ const ReportsMobile = () => {
         search_term: trimmed,
       });
 
+      // log to your search-log Lambda
       const payload = {
         search_query: trimmed,
         user: {
@@ -117,8 +120,7 @@ const ReportsMobile = () => {
           userId: state?.userInfo?.userId || state?.userInfo?.phone || "",
         },
       };
-
-      const resp = await fetch(
+      const logResp = await fetch(
         "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/search-log",
         {
           method: "POST",
@@ -126,23 +128,69 @@ const ReportsMobile = () => {
           body: JSON.stringify(payload),
         }
       );
-
-      if (!resp.ok) {
-        const t = await resp.text();
-        throw new Error(`Failed with status ${resp.status}, body: ${t}`);
+      if (!logResp.ok) {
+        const t = await logResp.text();
+        throw new Error(`Failed search-log ${logResp.status}, body: ${t}`);
       }
-      await resp.json();
+      await logResp.json();
 
-      // Decide which report slug to show
+      // decide slug
       const ql = trimmed.toLowerCase();
       const found = PREVIEW_MAP.find((m) => ql.includes(m.match));
       const reportSlug = found?.slug || DEFAULT_REPORT.slug;
       const reportId = found ? `RBR1${Math.floor(Math.random()*900+100)}` : DEFAULT_REPORT.id;
 
-      // Navigate with slug (display page will pick preview/full based on purchase)
+      // 🔎 pre-check preview availability BEFORE navigating
+      const previewKey = `${reportSlug}_preview.pdf`;
+
+      // ask presign lambda for preview key
+      const presignResp = await fetch(
+        "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file_key: previewKey }),
+        }
+      );
+
+      if (!presignResp.ok) {
+        // e.g., lambda validates and rejects missing keys
+        setModalMsg("📢 This report preview isn’t ready yet. Our team is adding it shortly.");
+        setOpenModal(true);
+        return;
+      }
+
+      const presignData = await presignResp.json();
+      const url = presignData?.presigned_url;
+
+      if (!url) {
+        setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+        setOpenModal(true);
+        return;
+      }
+
+      // probe the presigned URL with a HEAD request (fast, confirms existence)
+      try {
+        const head = await fetch(url, { method: "HEAD" });
+        const ok = head.ok;
+        const ct = head.headers.get("content-type") || "";
+        if (!ok || !ct.includes("pdf")) {
+          // 404 or not a PDF → show coming soon
+          setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+          setOpenModal(true);
+          return;
+        }
+      } catch {
+        // Network/CORS failure – treat as not available
+        setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+        setOpenModal(true);
+        return;
+      }
+
+      // ✅ preview exists → navigate (display will fetch again & render)
       navigate("/report-display", { state: { reportSlug, reportId } });
     } catch (e) {
-      console.error("Error logging search (mobile):", e);
+      console.error("Error during search flow:", e);
       setModalMsg("⚠️ Something went wrong while processing your request. Please try again later.");
       setOpenModal(true);
     } finally {
@@ -169,6 +217,7 @@ const ReportsMobile = () => {
     setShowSuggestions(true);
   };
 
+  // close suggestions when clicking out
   useEffect(() => {
     const handleClick = (e) => {
       const insideDropdown = dropdownRef.current?.contains(e.target);
@@ -183,6 +232,7 @@ const ReportsMobile = () => {
     };
   }, []);
 
+  // reposition on resize; close on scroll
   useEffect(() => {
     const onResize = () => computeDropdownPos();
     const onScroll = () => setShowSuggestions(false);
@@ -194,6 +244,7 @@ const ReportsMobile = () => {
     };
   }, [computeDropdownPos]);
 
+  // ESC to close modal
   useEffect(() => {
     const onKey = (ev) => {
       if (ev.key === "Escape") closeModal();
@@ -303,13 +354,15 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* Error modal */}
+      {/* Error / Coming soon modal */}
       {openModal && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={closeModal}>
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="text-lg font-semibold mb-2">Notice</div>
-            <p className="text-gray-700 text-sm leading-relaxed mb-4">{modalMsg}</p>
+            <div className="text-lg font-semibold mb-2">📊 This data is coming soon</div>
+            <p className="text-gray-700 text-sm leading-relaxed mb-4">
+              {modalMsg || "We’re adding this report to our catalog. Please check back soon!"}
+            </p>
             <button ref={modalBtnRef} onClick={closeModal} className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]">
               Okay
             </button>
