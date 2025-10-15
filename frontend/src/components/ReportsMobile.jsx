@@ -94,7 +94,7 @@ const ReportsMobile = () => {
     });
   }, []);
 
-  // ⬇️ core: log → pre-sign → HEAD probe → navigate OR show modal
+  // log → presign → tiny GET probe → navigate OR show modal
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -140,8 +140,9 @@ const ReportsMobile = () => {
       const reportSlug = found?.slug || DEFAULT_REPORT.slug;
       const reportId = found ? `RBR1${Math.floor(Math.random()*900+100)}` : DEFAULT_REPORT.id;
 
-      // 🔎 pre-check preview availability BEFORE navigating
+      // pre-check preview availability BEFORE navigating
       const previewKey = `${reportSlug}_preview.pdf`;
+      console.log("[ReportsMobile] presign previewKey:", previewKey);
 
       // ask presign lambda for preview key
       const presignResp = await fetch(
@@ -154,7 +155,6 @@ const ReportsMobile = () => {
       );
 
       if (!presignResp.ok) {
-        // e.g., lambda validates and rejects missing keys
         setModalMsg("📢 This report preview isn’t ready yet. Our team is adding it shortly.");
         setOpenModal(true);
         return;
@@ -162,6 +162,7 @@ const ReportsMobile = () => {
 
       const presignData = await presignResp.json();
       const url = presignData?.presigned_url;
+      console.log("[ReportsMobile] presigned preview URL:", url);
 
       if (!url) {
         setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
@@ -169,21 +170,25 @@ const ReportsMobile = () => {
         return;
       }
 
-      // probe the presigned URL with a HEAD request (fast, confirms existence)
+      // 🔁 Use a tiny GET with Range instead of HEAD (HEAD often 403 on presigned)
       try {
-        const head = await fetch(url, { method: "HEAD" });
-        const ok = head.ok;
-        const ct = head.headers.get("content-type") || "";
-        if (!ok || !ct.includes("pdf")) {
-          // 404 or not a PDF → show coming soon
+        const probe = await fetch(url, {
+          method: "GET",
+          headers: { Range: "bytes=0-1" }, // pulls 2 bytes max (fast)
+        });
+        const ct = probe.headers.get("content-type") || "";
+        console.log("[ReportsMobile] probe status/ct:", probe.status, ct);
+
+        // accept 200 or 206 (Partial Content) and content-type containing "pdf"
+        if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.toLowerCase().includes("pdf")) {
           setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
           setOpenModal(true);
           return;
         }
-      } catch {
-        // Network/CORS failure – treat as not available
-        setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
-        setOpenModal(true);
+      } catch (probeErr) {
+        console.warn("[ReportsMobile] probe error:", probeErr);
+        // If probing fails (network/CORS), be lenient and navigate — viewer will show real error if any
+        navigate("/report-display", { state: { reportSlug, reportId } });
         return;
       }
 
