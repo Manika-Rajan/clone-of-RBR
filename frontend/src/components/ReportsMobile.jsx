@@ -38,11 +38,13 @@ const SUGGESTIONS = [
  * Add/change keywords here as you add reports.
  */
 const ROUTER = [
-  { slug: "ev_charging",    keywords: ["ev charging", "charging station"],             title: "EV Charging Stations in India", icon: "🔌" },
-  { slug: "fmcg",           keywords: ["fmcg"],                                        title: "FMCG Market Report India",      icon: "🛒" },
-  { slug: "pharma",         keywords: ["pharma", "pharmaceutical"],                    title: "Pharma Competitor Analysis",    icon: "💊" },
-  { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing", "paper"], title: "Paper Industry in India",    icon: "📄" },
+  { slug: "ev_charging",    keywords: ["ev charging", "charging station"],              title: "EV Charging Stations in India", icon: "🔌" },
+  { slug: "fmcg",           keywords: ["fmcg"],                                         title: "FMCG Market Report India",      icon: "🛒" },
+  { slug: "pharma",         keywords: ["pharma", "pharmaceutical"],                     title: "Pharma Competitor Analysis",    icon: "💊" },
+  // ⬇️ removed the single-word "paper" so partials like "paper clip" don't auto-resolve
+  { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing"],        title: "Paper Industry in India",       icon: "📄" },
 ];
+
 
 // Loader
 const LoaderRing = () => (
