@@ -1,6 +1,6 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
 // Mobile landing — logs searches; navigates only if a known report's preview exists.
-// If no exact match, shows a polished “Did you mean…?” suggestion sheet.
+// If no exact match, shows a classic “Did you mean…?” popup (ice-blue).
 
 import React, {
   useMemo,
@@ -73,7 +73,7 @@ const ReportsMobile = () => {
   const [modalMsg, setModalMsg] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // Suggestion sheet (for "Did you mean…?")
+  // Suggestion modal (classic)
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [suggestItems, setSuggestItems] = useState([]); // [{title, asQuery, icon, chips:[]}]
   const [lastQuery, setLastQuery] = useState("");
@@ -451,94 +451,85 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* "Did you mean...?" suggestion sheet — ICE-BLUE background */}
+      {/* Did you mean modal (classic) */}
       {suggestOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={() => setSuggestOpen(false)}
         >
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
 
-          {/* Sheet */}
+          {/* Centered modal */}
           <div
-            className="relative z-10 w-full sm:w-[460px] rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl transform transition-transform duration-300 ease-out translate-y-0"
+            className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-2xl border border-blue-100 bg-[#EAF6FF] p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Gradient header */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white p-5">
-              <div className="text-sm opacity-90">Did you mean…</div>
-              <div className="text-lg font-semibold">Suggestions for your search</div>
-              <div className="mt-2 text-xs sm:text-[13px] text-white/90 truncate">
-                You searched: <span className="font-semibold">{lastQuery}</span>
-              </div>
-            </div>
-
-            {/* Body — ICE BLUE */}
-            <div className="bg-[#EAF6FF] p-5 nice-mark">
-              <div className="flex flex-col gap-3">
-                {suggestItems.map((s) => (
-                  <button
-                    key={s.title}
-                    type="button"
-                    className="group w-full text-left rounded-2xl border border-blue-100 bg-white/70 hover:bg-white hover:border-blue-200 hover:shadow-md active:scale-[0.99] transition-all p-4 flex items-center gap-3"
-                    onClick={() => {
-                      setSuggestOpen(false);
-                      setQ(s.asQuery);
-                      handleSearch(s.asQuery);
-                    }}
-                  >
-                    {/* Icon bubble */}
-                    <div className="shrink-0 h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg">
-                      <span className="group-hover:scale-110 transition-transform">{s.icon || "📊"}</span>
-                    </div>
-
-                    {/* Title + chips */}
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[15px] font-semibold text-gray-900 truncate">
-                        {s.title}
-                      </div>
-                      {s.chips?.length > 0 && (
-                        <div className="mt-1 flex flex-wrap gap-1.5">
-                          {s.chips.map((c) => (
-                            <span
-                              key={c}
-                              className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
-                            >
-                              {c}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="mt-1 text-xs text-gray-600">
-                        Tap to open preview
-                      </div>
-                    </div>
-
-                    {/* Chevron */}
-                    <div className="shrink-0 text-blue-400 group-hover:text-blue-600">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Divider */}
-              <div className="my-4 h-px bg-blue-100" />
-
-              {/* None of these — ICE BLUE tone */}
+            <div className="flex items-start justify-between mb-2">
+              <h3 className="text-base font-semibold text-blue-900">Did you mean…</h3>
               <button
-                type="button"
                 onClick={() => setSuggestOpen(false)}
-                className="w-full border border-blue-100 hover:border-blue-200 bg-[#DFF1FF] hover:bg-[#D6ECFF] text-blue-900 font-semibold py-2.5 rounded-2xl active:scale-[0.98] transition-all"
+                className="h-8 w-8 rounded-full bg-white/70 hover:bg-white text-blue-700 flex items-center justify-center"
+                aria-label="Close suggestions"
               >
-                None of these
+                ×
               </button>
             </div>
+
+            <p className="text-xs text-blue-800/80 mb-3">
+              You searched: <strong>{lastQuery}</strong>
+            </p>
+
+            <div className="space-y-2">
+              {suggestItems.map((s) => (
+                <button
+                  key={s.title}
+                  type="button"
+                  className="w-full text-left rounded-xl border border-blue-100 bg-white/80 hover:bg-white hover:border-blue-200 hover:shadow-md active:scale-[0.99] transition-all p-3 flex items-center gap-3"
+                  onClick={() => {
+                    setSuggestOpen(false);
+                    setQ(s.asQuery);
+                    handleSearch(s.asQuery);
+                  }}
+                >
+                  <div className="shrink-0 h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <span>{s.icon || "📊"}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {s.title}
+                    </div>
+                    {s.chips?.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {s.chips.map((c) => (
+                          <span
+                            key={c}
+                            className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+                          >
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="shrink-0 text-blue-400">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSuggestOpen(false)}
+              className="mt-3 w-full border border-blue-100 hover:border-blue-200 bg-[#DFF1FF] hover:bg-[#D6ECFF] text-blue-900 font-semibold py-2.5 rounded-xl active:scale-[0.98] transition-all"
+            >
+              None of these
+            </button>
           </div>
         </div>
       )}
