@@ -1,6 +1,6 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
-// Mobile landing page — logs searches; navigates only if a known report's preview exists.
-// If no exact match, shows a "Did you mean...?" suggestion sheet based on partial overlap.
+// Mobile landing — logs searches; navigates only if a known report's preview exists.
+// If no exact match, shows a polished “Did you mean…?” suggestion sheet.
 
 import React, {
   useMemo,
@@ -38,10 +38,10 @@ const SUGGESTIONS = [
  * Add/change keywords here as you add reports.
  */
 const ROUTER = [
-  { slug: "ev_charging",    keywords: ["ev charging", "charging station"], title: "EV Charging Stations in India" },
-  { slug: "fmcg",           keywords: ["fmcg"],                           title: "FMCG Market Report India" },
-  { slug: "pharma",         keywords: ["pharma", "pharmaceutical"],       title: "Pharma Competitor Analysis" },
-  { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing"], title: "Paper Industry in India" },
+  { slug: "ev_charging",    keywords: ["ev charging", "charging station"],             title: "EV Charging Stations in India", icon: "🔌" },
+  { slug: "fmcg",           keywords: ["fmcg"],                                        title: "FMCG Market Report India",      icon: "🛒" },
+  { slug: "pharma",         keywords: ["pharma", "pharmaceutical"],                    title: "Pharma Competitor Analysis",    icon: "💊" },
+  { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing", "paper"], title: "Paper Industry in India",    icon: "📄" },
 ];
 
 // Loader
@@ -74,7 +74,8 @@ const ReportsMobile = () => {
 
   // Suggestion sheet (for "Did you mean…?")
   const [suggestOpen, setSuggestOpen] = useState(false);
-  const [suggestItems, setSuggestItems] = useState([]); // [{title, asQuery}]
+  const [suggestItems, setSuggestItems] = useState([]); // [{title, asQuery, icon, chips:[]}]
+  const [lastQuery, setLastQuery] = useState("");
 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [dropdownRect, setDropdownRect] = useState({ left: 0, top: 0, width: 0 });
@@ -112,69 +113,63 @@ const ReportsMobile = () => {
     return null;
   };
 
-  // Helper: build “Did you mean…?” suggestions by partial overlap
-  // Strategy: split query into tokens; if a ROUTER entry has any keyword sharing any token, propose it.
-  const buildDidYouMean = (query) => {
-    const tokens = query
+  // Helper: tokenization
+  const tokenize = (text) =>
+    text
       .toLowerCase()
       .split(/[^a-z0-9]+/i)
       .filter(Boolean);
 
+  // Helper: build “Did you mean…?” suggestions by partial overlap
+  const buildDidYouMean = (query) => {
+    const tokens = tokenize(query);
     if (tokens.length === 0) return [];
 
     const intersects = (a, b) => a.some((x) => b.includes(x));
-
     const candidates = [];
+
     for (const entry of ROUTER) {
-      // build token bag for the entry (all keywords tokenized)
       const entryTokens = Array.from(
-        new Set(
-          entry.keywords.flatMap((kw) =>
-            kw
-              .toLowerCase()
-              .split(/[^a-z0-9]+/i)
-              .filter(Boolean)
-          )
-        )
+        new Set(entry.keywords.flatMap((kw) => tokenize(kw)))
       );
       if (intersects(tokens, entryTokens)) {
+        // Build chip list = intersection tokens
+        const chips = Array.from(
+          new Set(entryTokens.filter((t) => tokens.includes(t)))
+        ).slice(0, 3);
         candidates.push({
           title: entry.title,
-          asQuery: entry.title, // what we will re-search with
+          asQuery: entry.title,
+          icon: entry.icon || "📊",
+          chips,
         });
       }
     }
 
-    // if we still have room, add a couple of sensible, generic variations for common stems
+    // If still room and "paper" present, add a couple of friendly extras
     const bag = new Set(tokens);
-    if (candidates.length < 5) {
-      if (bag.has("paper")) {
-        candidates.push(
-          { title: "Paper cup manufacturing", asQuery: "paper cup manufacturing" },
-          { title: "New paper industry in India", asQuery: "new paper industry in India" }
-        );
-      }
-      if (bag.has("fmcg")) {
-        candidates.push({ title: "FMCG growth forecast India", asQuery: "FMCG growth forecast India" });
+    if (candidates.length < 5 && bag.has("paper")) {
+      const extras = [
+        { title: "Paper cup manufacturing", asQuery: "paper cup manufacturing", icon: "🥤", chips: ["paper", "manufacturing"] },
+        { title: "New paper industry in India", asQuery: "new paper industry in India", icon: "📰", chips: ["paper", "industry"] },
+      ];
+      // Avoid duplicates by title
+      const seen = new Set(candidates.map((c) => c.title));
+      for (const x of extras) {
+        if (!seen.has(x.title)) candidates.push(x);
       }
     }
 
-    // dedupe by title and limit to 5
-    const seen = new Set();
-    const unique = candidates.filter((c) => {
-      if (seen.has(c.title)) return false;
-      seen.add(c.title);
-      return true;
-    });
-
-    return unique.slice(0, 5);
+    // Limit to 5
+    return candidates.slice(0, 5);
   };
 
-  // core: log → (resolve) → presign → tiny GET probe → navigate OR suggest / modal
+  // log → (resolve) → presign → tiny GET probe → navigate OR suggest / modal
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
 
+    setLastQuery(trimmed);
     setSearchLoading(true);
     setModalMsg("");
     setSuggestOpen(false);
@@ -214,14 +209,12 @@ const ReportsMobile = () => {
       // 1) Decide slug strictly (no fallback)
       const reportSlug = resolveSlug(trimmed);
       if (!reportSlug) {
-        // Try “Did you mean…?”
         const suggestions = buildDidYouMean(trimmed);
         if (suggestions.length > 0) {
           setSuggestItems(suggestions);
           setSuggestOpen(true);
-          return; // stop here; wait for user tap
+          return; // wait for user tap
         }
-        // No good suggestions → show "coming soon"
         setModalMsg("📢 We don’t have a ready-made report for that yet. We’ve logged your request and will add it soon.");
         setOpenModal(true);
         return;
@@ -342,9 +335,19 @@ const ReportsMobile = () => {
     return () => document.removeEventListener("keydown", onKey);
   }, [openModal, suggestOpen]);
 
-  // ===== UI =====
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-10">
+      {/* A tiny style block just to make <mark> pretty in suggestions */}
+      <style>{`
+        .nice-mark mark {
+          background: linear-gradient(90deg, #e0f2ff, #f1f5ff);
+          color: #0b63c7;
+          padding: 0 6px;
+          border-radius: 9999px;
+          font-weight: 600;
+        }
+      `}</style>
+
       {/* Header */}
       <header className="w-full flex justify-between items-center mb-6">
         <div className="text-xl font-extrabold text-gray-900 tracking-tight">RBR</div>
@@ -436,7 +439,7 @@ const ReportsMobile = () => {
       {/* Loader overlay */}
       {searchLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="relative z-10 bg-white rounded-2xl p-6 shadow-xl w-[90%] max-w-xs text-center">
             <div className="flex items-center justify-center mb-3"><LoaderRing /></div>
             <div className="text-gray-800 text-sm">Fetching your request…</div>
@@ -447,7 +450,7 @@ const ReportsMobile = () => {
       {/* Error / Coming soon modal */}
       {openModal && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={closeModal}>
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg" onClick={(e) => e.stopPropagation()}>
             <div className="text-lg font-semibold mb-2">📊 This data is coming soon</div>
             <p className="text-gray-700 text-sm leading-relaxed mb-4">
@@ -460,7 +463,7 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* "Did you mean...?" suggestion sheet */}
+      {/* "Did you mean...?" suggestion sheet — polished UI */}
       {suggestOpen && (
         <div
           role="dialog"
@@ -468,36 +471,87 @@ const ReportsMobile = () => {
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
           onClick={() => setSuggestOpen(false)}
         >
-          <div className="absolute inset-0 bg-black/40" />
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+
+          {/* Sheet */}
           <div
-            className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
+            className="relative z-10 w-full sm:w-[460px] rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl transform transition-transform duration-300 ease-out translate-y-0"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-lg font-semibold mb-2">Did you mean…?</div>
-            <div className="flex flex-col gap-2 mb-3">
-              {suggestItems.map((s) => (
-                <button
-                  key={s.title}
-                  type="button"
-                  className="w-full text-left px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50"
-                  onClick={() => {
-                    setSuggestOpen(false);
-                    setQ(s.asQuery);
-                    // Immediately trigger a new search with the selected suggestion
-                    handleSearch(s.asQuery);
-                  }}
-                >
-                  {s.title}
-                </button>
-              ))}
+            {/* Gradient header */}
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white p-5">
+              <div className="text-sm opacity-90">Did you mean…</div>
+              <div className="text-lg font-semibold">Suggestions for your search</div>
+              <div className="mt-2 text-xs sm:text-[13px] text-white/90 truncate">
+                You searched: <span className="font-semibold">{lastQuery}</span>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setSuggestOpen(false)}
-              className="w-full bg-gray-100 text-gray-800 font-semibold py-2.5 rounded-xl active:scale-[0.98]"
-            >
-              None of these
-            </button>
+
+            {/* Body */}
+            <div className="bg-white p-5 nice-mark">
+              <div className="flex flex-col gap-3">
+                {suggestItems.map((s) => (
+                  <button
+                    key={s.title}
+                    type="button"
+                    className="group w-full text-left rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-md active:scale-[0.99] transition-all p-4 flex items-center gap-3"
+                    onClick={() => {
+                      setSuggestOpen(false);
+                      setQ(s.asQuery);
+                      // Immediately trigger a new search with the selected suggestion
+                      handleSearch(s.asQuery);
+                    }}
+                  >
+                    {/* Icon bubble */}
+                    <div className="shrink-0 h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg">
+                      <span className="group-hover:scale-110 transition-transform">{s.icon || "📊"}</span>
+                    </div>
+
+                    {/* Title + chips */}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[15px] font-semibold text-gray-900 truncate">
+                        {s.title}
+                      </div>
+                      {s.chips?.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {s.chips.map((c) => (
+                            <span
+                              key={c}
+                              className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+                            >
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-1 text-xs text-gray-500">
+                        Tap to open preview
+                      </div>
+                    </div>
+
+                    {/* Chevron */}
+                    <div className="shrink-0 text-gray-400 group-hover:text-blue-500">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div className="my-4 h-px bg-gray-100" />
+
+              {/* None of these */}
+              <button
+                type="button"
+                onClick={() => setSuggestOpen(false)}
+                className="w-full border border-gray-200 hover:border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-800 font-semibold py-2.5 rounded-2xl active:scale-[0.98] transition-all"
+              >
+                None of these
+              </button>
+            </div>
           </div>
         </div>
       )}
