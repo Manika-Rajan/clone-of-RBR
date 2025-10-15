@@ -158,7 +158,8 @@ const ReportsMobile = () => {
         if (!seen.has(x.title)) candidates.push(x);
       }
     }
-    return candidates.slice(0, 5);
+    // ✅ Limit to 3 items
+    return candidates.slice(0, 3);
   };
 
   // log → (resolve) → presign → tiny GET probe → navigate OR suggest / modal
@@ -451,7 +452,7 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* Did you mean modal (classic) */}
+      {/* Did you mean modal (classic, max 3 suggestions) */}
       {suggestOpen && (
         <div
           role="dialog"
@@ -483,7 +484,7 @@ const ReportsMobile = () => {
             </p>
 
             <div className="space-y-2">
-              {suggestItems.map((s) => (
+              {suggestItems.slice(0, 3).map((s) => (
                 <button
                   key={s.title}
                   type="button"
@@ -503,7 +504,7 @@ const ReportsMobile = () => {
                     </div>
                     {s.chips?.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1.5">
-                        {s.chips.map((c) => (
+                        {s.chips.slice(0, 2).map((c) => (
                           <span
                             key={c}
                             className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
