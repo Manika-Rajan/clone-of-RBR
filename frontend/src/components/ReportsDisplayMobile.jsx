@@ -8,18 +8,21 @@ import { useStore } from "../Store";
 import { Modal, ModalBody } from "reactstrap";
 import Login from "./Login";
 
-// Optional pricing UI (can keep or remove)
+// ====== Pricing (keep/change freely) ======
 const MRP = 2999;
 const PROMO_PCT = 25;
 const FINAL = Math.round(MRP * (1 - PROMO_PCT / 100));
+
+// ====== Lead API (TODO: set your endpoint) ======
+const LEAD_API_URL = "https://YOUR_API/lead-capture"; // <-- TODO replace
 
 const ReportsDisplayMobile = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   // From router state
-  const reportSlugFromState = location.state?.reportSlug || ""; // 👈 new
-  const fileKeyLegacy = location.state?.fileKey || "";          // legacy fallback
+  const reportSlugFromState = location.state?.reportSlug || "";
+  const fileKeyLegacy = location.state?.fileKey || ""; // legacy fallback
   const reportId = location.state?.reportId || "";
 
   const { state, dispatch: cxtDispatch } = useStore();
@@ -29,31 +32,37 @@ const ReportsDisplayMobile = () => {
   // Purchases list: array of slugs, e.g., ["paper_industry", "fmcg"]
   const purchases = userInfo?.purchases || [];
 
-  // Try to derive slug from legacy fileKey if needed
+  // Derive slug from legacy fileKey if needed
   const derivedSlugFromFileKey = useMemo(() => {
     if (!fileKeyLegacy) return "";
-    // Accept ".../paper_industry_preview.pdf" or ".../paper_industry.pdf"
     const m = fileKeyLegacy.match(/([a-z0-9_]+)(?:_preview)?\.pdf$/i);
     return m ? m[1] : "";
   }, [fileKeyLegacy]);
 
   const reportSlug = reportSlugFromState || derivedSlugFromFileKey || "paper_industry";
 
-  // Decide whether purchased
+  // Purchased?
   const isPurchased = purchases.includes(reportSlug);
 
-  // Compute the object key to presign
+  // Key to pre-sign
   const desiredKey = `${reportSlug}${isPurchased ? "" : "_preview"}.pdf`;
 
   // UI state
-  const [openModel, setOpenModel] = useState(false);
+  const [openModel, setOpenModel] = useState(false); // login/payment modal
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState("");
   const [error, setError] = useState("");
 
+  // Lead capture modal
+  const [leadOpen, setLeadOpen] = useState(false);
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadPhone, setLeadPhone] = useState("");
+  const [leadBusy, setLeadBusy] = useState(false);
+  const [leadMsg, setLeadMsg] = useState("");
+
   const headerRef = useRef(null);
 
-  // Fetch presigned URL for desiredKey
+  // ====== Fetch presigned URL ======
   useEffect(() => {
     const fetchPresignedUrl = async () => {
       if (!desiredKey) {
@@ -91,12 +100,23 @@ const ReportsDisplayMobile = () => {
     fetchPresignedUrl();
   }, [desiredKey]);
 
-  // BUY NOW flow (kept simple)
+  // ====== GA: report preview view ======
+  useEffect(() => {
+    if (pdfUrl) {
+      window.gtag?.("event", "report_preview_view", {
+        event_category: "engagement",
+        report_slug: reportSlug,
+        is_purchased: isPurchased ? "yes" : "no",
+      });
+    }
+  }, [pdfUrl, reportSlug, isPurchased]);
+
+  // ====== PAYMENT FLOW ======
   const goToPayment = () => {
     window.gtag?.("event", "buy_now_click", {
       event_category: "engagement",
       event_label: "mobile_reports_display",
-      value: 1,
+      value: FINAL,
       report_id: reportId,
       report_slug: reportSlug,
       price_mrp: MRP,
@@ -116,6 +136,53 @@ const ReportsDisplayMobile = () => {
     }
   };
 
+  // OPTIONAL: Use if you want Razorpay “UPI-first” experience directly here.
+  // Call openFastCheckout() instead of goToPayment(), once you wire an orderId backend.
+  const openFastCheckout = (orderId) => {
+    // TODO: replace with your Razorpay key + orderId
+    const options = {
+      key: "rzp_live_xxxxxxx", // <-- your key
+      amount: FINAL * 100,
+      currency: "INR",
+      name: "RBR Reports",
+      description: `Unlock: ${reportSlug.replace(/_/g, " ")} report`,
+      order_id: orderId, // from your server
+      prefill: {
+        name: userInfo?.name || "",
+        email: userInfo?.email || "",
+        contact: userInfo?.phone || "",
+      },
+      notes: { report_slug: reportSlug, report_id: reportId },
+      theme: { color: "#0B63C7" },
+      config: {
+        display: {
+          blocks: {
+            upi: {
+              name: "UPI",
+              instruments: [{ method: "upi" }, { method: "upi_intent" }],
+            },
+          },
+          sequence: ["upi", "card", "netbanking", "wallet"],
+          preferences: { show_default_blocks: true },
+        },
+      },
+      handler: function (resp) {
+        // On success → navigate to thank-you / mark purchase
+        // Mark purchase (add slug) in your user store after backend verifies signature
+        navigate("/payment-success", {
+          state: { reportSlug, reportId, razorpayPaymentId: resp.razorpay_payment_id },
+        });
+      },
+      modal: {
+        ondismiss: function () {
+          // user closed checkout
+        },
+      },
+    };
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
   const changeStatus = () => {
     setOpenModel(false);
     cxtDispatch({ type: "SET_REPORT_STATUS" });
@@ -125,6 +192,53 @@ const ReportsDisplayMobile = () => {
   const subtitle = isPurchased
     ? "Thanks for your purchase! You can access the full report below."
     : "Preview the report. Buy to unlock the complete version.";
+
+  // ====== Lead capture ======
+  const openLead = () => {
+    setLeadMsg("");
+    setLeadOpen(true);
+    window.gtag?.("event", "lead_capture_open", {
+      event_category: "engagement",
+      report_slug: reportSlug,
+    });
+  };
+
+  const submitLead = async () => {
+    if (!leadEmail && !leadPhone) {
+      setLeadMsg("Please enter your email or WhatsApp number.");
+      return;
+    }
+    setLeadBusy(true);
+    setLeadMsg("");
+    try {
+      const resp = await fetch(LEAD_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: leadEmail || undefined,
+          phone: leadPhone || undefined,
+          report_slug: reportSlug,
+          intent: "summary_teaser", // server can send a 2-page teaser
+        }),
+      });
+      if (!resp.ok) {
+        const t = await resp.text();
+        throw new Error(`Lead API failed: ${t}`);
+      }
+      window.gtag?.("event", "lead_capture_submit", {
+        event_category: "engagement",
+        report_slug: reportSlug,
+        channel: leadPhone ? "whatsapp" : "email",
+      });
+      setLeadMsg("✅ We’ll send your 2-page summary shortly.");
+      setTimeout(() => setLeadOpen(false), 1200);
+    } catch (e) {
+      console.error(e);
+      setLeadMsg("Something went wrong. Please try again.");
+    } finally {
+      setLeadBusy(false);
+    }
+  };
 
   return (
     <>
@@ -155,14 +269,15 @@ const ReportsDisplayMobile = () => {
                 onClick={goToPayment}
                 className="ml-auto bg-blue-600 text-white text-sm px-3 py-2 rounded-lg active:scale-[0.98]"
               >
-                BUY NOW
+                Unlock full report
               </button>
             )}
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="relative flex-1 overflow-auto">
+          {/* Loader */}
           {isLoading && (
             <div className="flex items-center justify-center h-[70vh]">
               <div className="text-center">
@@ -175,6 +290,7 @@ const ReportsDisplayMobile = () => {
             </div>
           )}
 
+          {/* Error state */}
           {!isLoading && error && (
             <div className="px-5 py-8 text-center">
               <p className="text-sm text-red-600 mb-3">{error}</p>
@@ -189,11 +305,58 @@ const ReportsDisplayMobile = () => {
             </div>
           )}
 
+          {/* PDF Viewer */}
           {!isLoading && !error && pdfUrl && (
-            <div className="h-[calc(100vh-150px)] sm:h-[calc(100vh-140px)]">
+            <div className="relative h-[calc(100vh-150px)] sm:h-[calc(100vh-140px)]">
               <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
                 <Viewer fileUrl={pdfUrl} />
               </Worker>
+
+              {/* PREVIEW LOCK OVERLAY (blocks interaction when not purchased) */}
+              {!isPurchased && (
+                <>
+                  {/* Interaction blocker */}
+                  <div className="absolute inset-0 z-10 bg-transparent" />
+
+                  {/* Blur/gradient curtain with pitch */}
+                  <div className="absolute inset-0 z-20 pointer-events-none">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white/95 backdrop-blur-[2px]" />
+                  </div>
+
+                  {/* Callout card */}
+                  <div className="absolute inset-x-0 bottom-6 z-30 px-4">
+                    <div className="mx-auto max-w-md rounded-2xl border border-blue-200 bg-white shadow-xl p-4">
+                      <div className="text-sm font-semibold text-gray-900">
+                        You’re viewing a preview
+                      </div>
+                      <div className="mt-1 text-xs text-gray-600">
+                        Unlock the complete report: market size, 5-year forecast, competitor list, pricing trends & risks.
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          onClick={goToPayment}
+                          className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98]"
+                        >
+                          Unlock full report — ₹{FINAL.toLocaleString("en-IN")}
+                        </button>
+                        <button
+                          onClick={openLead}
+                          className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                        >
+                          Get 2-page summary
+                        </button>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 text-[11px] text-gray-600">
+                        <span>🔒 Secure UPI/Cards</span>
+                        <span>•</span>
+                        <span>✅ 7-day money-back</span>
+                        <span>•</span>
+                        <span>⏱️ Instant access</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </main>
@@ -216,7 +379,7 @@ const ReportsDisplayMobile = () => {
                   <div className="text-[11px] text-green-600">RBideas25 applied</div>
                 </div>
                 <button onClick={goToPayment} className="ml-auto bg-blue-600 text-white text-sm px-4 py-2.5 rounded-xl active:scale-[0.98]">
-                  BUY NOW
+                  Unlock full report
                 </button>
               </>
             )}
@@ -242,6 +405,75 @@ const ReportsDisplayMobile = () => {
           )}
         </ModalBody>
       </Modal>
+
+      {/* Lead Capture Modal */}
+      {leadOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setLeadOpen(false)}
+        >
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+          <div
+            className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-2xl border border-blue-100 bg-white p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <h3 className="text-base font-semibold text-gray-900">Get a 2-page executive summary</h3>
+              <button
+                onClick={() => setLeadOpen(false)}
+                className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-gray-600">
+              We’ll email/WhatsApp you a short teaser. No spam.
+            </p>
+
+            <div className="mt-3 space-y-2">
+              <input
+                type="email"
+                value={leadEmail}
+                onChange={(e) => setLeadEmail(e.target.value)}
+                placeholder="Your email (optional)"
+                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="tel"
+                value={leadPhone}
+                onChange={(e) => setLeadPhone(e.target.value)}
+                placeholder="WhatsApp number (optional)"
+                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {leadMsg && <div className="mt-2 text-xs text-gray-700">{leadMsg}</div>}
+
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={submitLead}
+                disabled={leadBusy}
+                className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] disabled:opacity-60"
+              >
+                {leadBusy ? "Sending…" : "Send summary"}
+              </button>
+              <button
+                onClick={goToPayment}
+                className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+              >
+                Unlock now
+              </button>
+            </div>
+
+            <div className="mt-2 text-[11px] text-gray-600">
+              🔒 Secure UPI/Cards • ✅ 7-day money-back
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
