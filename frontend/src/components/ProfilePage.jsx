@@ -30,9 +30,8 @@ const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [newPhoto, setNewPhoto] = useState(null);
 
+  // ===== FIXED EFFECT: Tight deps + guard + "changed" check =====
   useEffect(() => {
-    console.log('ProfilePage mounted. State:', state);
-
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
     let storedUserId =
       storedUserInfo?.user_id ||
@@ -41,7 +40,6 @@ const ProfilePage = () => {
       localStorage.getItem('userId');
 
     let authToken = localStorage.getItem('authToken') || '';
-    console.log('Stored user_id:', storedUserId, 'Stored userInfo:', storedUserInfo, 'authToken:', authToken);
 
     if (!storedUserId) {
       console.warn('User ID missing.');
@@ -50,7 +48,7 @@ const ProfilePage = () => {
       return;
     }
 
-    // ensure normalized storage (always user_id)
+    // normalize storage (always user_id)
     localStorage.setItem('user_id', storedUserId);
     if (storedUserInfo) {
       storedUserInfo.user_id = storedUserId;
@@ -62,12 +60,14 @@ const ProfilePage = () => {
     if (!authToken && storedUserInfo?.token) {
       authToken = storedUserInfo.token;
       localStorage.setItem('authToken', authToken);
-      console.log('Updated authToken from userInfo:', authToken);
     }
 
+    // only set user id in context if missing
     if (!userInfo?.user_id) {
       cxtDispatch({ type: 'SET_USER_ID', payload: storedUserId });
     }
+
+    let isActive = true;
 
     const fetchProfile = async () => {
       setLoading(true);
@@ -84,9 +84,9 @@ const ProfilePage = () => {
             body: JSON.stringify({ user_id: storedUserId }),
           }
         );
-        console.log('API response status:', response.status, 'Headers:', Object.fromEntries(response.headers));
+
         const data = await response.json();
-        console.log('API response data:', data);
+        if (!isActive) return;
 
         if (response.ok) {
           setPurchasedReports(data.reports || []);
@@ -95,7 +95,9 @@ const ProfilePage = () => {
           const fetchedPhotoUrl = data.photo_url || null;
           setPhotoUrl(fetchedPhotoUrl);
 
-          const normalizedUserInfo = {
+          // Only dispatch if something actually changed to avoid loops
+          const current = userInfo || {};
+          const next = {
             isLogin: true,
             user_id: storedUserId,
             name: data.name,
@@ -104,8 +106,20 @@ const ProfilePage = () => {
             photo_url: fetchedPhotoUrl,
             token: authToken,
           };
-          cxtDispatch({ type: 'USER_LOGIN', payload: normalizedUserInfo });
-          localStorage.setItem('userInfo', JSON.stringify(normalizedUserInfo));
+
+          const changed =
+            current.user_id !== next.user_id ||
+            current.name !== next.name ||
+            current.email !== next.email ||
+            current.phone !== next.phone ||
+            current.photo_url !== next.photo_url ||
+            current.token !== next.token ||
+            current.isLogin !== true;
+
+          if (changed) {
+            cxtDispatch({ type: 'USER_LOGIN', payload: next });
+            localStorage.setItem('userInfo', JSON.stringify(next));
+          }
         } else {
           throw new Error(
             data.error ||
@@ -113,15 +127,22 @@ const ProfilePage = () => {
           );
         }
       } catch (err) {
+        if (!isActive) return;
         console.error('Error fetching profile:', err.message, err.stack);
         setError(`Failed to load profile data: ${err.message}. Check CORS configuration on the server.`);
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [cxtDispatch, userInfo?.user_id, state]);
+
+    return () => {
+      isActive = false;
+    };
+    // ✅ IMPORTANT: do NOT depend on `state`. Keep deps tight.
+  }, [cxtDispatch, userInfo?.user_id]);
+  // ===== END FIX =====
 
   // --- Use the existing presigned URL Lambda for viewing purchased reports ---
   const fetchPresignedUrl = async (fileKey) => {
@@ -151,12 +172,8 @@ const ProfilePage = () => {
   // ---- SURGICAL EDIT: use `userId` for the photo upload API ONLY ----
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) {
-      console.log('No file selected');
-      return;
-    }
+    if (!file) return;
 
-    console.log('File selected:', file.name, file.type, file.size);
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
     const uid =
       storedUserInfo?.user_id ||
@@ -164,9 +181,8 @@ const ProfilePage = () => {
       localStorage.getItem('user_id') ||
       localStorage.getItem('userId');
     const authToken = localStorage.getItem('authToken') || '';
-    console.log('Attempting upload with userId:', uid, 'authToken:', authToken);
+
     if (!uid) {
-      console.error('userId is undefined or missing');
       alert('Failed to upload photo: userId is undefined or missing');
       return;
     }
@@ -181,24 +197,20 @@ const ProfilePage = () => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
           },
-          // ⬇️ send `userId` instead of `user_id` or `userid`
-          body: JSON.stringify({ userId: uid }),
+          body: JSON.stringify({ userId: uid }), // send userId
         }
       );
-      console.log('Presigned URL fetch response status:', response.status, 'Headers:', Object.fromEntries(response.headers));
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
       }
       const { presignedPutUrl, presignedGetUrl } = await response.json();
-      console.log('Presigned PUT URL received:', presignedPutUrl, 'Presigned GET URL:', presignedGetUrl);
 
       const uploadResponse = await fetch(presignedPutUrl, {
         method: 'PUT',
         body: file,
         headers: { 'Content-Type': file.type },
       });
-      console.log('S3 upload response status:', uploadResponse.status, 'Headers:', Object.fromEntries(uploadResponse.headers));
       if (!uploadResponse.ok) {
         const uploadErrorText = await uploadResponse.text();
         throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
@@ -246,7 +258,7 @@ const ProfilePage = () => {
         }
       );
       if (!response.ok) throw new Error('Failed to remove photo');
-      console.log('Remove photo response:', await response.json());
+      await response.json();
       setPhotoUrl(null);
       const updatedUserInfo = { ...userInfo, user_id, photo_url: null };
       cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
@@ -288,7 +300,7 @@ const ProfilePage = () => {
         }
       );
       if (!response.ok) throw new Error('Failed to save profile');
-      console.log('Save profile response:', await response.json());
+      await response.json();
       alert('Profile saved successfully');
       const updatedUserInfo = {
         ...storedUserInfo,
@@ -312,14 +324,13 @@ const ProfilePage = () => {
   if (loading) return <div className="loading-spinner">Loading...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
-  console.log('Rendering photo section, photoUrl:', photoUrl, 'Default icon:', DEFAULT_PROFILE_ICON);
-
   // Helper for purchased date rendering
   const renderPurchasedOn = (r) => {
     const d = r.purchased_on || r.granted_on || r.granted_at || r.created_at || null;
     if (!d) return '—';
     const dt = new Date(d);
     return isNaN(dt.getTime()) ? String(d) : dt.toLocaleString();
+    // If your backend returns epoch seconds, use: new Date(d * 1000)
   };
 
   return (
@@ -330,14 +341,13 @@ const ProfilePage = () => {
             <div className="photo-section">
               {photoUrl ? (
                 <img
-                  src={photoUrl}
-                  alt="Profile"
-                  className="profile-photo"
-                  onError={(e) => {
-                    console.error('Photo URL failed to load:', e, 'Falling back to default');
-                    e.target.src = DEFAULT_PROFILE_ICON;
-                  }}
-                  onLoad={() => console.log('Photo loaded successfully:', photoUrl)}
+                    src={photoUrl}
+                    alt="Profile"
+                    className="profile-photo"
+                    onError={(e) => {
+                      console.error('Photo URL failed to load:', e);
+                      e.target.src = DEFAULT_PROFILE_ICON;
+                    }}
                 />
               ) : (
                 <img
