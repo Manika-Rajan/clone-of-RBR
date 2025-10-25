@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import './ProfilePage.css';
 import { Store } from '../Store';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,10 @@ import { Modal, ModalBody, ModalHeader } from 'reactstrap';
 
 // Default profile icon URL (using local path from public folder)
 const DEFAULT_PROFILE_ICON = '/default-avatar.png';
+
+// 🔹 Change only if you upload the sample somewhere else
+const SAMPLE_FILE_KEY = 'samples/RBR_Welcome_Sample.pdf';
+const SAMPLE_VERSION = '1.0';
 
 const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
@@ -30,7 +34,7 @@ const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [newPhoto, setNewPhoto] = useState(null);
 
-  // ===== FIXED EFFECT: Tight deps + guard + "changed" check =====
+  // ===== EFFECT: Tight deps + guard + "changed" check =====
   useEffect(() => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
     let storedUserId =
@@ -62,7 +66,6 @@ const ProfilePage = () => {
       localStorage.setItem('authToken', authToken);
     }
 
-    // only set user id in context if missing
     if (!userInfo?.user_id) {
       cxtDispatch({ type: 'SET_USER_ID', payload: storedUserId });
     }
@@ -89,7 +92,7 @@ const ProfilePage = () => {
         if (!isActive) return;
 
         if (response.ok) {
-          setPurchasedReports(data.reports || []);
+          setPurchasedReports(Array.isArray(data.reports) ? data.reports : []);
           setNameInput(data.name || '');
           setEmailInput(data.email || '');
           const fetchedPhotoUrl = data.photo_url || null;
@@ -140,9 +143,8 @@ const ProfilePage = () => {
     return () => {
       isActive = false;
     };
-    // ✅ IMPORTANT: do NOT depend on `state`. Keep deps tight.
   }, [cxtDispatch, userInfo?.user_id]);
-  // ===== END FIX =====
+  // ===== END EFFECT =====
 
   // --- Use the existing presigned URL Lambda for viewing purchased reports ---
   const fetchPresignedUrl = async (fileKey) => {
@@ -168,6 +170,24 @@ const ProfilePage = () => {
       setLoadingFileKey(null);
     }
   };
+
+  // 🔹 Build the list that the table will render:
+  //    If no purchased reports, add one default sample row.
+  const displayReports = useMemo(() => {
+    if (purchasedReports && purchasedReports.length > 0) return purchasedReports;
+
+    // Fallback row (uses SAMPLE_FILE_KEY)
+    return [
+      {
+        file_key: SAMPLE_FILE_KEY,
+        report_version: SAMPLE_VERSION,
+        // Optional label for the UI:
+        title: 'RBR Sample Report (Free Preview)',
+        purchased_on: '—', // or omit; render will show —
+        _isSample: true,
+      },
+    ];
+  }, [purchasedReports]);
 
   // ---- SURGICAL EDIT: use `userId` for the photo upload API ONLY ----
   const handlePhotoUpload = async (e) => {
@@ -330,7 +350,6 @@ const ProfilePage = () => {
     if (!d) return '—';
     const dt = new Date(d);
     return isNaN(dt.getTime()) ? String(d) : dt.toLocaleString();
-    // If your backend returns epoch seconds, use: new Date(d * 1000)
   };
 
   return (
@@ -341,13 +360,13 @@ const ProfilePage = () => {
             <div className="photo-section">
               {photoUrl ? (
                 <img
-                    src={photoUrl}
-                    alt="Profile"
-                    className="profile-photo"
-                    onError={(e) => {
-                      console.error('Photo URL failed to load:', e);
-                      e.target.src = DEFAULT_PROFILE_ICON;
-                    }}
+                  src={photoUrl}
+                  alt="Profile"
+                  className="profile-photo"
+                  onError={(e) => {
+                    console.error('Photo URL failed to load:', e);
+                    e.target.src = DEFAULT_PROFILE_ICON;
+                  }}
                 />
               ) : (
                 <img
@@ -376,7 +395,7 @@ const ProfilePage = () => {
         <div className="reports-section">
           <h3 className="section-title">Purchased Reports</h3>
 
-          {purchasedReports.length > 0 ? (
+          {displayReports.length > 0 ? (
             <div className="table-responsive">
               <table className="table table-striped align-middle rbr-table">
                 <thead>
@@ -388,11 +407,11 @@ const ProfilePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {purchasedReports.map((r) => {
-                    const fileName = r.file_key?.split('/').pop() || 'report.pdf';
+                  {displayReports.map((r) => {
+                    const fileName = r.title || r.file_key?.split('/').pop() || 'report.pdf';
                     const isRowLoading = loadingFileKey === r.file_key;
                     return (
-                      <tr key={r.file_key}>
+                      <tr key={r.file_key || fileName}>
                         <td>{fileName}</td>
                         <td>{r.report_version || 'N/A'}</td>
                         <td>{renderPurchasedOn(r)}</td>
@@ -410,6 +429,11 @@ const ProfilePage = () => {
                   })}
                 </tbody>
               </table>
+              {purchasedReports.length === 0 && (
+                <p className="text-muted" style={{ marginTop: 8 }}>
+                  This is a sample preview added for new accounts. Your purchased reports will appear here automatically.
+                </p>
+              )}
             </div>
           ) : (
             <p className="no-reports">No purchased reports found.</p>
