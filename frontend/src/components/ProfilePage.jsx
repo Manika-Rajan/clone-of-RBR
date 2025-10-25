@@ -2,13 +2,16 @@ import React, { useState, useEffect, useContext, useMemo } from 'react';
 import './ProfilePage.css';
 import { Store } from '../Store';
 import { useNavigate } from 'react-router-dom';
-import PDFViewer from './PDFViewer';
+// import PDFViewer from './PDFViewer';  // ⬅ keep file as-is, but we won’t use it here to avoid modal sizing issues
 import { Modal, ModalBody, ModalHeader } from 'reactstrap';
 
-// Default profile icon URL (using local path from public folder)
+// 👇 Add the same viewer you use in ReportsDisplay
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+
 const DEFAULT_PROFILE_ICON = '/default-avatar.png';
 
-// 🔹 Change only if you upload the sample somewhere else
+// Sample fallback row
 const SAMPLE_FILE_KEY = 'samples/RBR_Welcome_Sample.pdf';
 const SAMPLE_VERSION = '1.0';
 
@@ -23,7 +26,7 @@ const ProfilePage = () => {
 
   // Viewer state
   const [selectedUrl, setSelectedUrl] = useState(null);
-  const [loadingFileKey, setLoadingFileKey] = useState(null); // row-level loader for "View"
+  const [loadingFileKey, setLoadingFileKey] = useState(null);
 
   // Profile modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -34,7 +37,6 @@ const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [newPhoto, setNewPhoto] = useState(null);
 
-  // ===== EFFECT: Tight deps + guard + "changed" check =====
   useEffect(() => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
     let storedUserId =
@@ -52,7 +54,7 @@ const ProfilePage = () => {
       return;
     }
 
-    // normalize storage (always user_id)
+    // normalize storage
     localStorage.setItem('user_id', storedUserId);
     if (storedUserInfo) {
       storedUserInfo.user_id = storedUserId;
@@ -60,7 +62,6 @@ const ProfilePage = () => {
       localStorage.setItem('userInfo', JSON.stringify(storedUserInfo));
     }
 
-    // Set authToken if missing but present in userInfo
     if (!authToken && storedUserInfo?.token) {
       authToken = storedUserInfo.token;
       localStorage.setItem('authToken', authToken);
@@ -82,7 +83,7 @@ const ProfilePage = () => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${authToken}`,
+              Authorization: `Bearer ${authToken}`,
             },
             body: JSON.stringify({ user_id: storedUserId }),
           }
@@ -98,7 +99,7 @@ const ProfilePage = () => {
           const fetchedPhotoUrl = data.photo_url || null;
           setPhotoUrl(fetchedPhotoUrl);
 
-          // Only dispatch if something actually changed to avoid loops
+          // only dispatch if values actually changed
           const current = userInfo || {};
           const next = {
             isLogin: true,
@@ -139,19 +140,18 @@ const ProfilePage = () => {
     };
 
     fetchProfile();
-
     return () => {
       isActive = false;
     };
   }, [cxtDispatch, userInfo?.user_id]);
-  // ===== END EFFECT =====
 
-  // --- Use the existing presigned URL Lambda for viewing purchased reports ---
+  // Use existing presigned-URL Lambda
   const fetchPresignedUrl = async (fileKey) => {
     try {
       setSelectedUrl(null);
       setLoadingFileKey(fileKey);
-      const response = await fetch(
+
+      const resp = await fetch(
         'https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL',
         {
           method: 'POST',
@@ -159,37 +159,47 @@ const ProfilePage = () => {
           body: JSON.stringify({ file_key: fileKey }),
         }
       );
-      if (!response.ok) throw new Error('Failed to get presigned URL');
-      const data = await response.json();
-      if (!data?.presigned_url) throw new Error('No presigned_url returned');
+
+      if (!resp.ok) {
+        const t = await resp.text().catch(() => '');
+        throw new Error(`Failed to get presigned URL. HTTP ${resp.status}. Body: ${t}`);
+      }
+
+      const data = await resp.json().catch(() => ({}));
+      console.log('Presigned URL payload:', data);
+
+      if (!data?.presigned_url) {
+        throw new Error('No presigned_url returned by Lambda');
+      }
+
       setSelectedUrl(data.presigned_url);
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
-      alert('Failed to open the report.');
+      alert(
+        `Failed to open the report. ${
+          error?.message || ''
+        }\n\nTip: Check Network tab -> the GET to the signed URL must be 200 with content-type application/pdf, and the URL must not be expired.`
+      );
     } finally {
       setLoadingFileKey(null);
     }
   };
 
-  // 🔹 Build the list that the table will render:
-  //    If no purchased reports, add one default sample row.
+  // Fallback: sample row if no purchased reports
   const displayReports = useMemo(() => {
     if (purchasedReports && purchasedReports.length > 0) return purchasedReports;
-
-    // Fallback row (uses SAMPLE_FILE_KEY)
     return [
       {
         file_key: SAMPLE_FILE_KEY,
         report_version: SAMPLE_VERSION,
-        // Optional label for the UI:
         title: 'RBR Sample Report (Free Preview)',
-        purchased_on: '—', // or omit; render will show —
+        purchased_on: '—',
         _isSample: true,
       },
     ];
   }, [purchasedReports]);
 
-  // ---- SURGICAL EDIT: use `userId` for the photo upload API ONLY ----
+  // Photo upload
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -215,9 +225,9 @@ const ProfilePage = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
+            Authorization: `Bearer ${authToken}`,
           },
-          body: JSON.stringify({ userId: uid }), // send userId
+          body: JSON.stringify({ userId: uid }),
         }
       );
       if (!response.ok) {
@@ -249,7 +259,6 @@ const ProfilePage = () => {
       setPhotoUploading(false);
     }
   };
-  // ---- END SURGICAL EDIT ----
 
   const handleRemovePhoto = async () => {
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -273,7 +282,7 @@ const ProfilePage = () => {
         'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
           body: JSON.stringify(profileData),
         }
       );
@@ -315,7 +324,7 @@ const ProfilePage = () => {
         'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('authToken') || ''}` },
           body: JSON.stringify(profileData),
         }
       );
@@ -344,7 +353,6 @@ const ProfilePage = () => {
   if (loading) return <div className="loading-spinner">Loading...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
-  // Helper for purchased date rendering
   const renderPurchasedOn = (r) => {
     const d = r.purchased_on || r.granted_on || r.granted_at || r.created_at || null;
     if (!d) return '—';
@@ -440,8 +448,36 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* Modal PDF Viewer; your existing component */}
-        {selectedUrl && <PDFViewer pdfUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
+        {/* Inline PDF viewer modal (no change to your PDFViewer.jsx file) */}
+        <Modal
+          isOpen={!!selectedUrl}
+          toggle={() => setSelectedUrl(null)}
+          className="full-page-modal"
+          size="xl"
+        >
+          <ModalHeader toggle={() => setSelectedUrl(null)}>Report Viewer</ModalHeader>
+          <ModalBody style={{ height: '80vh', padding: 0 }}>
+            {selectedUrl ? (
+              <div style={{ height: '100%', width: '100%' }} onContextMenu={(e) => e.preventDefault()}>
+                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                  <Viewer
+                    fileUrl={selectedUrl}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                    // If you prefer page-fit: defaultScale={SpecialZoomLevel.PageFit}
+                    onDocumentLoadFailed={(e) => {
+                      console.error('PDF load failed:', e);
+                    }}
+                  />
+                </Worker>
+              </div>
+            ) : (
+              <div className="d-flex align-items-center justify-content-center" style={{ height: '100%' }}>
+                Loading…
+              </div>
+            )}
+          </ModalBody>
+        </Modal>
 
         {/* Edit Profile Modal */}
         <Modal isOpen={showEditModal} toggle={() => setShowEditModal(false)} className="full-page-modal">
