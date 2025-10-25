@@ -16,7 +16,12 @@ const ProfilePage = () => {
   const [purchasedReports, setPurchasedReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Viewer state
   const [selectedUrl, setSelectedUrl] = useState(null);
+  const [loadingFileKey, setLoadingFileKey] = useState(null); // row-level loader for "View"
+
+  // Profile modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [nameInput, setNameInput] = useState(userInfo?.name || '');
   const [emailInput, setEmailInput] = useState(userInfo?.email || '');
@@ -26,7 +31,7 @@ const ProfilePage = () => {
   const [newPhoto, setNewPhoto] = useState(null);
 
   useEffect(() => {
-    console.log("ProfilePage mounted. State:", state);
+    console.log('ProfilePage mounted. State:', state);
 
     const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
     let storedUserId =
@@ -34,8 +39,10 @@ const ProfilePage = () => {
       storedUserInfo?.userId ||
       localStorage.getItem('user_id') ||
       localStorage.getItem('userId');
+
     let authToken = localStorage.getItem('authToken') || '';
-    console.log("Stored user_id:", storedUserId, "Stored userInfo:", storedUserInfo, "authToken:", authToken);
+    console.log('Stored user_id:', storedUserId, 'Stored userInfo:', storedUserInfo, 'authToken:', authToken);
+
     if (!storedUserId) {
       console.warn('User ID missing.');
       setLoading(false);
@@ -66,37 +73,44 @@ const ProfilePage = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/getUserProfile-RBRmain-APIgateway', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json', 
-            'Authorization': `Bearer ${authToken}`
-          },
-          body: JSON.stringify({ user_id: storedUserId })
-        });
-        console.log("API response status:", response.status, "Headers:", Object.fromEntries(response.headers));
+        const response = await fetch(
+          'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/getUserProfile-RBRmain-APIgateway',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({ user_id: storedUserId }),
+          }
+        );
+        console.log('API response status:', response.status, 'Headers:', Object.fromEntries(response.headers));
         const data = await response.json();
-        console.log("API response data:", data);
+        console.log('API response data:', data);
+
         if (response.ok) {
           setPurchasedReports(data.reports || []);
           setNameInput(data.name || '');
           setEmailInput(data.email || '');
           const fetchedPhotoUrl = data.photo_url || null;
           setPhotoUrl(fetchedPhotoUrl);
-          console.log('Fetched photoUrl:', fetchedPhotoUrl);
-          const normalizedUserInfo = { 
-            isLogin: true, 
-            user_id: storedUserId, 
-            name: data.name, 
-            email: data.email, 
-            phone: data.phone, 
-            photo_url: fetchedPhotoUrl, 
-            token: authToken 
+
+          const normalizedUserInfo = {
+            isLogin: true,
+            user_id: storedUserId,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            photo_url: fetchedPhotoUrl,
+            token: authToken,
           };
           cxtDispatch({ type: 'USER_LOGIN', payload: normalizedUserInfo });
           localStorage.setItem('userInfo', JSON.stringify(normalizedUserInfo));
         } else {
-          throw new Error(data.error || `Failed to fetch profile (Status: ${response.status}) - ${data.message || 'No additional details'}`);
+          throw new Error(
+            data.error ||
+              `Failed to fetch profile (Status: ${response.status}) - ${data.message || 'No additional details'}`
+          );
         }
       } catch (err) {
         console.error('Error fetching profile:', err.message, err.stack);
@@ -107,10 +121,13 @@ const ProfilePage = () => {
     };
 
     fetchProfile();
-  }, [cxtDispatch, userInfo?.user_id]);
+  }, [cxtDispatch, userInfo?.user_id, state]);
 
+  // --- Use the existing presigned URL Lambda for viewing purchased reports ---
   const fetchPresignedUrl = async (fileKey) => {
     try {
+      setSelectedUrl(null);
+      setLoadingFileKey(fileKey);
       const response = await fetch(
         'https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL',
         {
@@ -121,10 +138,13 @@ const ProfilePage = () => {
       );
       if (!response.ok) throw new Error('Failed to get presigned URL');
       const data = await response.json();
+      if (!data?.presigned_url) throw new Error('No presigned_url returned');
       setSelectedUrl(data.presigned_url);
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
       alert('Failed to open the report.');
+    } finally {
+      setLoadingFileKey(null);
     }
   };
 
@@ -157,9 +177,9 @@ const ProfilePage = () => {
         'https://70j2ry7zol.execute-api.ap-south-1.amazonaws.com/default/generate-presigned-url-for-photo-RBRmain',
         {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json', 
-            'Authorization': `Bearer ${authToken}` 
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
           },
           // ⬇️ send `userId` instead of `user_id` or `userid`
           body: JSON.stringify({ userId: uid }),
@@ -172,6 +192,7 @@ const ProfilePage = () => {
       }
       const { presignedPutUrl, presignedGetUrl } = await response.json();
       console.log('Presigned PUT URL received:', presignedPutUrl, 'Presigned GET URL:', presignedGetUrl);
+
       const uploadResponse = await fetch(presignedPutUrl, {
         method: 'PUT',
         body: file,
@@ -182,9 +203,9 @@ const ProfilePage = () => {
         const uploadErrorText = await uploadResponse.text();
         throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
       }
+
       setPhotoUrl(presignedGetUrl);
       setNewPhoto(null);
-      console.log('Photo upload successful, photoUrl set to presigned GET URL:', presignedGetUrl);
       alert('Photo uploaded successfully!');
       const updatedUserInfo = { ...storedUserInfo, user_id: uid, photo_url: presignedGetUrl };
       cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
@@ -225,7 +246,7 @@ const ProfilePage = () => {
         }
       );
       if (!response.ok) throw new Error('Failed to remove photo');
-      console.log("Remove photo response:", await response.json());
+      console.log('Remove photo response:', await response.json());
       setPhotoUrl(null);
       const updatedUserInfo = { ...userInfo, user_id, photo_url: null };
       cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
@@ -267,9 +288,16 @@ const ProfilePage = () => {
         }
       );
       if (!response.ok) throw new Error('Failed to save profile');
-      console.log("Save profile response:", await response.json());
+      console.log('Save profile response:', await response.json());
       alert('Profile saved successfully');
-      const updatedUserInfo = { ...storedUserInfo, user_id, name: nameInput, email: emailInput, phone: profileData.phone, photo_url: photoUrl };
+      const updatedUserInfo = {
+        ...storedUserInfo,
+        user_id,
+        name: nameInput,
+        email: emailInput,
+        phone: profileData.phone,
+        photo_url: photoUrl,
+      };
       cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
       localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
       setShowEditModal(false);
@@ -285,6 +313,14 @@ const ProfilePage = () => {
   if (error) return <div className="error-message">{error}</div>;
 
   console.log('Rendering photo section, photoUrl:', photoUrl, 'Default icon:', DEFAULT_PROFILE_ICON);
+
+  // Helper for purchased date rendering
+  const renderPurchasedOn = (r) => {
+    const d = r.purchased_on || r.granted_on || r.granted_at || r.created_at || null;
+    if (!d) return '—';
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? String(d) : dt.toLocaleString();
+  };
 
   return (
     <div className="profile-page">
@@ -326,28 +362,54 @@ const ProfilePage = () => {
           </div>
         </div>
 
+        {/* Purchased Reports */}
         <div className="reports-section">
           <h3 className="section-title">Purchased Reports</h3>
+
           {purchasedReports.length > 0 ? (
-            <div className="reports-list">
-              {purchasedReports.map((report) => (
-                <div key={report.file_key} className="report-card">
-                  <button
-                    onClick={() => fetchPresignedUrl(report.file_key)}
-                    className="report-button"
-                  >
-                    {report.file_key.split('/').pop()} (Version: {report.report_version || 'N/A'})
-                  </button>
-                </div>
-              ))}
+            <div className="table-responsive">
+              <table className="table table-striped align-middle rbr-table">
+                <thead>
+                  <tr>
+                    <th style={{ minWidth: 220 }}>Report</th>
+                    <th>Version</th>
+                    <th>Purchased on</th>
+                    <th style={{ width: 120, textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchasedReports.map((r) => {
+                    const fileName = r.file_key?.split('/').pop() || 'report.pdf';
+                    const isRowLoading = loadingFileKey === r.file_key;
+                    return (
+                      <tr key={r.file_key}>
+                        <td>{fileName}</td>
+                        <td>{r.report_version || 'N/A'}</td>
+                        <td>{renderPurchasedOn(r)}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => fetchPresignedUrl(r.file_key)}
+                            disabled={isRowLoading}
+                          >
+                            {isRowLoading ? 'Opening…' : 'View'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           ) : (
             <p className="no-reports">No purchased reports found.</p>
           )}
         </div>
 
+        {/* Modal PDF Viewer; your existing component */}
         {selectedUrl && <PDFViewer pdfUrl={selectedUrl} onClose={() => setSelectedUrl(null)} />}
 
+        {/* Edit Profile Modal */}
         <Modal isOpen={showEditModal} toggle={() => setShowEditModal(false)} className="full-page-modal">
           <ModalHeader toggle={() => setShowEditModal(false)}>Edit Profile</ModalHeader>
           <ModalBody>
