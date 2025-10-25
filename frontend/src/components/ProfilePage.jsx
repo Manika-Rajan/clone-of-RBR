@@ -363,8 +363,8 @@ const ProfilePage = () => {
     <div className="profile-page">
       {/* ---- modal sizing helpers (scoped to this page) ---- */}
       <style>{`
-        .rbr-viewer-content { height: 80vh; }
-        .rbr-viewer-body { height: calc(80vh - 56px); padding: 0; overflow: hidden; }
+        .rbr-viewer-content { height: 92vh; }
+        .rbr-viewer-body { height: calc(92vh - 56px); padding: 0; overflow: hidden; }
         .rbr-viewer-scroll { height: 100%; width: 100%; overflow: auto; }
       `}</style>
 
