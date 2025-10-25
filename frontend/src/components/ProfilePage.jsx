@@ -2,10 +2,9 @@ import React, { useState, useEffect, useContext, useMemo } from 'react';
 import './ProfilePage.css';
 import { Store } from '../Store';
 import { useNavigate } from 'react-router-dom';
-// import PDFViewer from './PDFViewer';  // ⬅ keep file as-is, but we won’t use it here to avoid modal sizing issues
 import { Modal, ModalBody, ModalHeader } from 'reactstrap';
 
-// 👇 Add the same viewer you use in ReportsDisplay
+// Use the same PDF viewer stack you already use in ReportsDisplay
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 
@@ -362,6 +361,13 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-page">
+      {/* ---- modal sizing helpers (scoped to this page) ---- */}
+      <style>{`
+        .rbr-viewer-content { height: 80vh; }
+        .rbr-viewer-body { height: calc(80vh - 56px); padding: 0; overflow: hidden; }
+        .rbr-viewer-scroll { height: 100%; width: 100%; overflow: auto; }
+      `}</style>
+
       <div className="profile-container">
         <div className="profile-card">
           <div className="user-info">
@@ -448,26 +454,24 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* Inline PDF viewer modal (no change to your PDFViewer.jsx file) */}
+        {/* PDF viewer modal (80% viewport height, single inner scroll) */}
         <Modal
           isOpen={!!selectedUrl}
           toggle={() => setSelectedUrl(null)}
           className="full-page-modal"
           size="xl"
+          contentClassName="rbr-viewer-content"
         >
           <ModalHeader toggle={() => setSelectedUrl(null)}>Report Viewer</ModalHeader>
-          <ModalBody style={{ height: '80vh', padding: 0 }}>
+          <ModalBody className="rbr-viewer-body">
             {selectedUrl ? (
-              <div style={{ height: '100%', width: '100%' }} onContextMenu={(e) => e.preventDefault()}>
+              <div className="rbr-viewer-scroll" onContextMenu={(e) => e.preventDefault()}>
                 <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
                   <Viewer
                     fileUrl={selectedUrl}
                     renderTextLayer={false}
                     renderAnnotationLayer={false}
-                    // If you prefer page-fit: defaultScale={SpecialZoomLevel.PageFit}
-                    onDocumentLoadFailed={(e) => {
-                      console.error('PDF load failed:', e);
-                    }}
+                    onDocumentLoadFailed={(e) => console.error('PDF load failed:', e)}
                   />
                 </Worker>
               </div>
