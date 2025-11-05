@@ -215,38 +215,103 @@ const ReportsDisplayMobile = () => {
     });
   };
 
+  // Step 1: ask Lambda to send OTP
   const submitLead = async () => {
     if (!leadEmail && !leadPhone) {
       setLeadMsg("Please enter your email or WhatsApp number.");
       return;
     }
+
     setLeadBusy(true);
     setLeadMsg("");
     try {
       const resp = await fetch(LEAD_API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-RBR-Action": "request",
+        },
         body: JSON.stringify({
           email: leadEmail || undefined,
           phone: leadPhone || undefined,
           report_slug: reportSlug,
-          intent: "summary_teaser", // server can send a 2-page teaser
         }),
       });
+
+      const data = await resp.json().catch(() => ({}));
       if (!resp.ok) {
-        const t = await resp.text();
-        throw new Error(`Lead API failed: ${t}`);
+        throw new Error(data.error || `Request failed (${resp.status})`);
       }
+
+      setLeadToken(data.token || "");
+      setLeadChannel(data.channel || "");
+      setLeadStep("otp");
+
       window.gtag?.("event", "lead_capture_submit", {
         event_category: "engagement",
         report_slug: reportSlug,
-        channel: leadPhone ? "whatsapp" : "email",
+        channel: data.channel || (leadPhone ? "whatsapp" : "email"),
+        phase: "otp_sent",
       });
-      setLeadMsg("✅ We’ll send your 2-page summary shortly.");
-      setTimeout(() => setLeadOpen(false), 1200);
+
+      if (data.channel === "email") {
+        setLeadMsg("We’ve sent a 6-digit code to your email. Please enter it below.");
+      } else {
+        setLeadMsg("We’ve sent a 6-digit code to your WhatsApp. Please enter it below.");
+      }
     } catch (e) {
       console.error(e);
-      setLeadMsg("Something went wrong. Please try again.");
+      setLeadMsg("Something went wrong while sending the code. Please try again.");
+    } finally {
+      setLeadBusy(false);
+    }
+  };
+
+  // Step 2: verify OTP and trigger teaser send
+  const submitOtp = async () => {
+    if (!leadOtp.trim()) {
+      setLeadMsg("Please enter the 6-digit code.");
+      return;
+    }
+    if (!leadToken) {
+      setLeadMsg("Session expired. Please start again.");
+      setLeadStep("form");
+      return;
+    }
+
+    setLeadBusy(true);
+    setLeadMsg("");
+    try {
+      const resp = await fetch(LEAD_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-RBR-Action": "verify-send",
+        },
+        body: JSON.stringify({
+          token: leadToken,
+          otp: leadOtp.trim(),
+        }),
+      });
+
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data.error || `Verification failed (${resp.status})`);
+      }
+
+      window.gtag?.("event", "lead_capture_submit", {
+        event_category: "engagement",
+        report_slug: reportSlug,
+        channel: leadChannel || (leadPhone ? "whatsapp" : "email"),
+        phase: "verified_and_sent",
+      });
+
+      setLeadMsg("✅ Verified! We’ve sent your 2-page summary.");
+      // Auto-close after a short delay
+      setTimeout(() => setLeadOpen(false), 1500);
+    } catch (e) {
+      console.error(e);
+      setLeadMsg("Incorrect or expired code. Please check and try again.");
     } finally {
       setLeadBusy(false);
     }
