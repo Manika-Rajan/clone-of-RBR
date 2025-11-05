@@ -202,6 +202,12 @@ const ReportsDisplayMobile = () => {
   // ====== Lead capture ======
   const openLead = () => {
     setLeadMsg("");
+    setLeadEmail("");
+    setLeadPhone("");
+    setLeadOtp("");
+    setLeadToken("");
+    setLeadChannel("");
+    setLeadStep("form");
     setLeadOpen(true);
     window.gtag?.("event", "lead_capture_open", {
       event_category: "engagement",
