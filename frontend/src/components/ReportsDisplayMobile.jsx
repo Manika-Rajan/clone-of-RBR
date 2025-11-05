@@ -60,6 +60,12 @@ const ReportsDisplayMobile = () => {
   const [leadBusy, setLeadBusy] = useState(false);
   const [leadMsg, setLeadMsg] = useState("");
 
+  // New: OTP flow
+  const [leadStep, setLeadStep] = useState("form"); // "form" | "otp"
+  const [leadToken, setLeadToken] = useState("");
+  const [leadChannel, setLeadChannel] = useState(""); // "email" or "whatsapp"
+  const [leadOtp, setLeadOtp] = useState("");
+
   const headerRef = useRef(null);
 
   // ====== Fetch presigned URL ======
