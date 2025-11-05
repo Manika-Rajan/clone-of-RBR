@@ -14,7 +14,7 @@ const PROMO_PCT = 25;
 const FINAL = Math.round(MRP * (1 - PROMO_PCT / 100));
 
 // ====== Lead API (TODO: set your endpoint) ======
-const LEAD_API_URL = "https://YOUR_API/lead-capture"; // <-- TODO replace
+const LEAD_API_URL = "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook"; // <-- TODO replace
 
 const ReportsDisplayMobile = () => {
   const navigate = useNavigate();
