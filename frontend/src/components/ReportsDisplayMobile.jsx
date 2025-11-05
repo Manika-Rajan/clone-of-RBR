@@ -483,7 +483,7 @@ const ReportsDisplayMobile = () => {
         </ModalBody>
       </Modal>
 
-      {/* Lead Capture Modal */}
+      {/* Lead Capture Modal (OTP-based) */}
       {leadOpen && (
         <div
           role="dialog"
@@ -497,7 +497,9 @@ const ReportsDisplayMobile = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
-              <h3 className="text-base font-semibold text-gray-900">Get a 2-page executive summary</h3>
+              <h3 className="text-base font-semibold text-gray-900">
+                Get a 2-page executive summary
+              </h3>
               <button
                 onClick={() => setLeadOpen(false)}
                 className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center"
@@ -507,46 +509,85 @@ const ReportsDisplayMobile = () => {
               </button>
             </div>
             <p className="mt-1 text-xs text-gray-600">
-              We’ll email/WhatsApp you a short teaser. No spam.
+              We’ll send a short teaser to your email or WhatsApp after a quick verification.
             </p>
 
-            <div className="mt-3 space-y-2">
-              <input
-                type="email"
-                value={leadEmail}
-                onChange={(e) => setLeadEmail(e.target.value)}
-                placeholder="Your email (optional)"
-                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <input
-                type="tel"
-                value={leadPhone}
-                onChange={(e) => setLeadPhone(e.target.value)}
-                placeholder="WhatsApp number (optional)"
-                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            {leadStep === "form" && (
+              <>
+                <div className="mt-3 space-y-2">
+                  <input
+                    type="email"
+                    value={leadEmail}
+                    onChange={(e) => setLeadEmail(e.target.value)}
+                    placeholder="Your email (optional)"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="tel"
+                    value={leadPhone}
+                    onChange={(e) => setLeadPhone(e.target.value)}
+                    placeholder="WhatsApp number (optional, with country code)"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                {leadMsg && <div className="mt-2 text-xs text-gray-700">{leadMsg}</div>}
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={submitLead}
+                    disabled={leadBusy}
+                    className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {leadBusy ? "Sending code…" : "Send code"}
+                  </button>
+                  <button
+                    onClick={goToPayment}
+                    className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                  >
+                    Unlock now
+                  </button>
+                </div>
+              </>
+            )}
 
-            {leadMsg && <div className="mt-2 text-xs text-gray-700">{leadMsg}</div>}
-
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={submitLead}
-                disabled={leadBusy}
-                className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] disabled:opacity-60"
-              >
-                {leadBusy ? "Sending…" : "Send summary"}
-              </button>
-              <button
-                onClick={goToPayment}
-                className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
-              >
-                Unlock now
-              </button>
-            </div>
+            {leadStep === "otp" && (
+              <>
+                <div className="mt-3 space-y-2">
+                  <input
+                    type="text"
+                    value={leadOtp}
+                    onChange={(e) => setLeadOtp(e.target.value)}
+                    maxLength={6}
+                    inputMode="numeric"
+                    placeholder="Enter 6-digit code"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-[0.3em] text-center"
+                  />
+                </div>
+                {leadMsg && <div className="mt-2 text-xs text-gray-700">{leadMsg}</div>}
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={submitOtp}
+                    disabled={leadBusy}
+                    className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {leadBusy ? "Verifying…" : "Verify & send summary"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      // allow user to restart
+                      setLeadStep("form");
+                      setLeadOtp("");
+                      setLeadMsg("");
+                    }}
+                    className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                  >
+                    Start again
+                  </button>
+                </div>
+              </>
+            )}
 
             <div className="mt-2 text-[11px] text-gray-600">
-              🔒 Secure UPI/Cards • ✅ 7-day money-back
+              🔒 We only use your contact to send the summary. No spam.
             </div>
           </div>
         </div>
