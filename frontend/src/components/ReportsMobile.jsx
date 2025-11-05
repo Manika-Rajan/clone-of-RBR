@@ -1,7 +1,7 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
 // Mobile landing — logs searches; navigates only if a known report's preview exists.
 // If no exact match, calls /suggest (POST) and shows a classic “Did you mean…?” popup (ice-blue).
-// Tapping a suggestion now navigates directly to the report (no re-search loop).
+// Now also includes a lead-capture modal (name + email + WhatsApp) before opening a known report.
 
 import React, {
   useMemo,
@@ -48,6 +48,12 @@ const SEARCH_LOG_URL = "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/
 const PRESIGN_URL    = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL";
 const SUGGEST_URL    = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/suggest";
 
+// 🚨 TODO: Replace this with your real Lambda/API endpoint
+// This endpoint should:
+//   1) Store the lead (name, email, phone, reportSlug, query)
+//   2) Trigger sending “first 2 pages” by email / WhatsApp (backend logic)
+const LEAD_CAPTURE_URL = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/rbr-lead-capture";
+
 // Loader
 const LoaderRing = () => (
   <svg viewBox="0 0 100 100" className="w-14 h-14 animate-spin-slow">
@@ -78,6 +84,15 @@ const ReportsMobile = () => {
 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [dropdownRect, setDropdownRect] = useState({ left: 0, top: 0, width: 0 });
+
+  // LEAD-CAPTURE modal state
+  const [leadOpen, setLeadOpen] = useState(false);
+  const [leadName, setLeadName] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadPhone, setLeadPhone] = useState("");
+  const [leadSubmitting, setLeadSubmitting] = useState(false);
+  const [leadError, setLeadError] = useState("");
+  const [pendingSlug, setPendingSlug] = useState(null); // which report we’re about to open
 
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -182,7 +197,93 @@ const ReportsMobile = () => {
     }
   };
 
-  // log → (resolve) → navigate OR suggest
+  // 📝 Prefill lead form from Store or localStorage
+  useEffect(() => {
+    try {
+      if (state?.userInfo) {
+        if (state.userInfo.name) setLeadName(state.userInfo.name);
+        if (state.userInfo.email) setLeadEmail(state.userInfo.email);
+        if (state.userInfo.phone) setLeadPhone(state.userInfo.phone);
+        return;
+      }
+      if (typeof window !== "undefined") {
+        const raw = window.localStorage.getItem("rbrLeadInfo");
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (saved.name) setLeadName(saved.name);
+          if (saved.email) setLeadEmail(saved.email);
+          if (saved.phone) setLeadPhone(saved.phone);
+        }
+      }
+    } catch (e) {
+      console.warn("lead prefill error:", e);
+    }
+  }, [state]);
+
+  // 💌 Submit lead form (name + email + WhatsApp), then open preview
+  const handleLeadSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!pendingSlug) {
+      setLeadOpen(false);
+      return;
+    }
+
+    // very light validation
+    if (!leadEmail || !leadEmail.includes("@")) {
+      setLeadError("Please enter a valid email address.");
+      return;
+    }
+    const digits = (leadPhone || "").replace(/\D/g, "");
+    if (!leadPhone || digits.length < 7) {
+      setLeadError("Please enter a valid WhatsApp number.");
+      return;
+    }
+
+    setLeadError("");
+    setLeadSubmitting(true);
+    try {
+      const payload = {
+        name: leadName || "",
+        email: leadEmail,
+        phone: leadPhone,
+        reportSlug: pendingSlug,
+        query: lastQuery,
+        source: "mobile_first_two_pages",
+      };
+
+      // save locally so we can prefill next time
+      try {
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("rbrLeadInfo", JSON.stringify(payload));
+        }
+      } catch (e) {
+        console.warn("localStorage lead save error:", e);
+      }
+
+      // send to your backend (Lambda / API Gateway)
+      if (LEAD_CAPTURE_URL && LEAD_CAPTURE_URL.startsWith("http")) {
+        try {
+          const resp = await fetch(LEAD_CAPTURE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!resp.ok) {
+            console.warn("lead capture returned non-200:", resp.status);
+          }
+        } catch (err) {
+          console.warn("lead capture error:", err);
+        }
+      }
+
+      setLeadOpen(false);
+      await goToReportBySlug(pendingSlug);
+    } finally {
+      setLeadSubmitting(false);
+    }
+  };
+
+  // log → (resolve) → LEAD MODAL or navigate OR suggest
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -220,7 +321,7 @@ const ReportsMobile = () => {
       }
       await logResp.json();
 
-      // 1) Try strict router first (no fallback)
+      // 1) Try strict router first
       const reportSlug = resolveSlug(trimmed);
       if (!reportSlug) {
         // 1a) Ask suggest API
@@ -229,7 +330,7 @@ const ReportsMobile = () => {
           // Map API -> modal items with slug (so clicks can jump straight to report)
           const mapped = items.map((it) => ({
             title: it.title || it.slug,
-            slug: it.slug, // crucial
+            slug: it.slug,
           }));
           setSuggestItems(mapped.slice(0, 3));
           setSuggestOpen(true);
@@ -241,7 +342,14 @@ const ReportsMobile = () => {
         return;
       }
 
-      // 2) We have a slug → go open the report
+      // 2) We have a slug → if no contact info, open lead modal first
+      if (!leadEmail || !leadPhone) {
+        setPendingSlug(reportSlug);
+        setLeadOpen(true);
+        return;
+      }
+
+      // Otherwise go straight to preview
       await goToReportBySlug(reportSlug);
     } catch (e) {
       console.error("Error during search flow:", e);
@@ -304,11 +412,12 @@ const ReportsMobile = () => {
       if (ev.key === "Escape") {
         if (suggestOpen) setSuggestOpen(false);
         if (openModal) setOpenModal(false);
+        if (leadOpen) setLeadOpen(false);
       }
     };
-    if (openModal || suggestOpen) document.addEventListener("keydown", onKey);
+    if (openModal || suggestOpen || leadOpen) document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [openModal, suggestOpen]);
+  }, [openModal, suggestOpen, leadOpen]);
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-10">
@@ -494,6 +603,93 @@ const ReportsMobile = () => {
             >
               None of these
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* LEAD-CAPTURE MODAL: email + WhatsApp before first-2-pages preview */}
+      {leadOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setLeadOpen(false)}
+        >
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+          <div
+            className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-2xl bg-white p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-semibold text-gray-900 mb-1">
+              Get the first 2 pages free
+            </h3>
+            <p className="text-xs text-gray-600 mb-3">
+              Share your email and WhatsApp number and we’ll send you the first 2 pages of this report and occasional updates.
+            </p>
+
+            <form onSubmit={handleLeadSubmit} className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Name (optional)
+                </label>
+                <input
+                  type="text"
+                  value={leadName}
+                  onChange={(e) => setLeadName(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Rajan"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Email (required)
+                </label>
+                <input
+                  type="email"
+                  value={leadEmail}
+                  onChange={(e) => setLeadEmail(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="you@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  WhatsApp number (required)
+                </label>
+                <input
+                  type="tel"
+                  value={leadPhone}
+                  onChange={(e) => setLeadPhone(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="+91 90147 94288"
+                />
+              </div>
+
+              {leadError && (
+                <p className="text-xs text-red-600">{leadError}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={leadSubmitting}
+                className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl text-sm active:scale-[0.98] disabled:opacity-60"
+              >
+                {leadSubmitting ? "Sending…" : "Send me first 2 pages"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setLeadOpen(false);
+                  if (pendingSlug) {
+                    goToReportBySlug(pendingSlug);
+                  }
+                }}
+                className="w-full mt-1 border border-gray-200 text-gray-700 bg-gray-50 hover:bg-gray-100 font-medium py-2.5 rounded-xl text-sm active:scale-[0.98]"
+              >
+                Skip for now, just show preview
+              </button>
+            </form>
           </div>
         </div>
       )}
