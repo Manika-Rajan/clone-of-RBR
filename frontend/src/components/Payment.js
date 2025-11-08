@@ -60,7 +60,7 @@ const Payment = () => {
     (localStorage.getItem('amount')
       ? Number(localStorage.getItem('amount'))
       : undefined) ??
-    400; // default ₹400 fallback
+    1; // default ₹400 fallback
   const resolvedFileKey =
     stateObj.fileKey ||
     stateObj.file_key ||
