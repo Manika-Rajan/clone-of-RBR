@@ -37,12 +37,6 @@ const ReportsDisplay = () => {
     
     // ✅ Save fileKey and reportId in Store for Payment
     cxtDispatch({ type: 'SET_FILE_REPORT', payload: { fileKey: localFileKey, reportId: localReportId } });
-
-    // ✅ TEMP: force test price ₹1 for the payment flow
-    localStorage.setItem('amount', '1');           // <<< ADD THIS LINE
-
-    // NEW: set a test flag so Payment.js can “lock” to ₹1 everywhere
-    localStorage.setItem('testMode', '1');
     
     setOpenModel(true);
   };
