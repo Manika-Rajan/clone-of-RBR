@@ -7,6 +7,34 @@ import Delivery from '../assets/Delivery.svg';
 import pencil from '../assets/pencil.svg';
 import green from '../assets/green-tick.svg';
 
+const CONVERSION_SEND_TO = 'AW-824378442/NWTVCJbO_bobEMqIjIkD'; // Google Ads ID/Label
+
+// Fire Google Ads conversion safely (once per paymentId)
+function fireGoogleAdsPurchase({ paymentId, valueINR }) {
+  try {
+    if (!paymentId) return;
+    const guardKey = `ads_conv_fired_${paymentId}`;
+    if (sessionStorage.getItem(guardKey)) {
+      console.log('[Ads] Conversion already fired for', paymentId);
+      return;
+    }
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'conversion', {
+        send_to: CONVERSION_SEND_TO,
+        value: Number(valueINR) || 1.0,
+        currency: 'INR',
+        transaction_id: paymentId,
+      });
+      sessionStorage.setItem(guardKey, '1');
+      console.log('[Ads] Conversion fired:', { paymentId, valueINR });
+    } else {
+      console.warn('[Ads] gtag not available; skip fire.');
+    }
+  } catch (e) {
+    console.error('[Ads] Conversion fire error:', e);
+  }
+}
+
 const Payment = () => {
   // Pull userInfo and report from state
   const {
@@ -400,6 +428,12 @@ const Payment = () => {
                 }),
               }
             );
+            // ✅ Fire Google Ads Purchase conversion (once per payment id)
+            fireGoogleAdsPurchase({
+              paymentId: response.razorpay_payment_id,     // keep "response" as in your code
+              valueINR: Number(amount),                    // your amount is already INR
+            });
+
             await saveUserDetails();
             navigate('/profile', { state: { showSuccess: true } });
           } catch (err) {
