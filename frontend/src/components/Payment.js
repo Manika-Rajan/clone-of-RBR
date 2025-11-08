@@ -41,13 +41,17 @@ const Payment = () => {
     state: { userInfo, report },
     dispatch: cxtDispatch,
   } = useContext(Store);
+
   const storeFileKey = report?.fileKey || '';
   const storeReportId = report?.reportId || '';
   const { isLogin, userId } = userInfo || {};
+
   const navigate = useNavigate();
   const location = useLocation();
+
   // ---- Helpers to resolve values safely from multiple sources ----
   const stateObj = location?.state || {};
+
   const resolvedReportId =
     stateObj.reportId ||
     stateObj.report_id ||
@@ -55,23 +59,27 @@ const Payment = () => {
     localStorage.getItem('reportId') ||
     localStorage.getItem('lastReportId') || // optional extra fallback
     '';
+
   const resolvedAmount =
     stateObj.amount ??
     (localStorage.getItem('amount')
       ? Number(localStorage.getItem('amount'))
       : undefined) ??
-    1; // default ₹400 fallback
+    1; // default ₹1 fallback
+
   const resolvedFileKey =
     stateObj.fileKey ||
     stateObj.file_key ||
     storeFileKey ||
     localStorage.getItem('fileKey') ||
     '';
+
   // Prefer values from userInfo, fallback to localStorage
   const storedName = localStorage.getItem('userName') || (userInfo?.name ?? '');
   const storedPhone =
     localStorage.getItem('userPhone') || (userInfo?.phone ?? userId);
   const storedEmail = localStorage.getItem('userEmail') || (userInfo?.email ?? '');
+
   const [editName, setEditName] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
   const [inputName, setInputName] = useState(storedName);
@@ -80,27 +88,28 @@ const Payment = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
   // Local reactive copies for logging & validation
   const reportId = resolvedReportId;
   const amount = resolvedAmount;
   const file_key = resolvedFileKey;
+
   // Persist payment context so refresh doesn't lose it (and optionally into store if you add actions later)
   useEffect(() => {
-    // Mirror to localStorage
     if (reportId) {
       localStorage.setItem('reportId', reportId);
       localStorage.setItem('lastReportId', reportId);
     }
     if (file_key) localStorage.setItem('fileKey', file_key);
     if (amount != null) localStorage.setItem('amount', String(amount));
-    // Optional: dispatch to store (no-op if your reducer doesn't implement these types)
     try {
       if (reportId) cxtDispatch({ type: 'SET_REPORT_ID', payload: reportId });
       if (file_key) cxtDispatch({ type: 'SET_FILE_KEY', payload: file_key });
     } catch {
-      // Safe to ignore if your reducer doesn't handle these yet
+      // ignore if reducer doesn't handle these
     }
   }, [reportId, file_key, amount, cxtDispatch]);
+
   useEffect(() => {
     console.log('Payment.js - Initial state:', {
       isLogin,
@@ -110,10 +119,12 @@ const Payment = () => {
       file_key,
       locationState: location?.state,
     });
+
     if (!isLogin) {
       navigate('/');
       return;
     }
+
     let scriptLoaded = false;
     try {
       const script = document.createElement('script');
@@ -129,6 +140,7 @@ const Payment = () => {
         scriptLoaded = false;
       };
       document.body.appendChild(script);
+
       setTimeout(() => {
         if (!scriptLoaded) {
           console.error('Razorpay script timeout');
@@ -139,6 +151,7 @@ const Payment = () => {
       console.error('Error loading Razorpay script:', e.message);
       setError('Error initializing payment gateway.');
     }
+
     return () => {
       const script = document.querySelector(
         'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
@@ -146,6 +159,7 @@ const Payment = () => {
       if (script) document.body.removeChild(script);
     };
   }, [isLogin, userId, navigate, location?.state]);
+
   const saveUserDetails = async () => {
     try {
       const response = await fetch(
@@ -171,6 +185,7 @@ const Payment = () => {
       console.error('Save user details error:', err);
     }
   };
+
   const handleName = (e) => {
     if (e.key === 'Enter') {
       if (!inputName.trim()) {
@@ -183,6 +198,7 @@ const Payment = () => {
       setEditName(false);
     }
   };
+
   const handleEmail = (e) => {
     if (e.key === 'Enter') {
       if (!inputEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputEmail)) {
@@ -196,6 +212,7 @@ const Payment = () => {
       setSuccess(true);
     }
   };
+
   const ensureRazorpayLoaded = () =>
     new Promise((resolve, reject) => {
       if (window.Razorpay) {
@@ -220,8 +237,9 @@ const Payment = () => {
           console.error('Razorpay SDK load timeout');
           reject(new Error('Razorpay SDK load timeout'));
         }
-      }, 10000); // Increased timeout to 10 seconds
+      }, 10000);
     });
+
   const handlePayment = async () => {
     console.log('handlePayment started', {
       reportId,
@@ -232,10 +250,12 @@ const Payment = () => {
       inputEmail,
       verify,
       authToken: localStorage.getItem('authToken'),
-      userInfoToken: userInfo?.token, // Check if token exists in userInfo
+      userInfoToken: userInfo?.token,
     });
+
     setError('');
     setLoading(true);
+
     // Step 1: Validate inputs individually
     if (!reportId) {
       console.error('Validation failed: Missing reportId');
@@ -246,7 +266,7 @@ const Payment = () => {
     if (!userId) {
       console.error('Validation failed: Missing userId');
       setError('Please log in again.');
-      navigate('/login'); // Changed to /login for clarity
+      navigate('/login');
       setLoading(false);
       return;
     }
@@ -274,6 +294,7 @@ const Payment = () => {
       setLoading(false);
       return;
     }
+
     // Step 2: Ensure Razorpay SDK is loaded
     try {
       await ensureRazorpayLoaded();
@@ -284,24 +305,26 @@ const Payment = () => {
       setLoading(false);
       return;
     }
+
     // Step 3: Fetch Razorpay order
     try {
-      // Check authToken in localStorage and userInfo
       const token = localStorage.getItem('authToken') || userInfo?.token;
       if (!token) {
         console.error('No auth token found in localStorage or userInfo');
         setError('Authentication error. Please log in again and retry.');
-        navigate('/login'); // Changed to /login for clarity
+        navigate('/login');
         setLoading(false);
         return;
       }
+
       console.log('Fetching create-razorpay-order with:', {
         body: JSON.stringify({
           reportId,
           amount: Math.round(Number(amount) * 100),
-          userId
-        })
+          userId,
+        }),
       });
+
       const response = await fetch(
         'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/create-razorpay-order',
         {
@@ -314,11 +337,12 @@ const Payment = () => {
             body: JSON.stringify({
               reportId,
               amount: Math.round(Number(amount) * 100),
-              userId
-            })
-          })
+              userId,
+            }),
+          }),
         }
       );
+
       console.log('create-razorpay-order response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
@@ -327,26 +351,29 @@ const Payment = () => {
         setLoading(false);
         return;
       }
+
       const order = await response.json();
       console.log('Razorpay order response:', order);
       const parsedBody = JSON.parse(order.body);
-      // Step 4: Resolve order details
+
+      // ---- Step 4: Resolve order details (PREFER server key_id) ----
       const orderId = parsedBody?.razorpay_response?.id;
       const orderAmount =
-        parsedBody?.razorpay_response?.amount ||
-        Math.round(Number(amount) * 100);
-      const orderCurrency =
-        parsedBody?.razorpay_response?.currency ||
-        'INR';
-      const keyFromOrder =
-        parsedBody?.key_id ||
-        null;
+        parsedBody?.razorpay_response?.amount || Math.round(Number(amount) * 100);
+      const orderCurrency = parsedBody?.razorpay_response?.currency || 'INR';
+      const keyFromOrder = parsedBody?.key_id || null;
+
+      // ✅ Critical fix: prefer the key_id returned by the order API.
+      //    Only if it's missing, fall back to env/window/localStorage.
       const razorpayKey =
+        keyFromOrder ||
         process.env.REACT_APP_RAZORPAY_KEY_ID ||
         (typeof window !== 'undefined' && window._env_?.RAZORPAY_KEY_ID) ||
         localStorage.getItem('razorpayKey') ||
-        keyFromOrder;
+        null;
+
       console.log('Resolved Razorpay key:', razorpayKey, 'Order ID:', orderId);
+
       if (!razorpayKey) {
         console.error('Razorpay key missing');
         setError('Payment configuration error. Please contact support.');
@@ -359,7 +386,9 @@ const Payment = () => {
         setLoading(false);
         return;
       }
+
       console.log('Opening Razorpay popup with order:', orderId);
+
       // Step 5: Initialize Razorpay
       const options = {
         key: razorpayKey,
@@ -378,6 +407,7 @@ const Payment = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
             });
+
             const verifyResponse = await fetch(
               'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/verify-payment',
               {
@@ -388,15 +418,16 @@ const Payment = () => {
                 },
                 body: JSON.stringify({
                   body: JSON.stringify({
-                  reportId,
-                  userId,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_signature: response.razorpay_signature,
-                    })
+                    reportId,
+                    userId,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature,
+                  }),
                 }),
               }
             );
+
             console.log('verify-payment response status:', verifyResponse.status);
             if (!verifyResponse.ok) {
               const verifyError = await verifyResponse.text();
@@ -404,8 +435,10 @@ const Payment = () => {
                 `Verification failed: ${verifyError || 'Unknown server error'}`
               );
             }
+
             const verifyData = await verifyResponse.json();
             console.log('Payment verification response:', verifyData);
+
             // Log outcome for your backend
             await fetch(
               'https://d7vdzrifz9.execute-api.ap-south-1.amazonaws.com/prod/log_payment',
@@ -428,10 +461,11 @@ const Payment = () => {
                 }),
               }
             );
+
             // ✅ Fire Google Ads Purchase conversion (once per payment id)
             fireGoogleAdsPurchase({
-              paymentId: response.razorpay_payment_id,     // keep "response" as in your code
-              valueINR: Number(amount),                    // your amount is already INR
+              paymentId: response.razorpay_payment_id,
+              valueINR: Number(amount),
             });
 
             await saveUserDetails();
@@ -464,7 +498,9 @@ const Payment = () => {
           },
         },
       };
+
       console.log('Razorpay options:', options);
+
       // Step 6: Open Razorpay modal
       try {
         const rzp = new window.Razorpay(options);
@@ -494,6 +530,7 @@ const Payment = () => {
           );
           setLoading(false);
         });
+
         console.log('Opening Razorpay modal');
         rzp.open();
       } catch (err) {
@@ -507,6 +544,7 @@ const Payment = () => {
       setLoading(false);
     }
   };
+
   return (
     <div className="payments-page" style={{ position: 'relative', zIndex: 1000 }}>
       {/* Left Section */}
@@ -518,6 +556,7 @@ const Payment = () => {
             style={{ width: '187px', height: '36px', marginLeft: '15%' }}
           />
         </div>
+
         {/* Name */}
         <div className="payment-name mt-2">
           <div style={{ paddingRight: '20px' }}>
@@ -551,6 +590,7 @@ const Payment = () => {
             />
           </div>
         </div>
+
         {/* Phone */}
         <div className="payment-name mt-2">
           <div style={{ paddingRight: '20px' }}>
@@ -562,6 +602,7 @@ const Payment = () => {
             <p style={{ fontSize: '20px', fontWeight: '400' }}>{storedPhone}</p>
           </div>
         </div>
+
         <div className="row mt-2" style={{ textAlign: 'center' }}>
           <img
             src={Delivery}
@@ -569,6 +610,7 @@ const Payment = () => {
             style={{ width: '187px', height: '36px', marginLeft: '15%' }}
           />
         </div>
+
         {/* Email */}
         <div className="payment-name mt-3">
           <div style={{ paddingRight: '20px' }}>
@@ -602,6 +644,7 @@ const Payment = () => {
             />
           </div>
         </div>
+
         {success && (
           <div
             className="success-message"
@@ -619,6 +662,7 @@ const Payment = () => {
             <div>Your email id has been changed successfully</div>
           </div>
         )}
+
         <div className="form-check" style={{ paddingLeft: '25%', paddingTop: '5%' }}>
           <input
             className="form-check-input"
@@ -635,6 +679,7 @@ const Payment = () => {
           </label>
         </div>
       </div>
+
       {/* Right Section */}
       <div className="payments-right">
         <div className="row">
