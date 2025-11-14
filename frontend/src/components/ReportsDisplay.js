@@ -289,8 +289,15 @@ const ReportsDisplay = () => {
 
   return (
     <>
-      <div className="report-display">
-        {/* Top nav – lightly themed but aligned with mobile */}
+      <div
+        className="report-display"
+        style={{
+          minHeight: "100vh",
+          background: "#020617",
+          overflowX: "hidden",
+        }}
+      >
+        {/* Top nav – gradient header mirroring mobile feel */}
         <nav
           className="navbar navbar-expand-lg"
           style={{
@@ -405,16 +412,20 @@ const ReportsDisplay = () => {
 
         {/* PDF viewer */}
         <div
-          className="viewer col-md-11 col-sm-11 col-11"
+          className="viewer"
           style={{
             position: "relative",
-            marginTop: 16,
-            marginBottom: 24,
+            margin: "16px auto 24px",
+            width: "100%",
+            maxWidth: "1100px",
+            borderRadius: 12,
+            overflow: "hidden",
+            backgroundColor: "#020617",
           }}
         >
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
             {isLoading ? (
-              <div className="d-flex justify-content-center align-items-center h-100">
+              <div className="d-flex justify-content-center align-items-center" style={{ height: "70vh" }}>
                 <div className="text-center text-muted">
                   <div className="spinner-border" role="status" />
                   <div style={{ marginTop: 8, fontSize: 13 }}>
@@ -425,7 +436,10 @@ const ReportsDisplay = () => {
             ) : pdfUrl ? (
               <Viewer fileUrl={pdfUrl} plugins={[defaultLayoutPluginInstance]} />
             ) : (
-              <div className="error-message text-danger text-center">
+              <div
+                className="error-message text-danger text-center"
+                style={{ padding: 24 }}
+              >
                 {error || "Failed to load report. No fileKey or API issue."}
               </div>
             )}
@@ -460,7 +474,12 @@ const ReportsDisplay = () => {
               {/* Callout card */}
               <div
                 className="position-absolute d-flex justify-content-center"
-                style={{ insetInline: 0, bottom: 24, zIndex: 20, pointerEvents: "none" }}
+                style={{
+                  insetInline: 0,
+                  bottom: 24,
+                  zIndex: 20,
+                  pointerEvents: "none",
+                }}
               >
                 <div
                   style={{
@@ -539,16 +558,15 @@ const ReportsDisplay = () => {
                       color: "#e5e7eb",
                     }}
                   >
-                    <li>Exact market size & 5-year forecast</li>
-                    <li>Competitor list, pricing bands & margins</li>
-                    <li>Risks, regulations & “go / no-go” checklist</li>
+                    <li>Exact market size &amp; 5-year forecast</li>
+                    <li>Competitor list, pricing bands &amp; margins</li>
+                    <li>Risks, regulations &amp; “go / no-go” checklist</li>
                   </ul>
 
                   {/* CTA block – Pay OR Preview */}
                   <div style={{ marginTop: 10 }}>
                     <button
                       onClick={handlePayment}
-                      className="w-100"
                       style={{
                         width: "100%",
                         borderRadius: 12,
@@ -562,7 +580,7 @@ const ReportsDisplay = () => {
                         boxShadow: "0 14px 30px rgba(15,23,42,0.85)",
                       }}
                     >
-                      Pay & unlock full report — ₹
+                      Pay &amp; unlock full report — ₹
                       {FINAL.toLocaleString("en-IN")}
                     </button>
 
@@ -646,7 +664,10 @@ const ReportsDisplay = () => {
           className="fixed inset-0 z-50 d-flex align-items-center justify-content-center"
           onClick={() => setLeadOpen(false)}
         >
-          <div className="position-absolute w-100 h-100" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(3px)" }} />
+          <div
+            className="position-absolute w-100 h-100"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(3px)" }}
+          />
           <div
             className="position-relative"
             style={{
