@@ -297,115 +297,75 @@ const ReportsDisplay = () => {
           overflowX: "hidden",
         }}
       >
-        {/* Top nav – gradient header mirroring mobile feel */}
-        <nav
-          className="navbar navbar-expand-lg"
-          style={{
-            background:
-              "linear-gradient(90deg, #1d4ed8 0%, #2563eb 40%, #4f46e5 100%)",
-            color: "#fff",
-            boxShadow: "0 8px 20px rgba(15,23,42,0.55)",
-          }}
-        >
+        {/* ORIGINAL NAVBAR STYLE (kept consistent with rest of site) */}
+        <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
-            <div className="nav-left" style={{ alignItems: "center" }}>
+            <div className="nav-left">
               <div className="logo">
                 <Link to="/" className="navbar-brand">
-                  <div
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.1)",
-                      border: "1px solid rgba(255,255,255,0.3)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <img
-                      src={logo}
-                      alt="RBR"
-                      style={{ width: 42, height: 42, objectFit: "contain" }}
-                    />
-                  </div>
+                  <img
+                    src={logo}
+                    alt="RBR"
+                    style={{ width: "60px", height: "60px" }}
+                  />
                 </Link>
               </div>
-              <div className="text" style={{ marginLeft: 16 }}>
+              <div className="text">
                 <p
                   className="report-display-title"
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 600,
-                    marginBottom: 2,
-                    color: "white",
-                  }}
+                  style={{ fontSize: "28px" }}
                 >
                   {title}
                 </p>
                 <p
                   className="report-display-desc"
-                  style={{
-                    marginTop: 0,
-                    maxWidth: 520,
-                    fontSize: 13,
-                    color: "rgba(219,234,254,1)",
-                  }}
+                  style={{ marginTop: "-10px", width: "70%" }}
                 >
                   {subtitle}
                 </p>
               </div>
             </div>
-
-            <div className="d-flex align-items-center gap-2">
-              {!isPurchased && (
-                <span
-                  style={{
-                    background: "rgba(254, 243, 199, 0.9)",
-                    color: "#92400e",
-                    borderRadius: 999,
-                    padding: "4px 10px",
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {PROMO_PCT}% off launch price
-                </span>
-              )}
-              {isPurchased ? (
-                <span
-                  style={{
-                    borderRadius: 999,
-                    padding: "6px 14px",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    background: "rgba(167, 243, 208, 0.9)",
-                    color: "#064e3b",
-                  }}
-                >
-                  ✅ Purchased
-                </span>
-              ) : (
-                <button
-                  className="buy-btn"
-                  onClick={handlePayment}
-                  style={{
-                    color: "#111827",
-                    background:
-                      "linear-gradient(90deg,#facc15,#fbbf24,#fde047)",
-                    borderRadius: 999,
-                    fontWeight: 600,
-                    fontSize: 13,
-                    padding: "8px 18px",
-                    border: "none",
-                    boxShadow: "0 10px 25px rgba(15,23,42,0.6)",
-                  }}
-                >
-                  Pay & unlock now
-                </button>
-              )}
+            <button
+              className="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarSupportedContent"
+            >
+              <span className="navbar-toggler-icon" />
+            </button>
+            <div
+              className="collapse navbar-collapse"
+              id="navbarSupportedContent"
+            >
+              <ul className="navbar-nav ms-auto">
+                {!isPurchased && (
+                  <li className="nav-item">
+                    <button
+                      className="buy-btn"
+                      onClick={handlePayment}
+                      style={{ color: "white" }}
+                    >
+                      BUY NOW
+                    </button>
+                  </li>
+                )}
+                {isPurchased && (
+                  <li className="nav-item">
+                    <span
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: 999,
+                        background: "rgba(22,163,74,0.1)",
+                        color: "#15803d",
+                        fontWeight: 600,
+                        fontSize: 13,
+                      }}
+                    >
+                      ✅ Purchased
+                    </span>
+                  </li>
+                )}
+              </ul>
             </div>
           </div>
         </nav>
@@ -425,7 +385,10 @@ const ReportsDisplay = () => {
         >
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
             {isLoading ? (
-              <div className="d-flex justify-content-center align-items-center" style={{ height: "70vh" }}>
+              <div
+                className="d-flex justify-content-center align-items-center"
+                style={{ height: "70vh" }}
+              >
                 <div className="text-center text-muted">
                   <div className="spinner-border" role="status" />
                   <div style={{ marginTop: 8, fontSize: 13 }}>
@@ -434,7 +397,10 @@ const ReportsDisplay = () => {
                 </div>
               </div>
             ) : pdfUrl ? (
-              <Viewer fileUrl={pdfUrl} plugins={[defaultLayoutPluginInstance]} />
+              <Viewer
+                fileUrl={pdfUrl}
+                plugins={[defaultLayoutPluginInstance]}
+              />
             ) : (
               <div
                 className="error-message text-danger text-center"
