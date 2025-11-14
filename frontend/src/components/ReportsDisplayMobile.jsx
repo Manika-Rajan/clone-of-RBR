@@ -13,8 +13,8 @@ const MRP = 2999;
 const PROMO_PCT = 25;
 const FINAL = Math.round(MRP * (1 - PROMO_PCT / 100));
 
-// ====== Lead API (TODO: set your endpoint) ======
-const LEAD_API_URL = "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook"; // <-- TODO replace
+// ====== Lead API (keep pointing to your RBRmain-everything-of-leads endpoint) ======
+const LEAD_API_URL = "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook"; // or your everything-of-leads URL
 
 const ReportsDisplayMobile = () => {
   const navigate = useNavigate();
@@ -60,8 +60,9 @@ const ReportsDisplayMobile = () => {
   const [leadBusy, setLeadBusy] = useState(false);
   const [leadMsg, setLeadMsg] = useState("");
 
-  // New: OTP flow
-  const [leadStep, setLeadStep] = useState("form"); // "form" | "otp"
+  // New: OTP / consent flow
+  // CHANGED: allow a third step "wa_wait" for WhatsApp consent screen
+  const [leadStep, setLeadStep] = useState("form"); // "form" | "otp" | "wa_wait"
   const [leadToken, setLeadToken] = useState("");
   const [leadChannel, setLeadChannel] = useState(""); // "email" or "whatsapp"
   const [leadOtp, setLeadOtp] = useState("");
@@ -215,7 +216,7 @@ const ReportsDisplayMobile = () => {
     });
   };
 
-  // Step 1: ask Lambda to send OTP
+  // Step 1: ask Lambda to send OTP (email) OR consent (WhatsApp)
   const submitLead = async () => {
     if (!leadEmail && !leadPhone) {
       setLeadMsg("Please enter your email or WhatsApp number.");
@@ -243,32 +244,44 @@ const ReportsDisplayMobile = () => {
         throw new Error(data.error || `Request failed (${resp.status})`);
       }
 
+      const channel = data.channel || (leadPhone ? "whatsapp" : "email");
       setLeadToken(data.token || "");
-      setLeadChannel(data.channel || "");
-      setLeadStep("otp");
+      setLeadChannel(channel);
+
+      // CHANGED: Branch behaviour based on channel
+      if (channel === "email") {
+        setLeadStep("otp");
+        setLeadMsg("We’ve sent a 6-digit code to your email. Please enter it below.");
+      } else {
+        // WhatsApp path → consent flow, no OTP screen
+        setLeadStep("wa_wait");
+        setLeadMsg(
+          "We’ve sent you a WhatsApp message. Tap “Yes, I requested” in WhatsApp to receive your 2-page summary there."
+        );
+      }
 
       window.gtag?.("event", "lead_capture_submit", {
         event_category: "engagement",
         report_slug: reportSlug,
-        channel: data.channel || (leadPhone ? "whatsapp" : "email"),
-        phase: "otp_sent",
+        channel,
+        phase: channel === "email" ? "otp_sent" : "consent_sent",
       });
-
-      if (data.channel === "email") {
-        setLeadMsg("We’ve sent a 6-digit code to your email. Please enter it below.");
-      } else {
-        setLeadMsg("We’ve sent a 6-digit code to your WhatsApp. Please enter it below.");
-      }
     } catch (e) {
       console.error(e);
-      setLeadMsg("Something went wrong while sending the code. Please try again.");
+      setLeadMsg("Something went wrong. Please try again.");
     } finally {
       setLeadBusy(false);
     }
   };
 
-  // Step 2: verify OTP and trigger teaser send
+  // Step 2: verify OTP (EMAIL ONLY) and trigger teaser send
   const submitOtp = async () => {
+    if (leadChannel === "whatsapp") {
+      // Safety guard: WA path no longer uses OTP
+      setLeadMsg('For WhatsApp, no code is needed. Just tap “Yes, I requested” in WhatsApp.');
+      return;
+    }
+
     if (!leadOtp.trim()) {
       setLeadMsg("Please enter the 6-digit code.");
       return;
@@ -483,7 +496,7 @@ const ReportsDisplayMobile = () => {
         </ModalBody>
       </Modal>
 
-      {/* Lead Capture Modal (OTP-based) */}
+      {/* Lead Capture Modal (email OTP + WhatsApp consent) */}
       {leadOpen && (
         <div
           role="dialog"
@@ -493,7 +506,7 @@ const ReportsDisplayMobile = () => {
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
           <div
-            className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-2xl border border-blue-100 bg-white p-5"
+            className="relative z-10 w:[92%] max-w-sm rounded-2xl shadow-2xl border border-blue-100 bg-white p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
@@ -512,6 +525,7 @@ const ReportsDisplayMobile = () => {
               We’ll send a short teaser to your email or WhatsApp after a quick verification.
             </p>
 
+            {/* Step 1: capture contact */}
             {leadStep === "form" && (
               <>
                 <div className="mt-3 space-y-2">
@@ -537,7 +551,7 @@ const ReportsDisplayMobile = () => {
                     disabled={leadBusy}
                     className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] disabled:opacity-60"
                   >
-                    {leadBusy ? "Sending code…" : "Send code"}
+                    {leadBusy ? "Sending…" : "Send"}
                   </button>
                   <button
                     onClick={goToPayment}
@@ -549,7 +563,8 @@ const ReportsDisplayMobile = () => {
               </>
             )}
 
-            {leadStep === "otp" && (
+            {/* Step 2 (email): OTP UI */}
+            {leadStep === "otp" && leadChannel === "email" && (
               <>
                 <div className="mt-3 space-y-2">
                   <input
@@ -577,10 +592,51 @@ const ReportsDisplayMobile = () => {
                       setLeadStep("form");
                       setLeadOtp("");
                       setLeadMsg("");
+                      setLeadChannel("");
+                      setLeadToken("");
                     }}
                     className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
                   >
                     Start again
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Step 2 (WhatsApp): Check WhatsApp screen */}
+            {leadStep === "wa_wait" && leadChannel === "whatsapp" && (
+              <>
+                <div className="mt-4 space-y-2 text-sm text-gray-800">
+                  <div className="text-lg">📲 Check WhatsApp to confirm</div>
+                  <p className="text-xs text-gray-600">
+                    We’ve sent you a message on WhatsApp from <strong>Rajan Business Ideas – Prod</strong>.
+                  </p>
+                  <ul className="mt-2 list-disc list-inside text-xs text-gray-700 space-y-1">
+                    <li>Open WhatsApp on your phone.</li>
+                    <li>Find the message about “{reportSlug.replace(/_/g, " ")} in India”.</li>
+                    <li>Tap <strong>“Yes, I requested”</strong>.</li>
+                    <li>You’ll immediately receive the 2-page preview with a link.</li>
+                  </ul>
+                </div>
+                {leadMsg && <div className="mt-3 text-xs text-gray-700">{leadMsg}</div>}
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => setLeadOpen(false)}
+                    className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98]"
+                  >
+                    Okay, I’ll check WhatsApp
+                  </button>
+                  <button
+                    onClick={() => {
+                      // switch back if user wants email instead
+                      setLeadStep("form");
+                      setLeadChannel("");
+                      setLeadToken("");
+                      setLeadMsg("");
+                    }}
+                    className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                  >
+                    Use email instead
                   </button>
                 </div>
               </>
