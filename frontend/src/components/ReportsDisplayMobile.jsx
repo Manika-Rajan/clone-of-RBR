@@ -1,5 +1,5 @@
 // RBR/frontend/src/components/ReportsDisplayMobile.jsx
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.svg";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
@@ -8,13 +8,14 @@ import { useStore } from "../Store";
 import { Modal, ModalBody } from "reactstrap";
 import Login from "./Login";
 
-// ====== Pricing (keep/change freely) ======
+// ====== Pricing ======
 const MRP = 2999;
 const PROMO_PCT = 25;
 const FINAL = Math.round(MRP * (1 - PROMO_PCT / 100));
 
-// ====== Lead API (keep pointing to your RBRmain-everything-of-leads endpoint) ======
-const LEAD_API_URL = "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook"; // or your everything-of-leads URL
+// ====== Lead API ======
+const LEAD_API_URL =
+  "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook";
 
 const ReportsDisplayMobile = () => {
   const navigate = useNavigate();
@@ -39,7 +40,8 @@ const ReportsDisplayMobile = () => {
     return m ? m[1] : "";
   }, [fileKeyLegacy]);
 
-  const reportSlug = reportSlugFromState || derivedSlugFromFileKey || "paper_industry";
+  const reportSlug =
+    reportSlugFromState || derivedSlugFromFileKey || "paper_industry";
 
   // Purchased?
   const isPurchased = purchases.includes(reportSlug);
@@ -60,8 +62,7 @@ const ReportsDisplayMobile = () => {
   const [leadBusy, setLeadBusy] = useState(false);
   const [leadMsg, setLeadMsg] = useState("");
 
-  // New: OTP / consent flow
-  // CHANGED: allow a third step "wa_wait" for WhatsApp consent screen
+  // OTP / consent flow
   const [leadStep, setLeadStep] = useState("form"); // "form" | "otp" | "wa_wait"
   const [leadToken, setLeadToken] = useState("");
   const [leadChannel, setLeadChannel] = useState(""); // "email" or "whatsapp"
@@ -131,7 +132,7 @@ const ReportsDisplayMobile = () => {
 
     cxtDispatch({
       type: "SET_FILE_REPORT",
-      payload: { fileKey: `${reportSlug}.pdf`, reportId, reportSlug }, // store the full file key to deliver post-purchase
+      payload: { fileKey: `${reportSlug}.pdf`, reportId, reportSlug },
     });
 
     if (isLoggedIn) {
@@ -139,51 +140,6 @@ const ReportsDisplayMobile = () => {
     } else {
       setOpenModel(true);
     }
-  };
-
-  // OPTIONAL: Use if you want Razorpay “UPI-first” experience directly here.
-  // Call openFastCheckout() instead of goToPayment(), once you wire an orderId backend.
-  const openFastCheckout = (orderId) => {
-    // TODO: replace with your Razorpay key + orderId
-    const options = {
-      key: "rzp_live_xxxxxxx", // <-- your key
-      amount: FINAL * 100,
-      currency: "INR",
-      name: "RBR Reports",
-      description: `Unlock: ${reportSlug.replace(/_/g, " ")} report`,
-      order_id: orderId, // from your server
-      prefill: {
-        name: userInfo?.name || "",
-        email: userInfo?.email || "",
-        contact: userInfo?.phone || "",
-      },
-      notes: { report_slug: reportSlug, report_id: reportId },
-      theme: { color: "#0B63C7" },
-      config: {
-        display: {
-          blocks: {
-            upi: {
-              name: "UPI",
-              instruments: [{ method: "upi" }, { method: "upi_intent" }],
-            },
-          },
-          sequence: ["upi", "card", "netbanking", "wallet"],
-          preferences: { show_default_blocks: true },
-        },
-      },
-      handler: function (resp) {
-        navigate("/payment-success", {
-          state: { reportSlug, reportId, razorpayPaymentId: resp.razorpay_payment_id },
-        });
-      },
-      modal: {
-        ondismiss: function () {
-          // user closed checkout
-        },
-      },
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
   };
 
   const changeStatus = () => {
@@ -194,7 +150,7 @@ const ReportsDisplayMobile = () => {
   const title = `${reportSlug.replace(/_/g, " ")} in India`;
   const subtitle = isPurchased
     ? "You’ve unlocked the full report. Access the complete analysis below."
-    : "You’re viewing a locked preview. Unlock the full report for complete data, forecasts & competitor insights.";
+    : "Preview of this RBR industry report. Unlock the full version for detailed data & forecasts.";
 
   // ====== Lead capture ======
   const openLead = () => {
@@ -212,7 +168,7 @@ const ReportsDisplayMobile = () => {
     });
   };
 
-  // Step 1: ask Lambda to send OTP (email) OR consent (WhatsApp)
+  // Step 1: request OTP / WA consent
   const submitLead = async () => {
     if (!leadEmail && !leadPhone) {
       setLeadMsg("Please enter your email or WhatsApp number.");
@@ -244,12 +200,12 @@ const ReportsDisplayMobile = () => {
       setLeadToken(data.token || "");
       setLeadChannel(channel);
 
-      // CHANGED: Branch behaviour based on channel
       if (channel === "email") {
         setLeadStep("otp");
-        setLeadMsg("We’ve sent a 6-digit code to your email. Please enter it below to get your 2-page preview.");
+        setLeadMsg(
+          "We’ve sent a 6-digit code to your email. Enter it below to receive your 2-page preview."
+        );
       } else {
-        // WhatsApp path → consent flow, no OTP screen
         setLeadStep("wa_wait");
         setLeadMsg(
           "We’ve sent you a WhatsApp message. Tap “Yes, I requested” in WhatsApp to receive your 2-page preview there."
@@ -270,11 +226,12 @@ const ReportsDisplayMobile = () => {
     }
   };
 
-  // Step 2: verify OTP (EMAIL ONLY) and trigger teaser send
+  // Step 2: verify OTP (EMAIL ONLY)
   const submitOtp = async () => {
     if (leadChannel === "whatsapp") {
-      // Safety guard: WA path no longer uses OTP
-      setLeadMsg('For WhatsApp, no code is needed. Just tap “Yes, I requested” in WhatsApp.');
+      setLeadMsg(
+        'For WhatsApp, no code is needed. Just tap “Yes, I requested” in WhatsApp.'
+      );
       return;
     }
 
@@ -316,7 +273,6 @@ const ReportsDisplayMobile = () => {
       });
 
       setLeadMsg("✅ Verified! We’ve sent your 2-page preview.");
-      // Auto-close after a short delay
       setTimeout(() => setLeadOpen(false), 1500);
     } catch (e) {
       console.error(e);
@@ -328,31 +284,28 @@ const ReportsDisplayMobile = () => {
 
   return (
     <>
-      <div className="min-h-screen flex flex-col bg-slate-50">
+      <div className="min-h-screen flex flex-col bg-[#f5f5f7]">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
+        <header className="sticky top-0 z-30 bg-[#f5f5f7]/95 backdrop-blur border-b border-slate-200">
           <div className="flex items-center gap-3 px-4 py-3">
             <Link to="/" className="shrink-0">
-              <img src={logo} alt="RBR" className="h-10 w-10 rounded-lg border border-gray-100" />
+              <img
+                src={logo}
+                alt="RBR"
+                className="h-9 w-9 rounded-xl border border-slate-200 bg-white p-1"
+              />
             </Link>
             <div className="min-w-0">
-              <h1 className="text-[15px] font-semibold text-gray-900 truncate">{title}</h1>
-              <p className="text-[12px] text-gray-600 leading-snug line-clamp-2">
+              <h1 className="text-[15px] font-semibold text-slate-900 truncate">
+                {title}
+              </h1>
+              <p className="text-[12px] text-slate-600 leading-snug line-clamp-2">
                 {subtitle}
               </p>
             </div>
-            {isPurchased ? (
-              <div className="ml-auto inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-medium text-green-700 border border-green-100">
-                <span className="mr-1 text-xs">●</span> Purchased
-              </div>
-            ) : (
-              <button
-                onClick={goToPayment}
-                className="ml-auto bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-2 rounded-lg active:scale-[0.98] shadow-sm"
-              >
-                Unlock full report
-              </button>
-            )}
+            <span className="ml-auto rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+              Preview
+            </span>
           </div>
         </header>
 
@@ -362,22 +315,36 @@ const ReportsDisplayMobile = () => {
           {isLoading && (
             <div className="flex items-center justify-center h-[70vh]">
               <div className="text-center">
-                <svg className="mx-auto animate-spin" viewBox="0 0 100 100" width="56" height="56">
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#e6e6e6" strokeWidth="8" />
+                <svg
+                  className="mx-auto animate-spin"
+                  viewBox="0 0 100 100"
+                  width="48"
+                  height="48"
+                >
                   <circle
                     cx="50"
                     cy="50"
                     r="40"
                     fill="none"
-                    stroke="#0263c7"
+                    stroke="#e5e7eb"
+                    strokeWidth="8"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="#2563eb"
                     strokeWidth="8"
                     strokeLinecap="round"
                     strokeDasharray="251"
                     strokeDashoffset="70"
                   />
                 </svg>
-                <p className="mt-3 text-sm text-gray-800 font-medium">Fetching your report…</p>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-3 text-sm text-slate-900 font-medium">
+                  Fetching your report…
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
                   This usually takes just a few seconds.
                 </p>
               </div>
@@ -388,19 +355,20 @@ const ReportsDisplayMobile = () => {
           {!isLoading && error && (
             <div className="px-5 py-10 text-center">
               <p className="text-sm text-red-600 mb-3 font-medium">{error}</p>
-              <p className="text-xs text-gray-500 mb-5">
-                You can go back and re-open the report, or try reloading this page.
+              <p className="text-xs text-slate-500 mb-5">
+                You can go back and re-open the report, or try reloading this
+                page.
               </p>
               <div className="flex items-center justify-center gap-3">
                 <button
                   onClick={() => navigate(-1)}
-                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm bg-white active:scale-[0.98]"
+                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-800 text-sm bg-white active:scale-[0.98]"
                 >
                   Go back
                 </button>
                 <button
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm active:scale-[0.98] shadow-sm"
+                  className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm active:scale-[0.98]"
                 >
                   Retry
                 </button>
@@ -421,40 +389,39 @@ const ReportsDisplayMobile = () => {
                   {/* Interaction blocker */}
                   <div className="absolute inset-0 z-10 bg-transparent" />
 
-                  {/* Blur/gradient curtain with pitch */}
+                  {/* Blur / gradient */}
                   <div className="absolute inset-0 z-20 pointer-events-none">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-white/95 backdrop-blur-[3px]" />
                   </div>
 
                   {/* Callout card */}
-                  <div className="absolute inset-x-0 bottom-5 z-30 px-4">
-                    <div className="mx-auto max-w-md rounded-2xl border border-blue-100 bg-white shadow-xl p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="text-sm font-semibold text-gray-900">
-                            You’re viewing a locked preview
-                          </div>
-                          <div className="mt-1 text-xs text-gray-600">
-                            Unlock the complete report with market size, 5-year forecast,
-                            competitor list, pricing trends & risks.
-                          </div>
+                  <div className="absolute inset-x-0 bottom-4 z-30 px-4">
+                    <div className="mx-auto max-w-sm rounded-2xl border border-slate-200 bg-white shadow-lg px-4 py-3.5">
+                      <div className="space-y-1">
+                        <div className="text-sm font-semibold text-slate-900">
+                          You’re viewing a locked preview
+                        </div>
+                        <div className="text-xs text-slate-600">
+                          Unlock the complete report with market size, 5-year
+                          forecast, competitor list, pricing trends & risks.
                         </div>
                       </div>
-                      <div className="mt-3 flex gap-2">
+                      <div className="mt-3 space-y-2">
                         <button
                           onClick={goToPayment}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] font-medium shadow-sm"
+                          className="w-full rounded-xl bg-slate-900 text-white text-sm py-2.5 font-medium active:scale-[0.98]"
                         >
-                          Unlock full report — ₹{FINAL.toLocaleString("en-IN")}
+                          Unlock full report — ₹
+                          {FINAL.toLocaleString("en-IN")}
                         </button>
                         <button
                           onClick={openLead}
-                          className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                          className="w-full rounded-xl border border-slate-300 bg-white text-sm py-2.5 text-slate-800 active:scale-[0.98]"
                         >
                           Get 2-page preview
                         </button>
                       </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-600">
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                         <span>🔒 Secure UPI/Cards</span>
                         <span>•</span>
                         <span>✅ 7-day money-back</span>
@@ -470,31 +437,37 @@ const ReportsDisplayMobile = () => {
         </main>
 
         {/* Sticky Bottom Bar */}
-        <div className="sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur">
+        <div className="sticky bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur">
           <div className="px-4 py-3 flex items-center gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] text-gray-500 leading-none">Report ID</p>
-              <p className="text-sm font-medium text-gray-900 truncate">{reportId || "—"}</p>
+              <p className="text-[11px] text-slate-500 leading-none">
+                Report ID
+              </p>
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {reportId || "—"}
+              </p>
             </div>
 
             {isPurchased ? (
-              <div className="ml-auto inline-flex items-center rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 border border-green-100">
+              <div className="ml-auto inline-flex items-center rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 border border-emerald-100">
                 ✅ Already purchased
               </div>
             ) : (
               <>
                 <div className="ml-2 text-right">
-                  <div className="text-[11px] text-gray-400 line-through">
+                  <div className="text-[11px] text-slate-400 line-through">
                     ₹{MRP.toLocaleString("en-IN")}
                   </div>
-                  <div className="text-base font-semibold text-gray-900 leading-tight">
+                  <div className="text-base font-semibold text-slate-900 leading-tight">
                     ₹{FINAL.toLocaleString("en-IN")}
                   </div>
-                  <div className="text-[11px] text-green-600">RBideas25 applied</div>
+                  <div className="text-[11px] text-emerald-600">
+                    RBideas25 applied
+                  </div>
                 </div>
                 <button
                   onClick={goToPayment}
-                  className="ml-auto bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2.5 rounded-xl active:scale-[0.98] font-medium shadow-sm"
+                  className="ml-auto rounded-xl bg-slate-900 text-white text-sm px-4 py-2.5 font-medium active:scale-[0.98]"
                 >
                   Unlock full report
                 </button>
@@ -515,7 +488,9 @@ const ReportsDisplayMobile = () => {
           <Login onClose={() => setOpenModel(false)} returnTo="/payment" />
           {status && (
             <div style={{ textAlign: "center" }}>
-              <p className="success-head">The Report has been successfully sent to</p>
+              <p className="success-head">
+                The Report has been successfully sent to
+              </p>
               <p className="success-email">{email}</p>
               <button className="btn btn-primary" onClick={changeStatus}>
                 Ok
@@ -535,23 +510,24 @@ const ReportsDisplayMobile = () => {
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
           <div
-            className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-2xl border border-blue-100 bg-white p-5"
+            className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-2xl border border-slate-200 bg-white p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
-              <h3 className="text-base font-semibold text-gray-900">
+              <h3 className="text-base font-semibold text-slate-900">
                 Get a 2-page preview
               </h3>
               <button
                 onClick={() => setLeadOpen(false)}
-                className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center"
+                className="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center"
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
-            <p className="mt-1 text-xs text-gray-600">
-              We’ll send a 2-page preview PDF to your email or WhatsApp after a quick verification.
+            <p className="mt-1 text-xs text-slate-600">
+              We’ll send a 2-page preview PDF to your email or WhatsApp after a
+              quick verification.
             </p>
 
             {/* Step 1: capture contact */}
@@ -563,28 +539,30 @@ const ReportsDisplayMobile = () => {
                     value={leadEmail}
                     onChange={(e) => setLeadEmail(e.target.value)}
                     placeholder="Your email (optional)"
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/70"
                   />
                   <input
                     type="tel"
                     value={leadPhone}
                     onChange={(e) => setLeadPhone(e.target.value)}
                     placeholder="WhatsApp number (optional, with country code)"
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/70"
                   />
                 </div>
-                {leadMsg && <div className="mt-2 text-xs text-gray-700">{leadMsg}</div>}
+                {leadMsg && (
+                  <div className="mt-2 text-xs text-slate-700">{leadMsg}</div>
+                )}
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={submitLead}
                     disabled={leadBusy}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] disabled:opacity-60 font-medium"
+                    className="flex-1 rounded-xl bg-slate-900 text-white text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-medium"
                   >
                     {leadBusy ? "Sending…" : "Send preview"}
                   </button>
                   <button
                     onClick={goToPayment}
-                    className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                    className="px-3 py-2.5 text-sm rounded-xl border border-slate-300 text-slate-800 bg-white active:scale-[0.98]"
                   >
                     Unlock full report
                   </button>
@@ -603,28 +581,29 @@ const ReportsDisplayMobile = () => {
                     maxLength={6}
                     inputMode="numeric"
                     placeholder="Enter 6-digit code"
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-[0.3em] text-center"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/70 tracking-[0.3em] text-center"
                   />
                 </div>
-                {leadMsg && <div className="mt-2 text-xs text-gray-700">{leadMsg}</div>}
+                {leadMsg && (
+                  <div className="mt-2 text-xs text-slate-700">{leadMsg}</div>
+                )}
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={submitOtp}
                     disabled={leadBusy}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] disabled:opacity-60 font-medium"
+                    className="flex-1 rounded-xl bg-slate-900 text-white text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-medium"
                   >
                     {leadBusy ? "Verifying…" : "Verify & send preview"}
                   </button>
                   <button
                     onClick={() => {
-                      // allow user to restart
                       setLeadStep("form");
                       setLeadOtp("");
                       setLeadMsg("");
                       setLeadChannel("");
                       setLeadToken("");
                     }}
-                    className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                    className="px-3 py-2.5 text-sm rounded-xl border border-slate-300 text-slate-800 bg-white active:scale-[0.98]"
                   >
                     Start again
                   </button>
@@ -635,40 +614,44 @@ const ReportsDisplayMobile = () => {
             {/* Step 2 (WhatsApp): Check WhatsApp screen */}
             {leadStep === "wa_wait" && leadChannel === "whatsapp" && (
               <>
-                <div className="mt-4 space-y-2 text-sm text-gray-800">
-                  <div className="text-lg font-semibold">📲 Check WhatsApp to confirm</div>
-                  <p className="text-xs text-gray-600">
+                <div className="mt-4 space-y-2 text-sm text-slate-800">
+                  <div className="text-lg font-semibold">
+                    📲 Check WhatsApp to confirm
+                  </div>
+                  <p className="text-xs text-slate-600">
                     We’ve sent you a message on WhatsApp from{" "}
                     <strong>Rajan Business Ideas – Prod</strong>.
                   </p>
-                  <ul className="mt-2 list-disc list-inside text-xs text-gray-700 space-y-1">
+                  <ul className="mt-2 list-disc list-inside text-xs text-slate-700 space-y-1">
                     <li>Open WhatsApp on your phone.</li>
                     <li>
-                      Find the message about “{reportSlug.replace(/_/g, " ")} in India”.
+                      Find the message about “
+                      {reportSlug.replace(/_/g, " ")} in India”.
                     </li>
                     <li>
                       Tap <strong>“Yes, I requested”</strong>.
                     </li>
-                    <li>You’ll immediately receive the 2-page preview with a link.</li>
+                    <li>You’ll immediately receive the 2-page preview.</li>
                   </ul>
                 </div>
-                {leadMsg && <div className="mt-3 text-xs text-gray-700">{leadMsg}</div>}
+                {leadMsg && (
+                  <div className="mt-3 text-xs text-slate-700">{leadMsg}</div>
+                )}
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => setLeadOpen(false)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] font-medium"
+                    className="flex-1 rounded-xl bg-slate-900 text-white text-sm py-2.5 active:scale-[0.98] font-medium"
                   >
                     Okay, I’ll check WhatsApp
                   </button>
                   <button
                     onClick={() => {
-                      // switch back if user wants email instead
                       setLeadStep("form");
                       setLeadChannel("");
                       setLeadToken("");
                       setLeadMsg("");
                     }}
-                    className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                    className="px-3 py-2.5 text-sm rounded-xl border border-slate-300 text-slate-800 bg-white active:scale-[0.98]"
                   >
                     Use email instead
                   </button>
@@ -676,7 +659,7 @@ const ReportsDisplayMobile = () => {
               </>
             )}
 
-            <div className="mt-2 text-[11px] text-gray-600">
+            <div className="mt-2 text-[11px] text-slate-500">
               🔒 We only use your contact to send the 2-page preview. No spam.
             </div>
           </div>
