@@ -1,5 +1,5 @@
 // RBR/frontend/src/components/ReportsDisplayMobile.jsx
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.svg";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
@@ -8,13 +8,14 @@ import { useStore } from "../Store";
 import { Modal, ModalBody } from "reactstrap";
 import Login from "./Login";
 
-// ====== Pricing (keep/change freely) ======
+// ====== Pricing ======
 const MRP = 2999;
 const PROMO_PCT = 25;
 const FINAL = Math.round(MRP * (1 - PROMO_PCT / 100));
 
-// ====== Lead API (keep pointing to your RBRmain-everything-of-leads endpoint) ======
-const LEAD_API_URL = "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook"; // or your everything-of-leads URL
+// ====== Lead API ======
+const LEAD_API_URL =
+  "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook";
 
 const ReportsDisplayMobile = () => {
   const navigate = useNavigate();
@@ -39,7 +40,8 @@ const ReportsDisplayMobile = () => {
     return m ? m[1] : "";
   }, [fileKeyLegacy]);
 
-  const reportSlug = reportSlugFromState || derivedSlugFromFileKey || "paper_industry";
+  const reportSlug =
+    reportSlugFromState || derivedSlugFromFileKey || "paper_industry";
 
   // Purchased?
   const isPurchased = purchases.includes(reportSlug);
@@ -60,13 +62,11 @@ const ReportsDisplayMobile = () => {
   const [leadBusy, setLeadBusy] = useState(false);
   const [leadMsg, setLeadMsg] = useState("");
 
-  // New: OTP / consent flow
+  // OTP / consent flow
   const [leadStep, setLeadStep] = useState("form"); // "form" | "otp" | "wa_wait"
   const [leadToken, setLeadToken] = useState("");
   const [leadChannel, setLeadChannel] = useState(""); // "email" or "whatsapp"
   const [leadOtp, setLeadOtp] = useState("");
-
-  const headerRef = useRef(null);
 
   // ====== Fetch presigned URL ======
   useEffect(() => {
@@ -132,7 +132,7 @@ const ReportsDisplayMobile = () => {
 
     cxtDispatch({
       type: "SET_FILE_REPORT",
-      payload: { fileKey: `${reportSlug}.pdf`, reportId, reportSlug }, // store the full file key to deliver post-purchase
+      payload: { fileKey: `${reportSlug}.pdf`, reportId, reportSlug },
     });
 
     if (isLoggedIn) {
@@ -149,8 +149,8 @@ const ReportsDisplayMobile = () => {
 
   const title = `${reportSlug.replace(/_/g, " ")} in India`;
   const subtitle = isPurchased
-    ? "Thanks for your purchase! You can access the full report below."
-    : "Preview the report. Buy to unlock the complete version.";
+    ? "You’ve unlocked this report from Rajan Business Reports."
+    : "Preview of this Rajan Business Reports industry study. Unlock the full report for complete data & forecasts.";
 
   // ====== Lead capture ======
   const openLead = () => {
@@ -168,7 +168,7 @@ const ReportsDisplayMobile = () => {
     });
   };
 
-  // Step 1: ask Lambda to send OTP (email) OR consent (WhatsApp)
+  // Step 1: request OTP / WA consent
   const submitLead = async () => {
     if (!leadEmail && !leadPhone) {
       setLeadMsg("Please enter your email or WhatsApp number.");
@@ -202,13 +202,22 @@ const ReportsDisplayMobile = () => {
 
       if (channel === "email") {
         setLeadStep("otp");
-        setLeadMsg("We’ve sent a 6-digit code to your email. Please enter it below.");
+        setLeadMsg(
+          "We’ve sent a 6-digit code to your email. Enter it below to receive your 2-page preview."
+        );
       } else {
         setLeadStep("wa_wait");
         setLeadMsg(
-          "We’ve sent you a WhatsApp message. Tap “Yes, I requested” in WhatsApp to receive your 2-page summary there."
+          "We’ve sent you a WhatsApp message. Tap “Yes, I requested” in WhatsApp to receive your 2-page preview there."
         );
       }
+
+      window.gtag?.("event", "lead_capture_submit", {
+        event_category: "engagement",
+        report_slug: reportSlug,
+        channel,
+        phase: channel === "email" ? "otp_sent" : "consent_sent",
+      });
     } catch (e) {
       console.error(e);
       setLeadMsg("Something went wrong. Please try again.");
@@ -217,10 +226,12 @@ const ReportsDisplayMobile = () => {
     }
   };
 
-  // Step 2: verify OTP (EMAIL ONLY) and trigger teaser send
+  // Step 2: verify OTP (EMAIL ONLY)
   const submitOtp = async () => {
     if (leadChannel === "whatsapp") {
-      setLeadMsg('For WhatsApp, no code is needed. Just tap “Yes, I requested” in WhatsApp.');
+      setLeadMsg(
+        'For WhatsApp, no code is needed. Just tap “Yes, I requested” in WhatsApp.'
+      );
       return;
     }
 
@@ -254,7 +265,14 @@ const ReportsDisplayMobile = () => {
         throw new Error(data.error || `Verification failed (${resp.status})`);
       }
 
-      setLeadMsg("✅ Verified! We’ve sent your 2-page summary.");
+      window.gtag?.("event", "lead_capture_submit", {
+        event_category: "engagement",
+        report_slug: reportSlug,
+        channel: leadChannel || (leadPhone ? "whatsapp" : "email"),
+        phase: "verified_and_sent",
+      });
+
+      setLeadMsg("✅ Verified! We’ve sent your 2-page preview.");
       setTimeout(() => setLeadOpen(false), 1500);
     } catch (e) {
       console.error(e);
@@ -266,34 +284,40 @@ const ReportsDisplayMobile = () => {
 
   return (
     <>
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-900 via-slate-950 to-slate-900">
         {/* Sticky Header */}
-        <header
-          ref={headerRef}
-          className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200"
-        >
-          <div className="flex items-center gap-3 px-4 py-3">
+        <header className="sticky top-0 z-30 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white shadow-md">
+          <div className="px-4 pt-3 pb-4 flex items-center gap-3">
             <Link to="/" className="shrink-0">
-              <img src={logo} alt="RBR" className="h-10 w-10" />
+              <div className="h-9 w-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
+                <img src={logo} alt="RBR" className="h-7 w-7" />
+              </div>
             </Link>
-            <div className="min-w-0">
-              <h1 className="text-[15px] font-semibold text-gray-900 truncate">
-                {title}
-              </h1>
-              <p className="text-[12px] text-gray-600 leading-tight line-clamp-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-[15px] font-semibold truncate">
+                  {title}
+                </h1>
+                {!isPurchased && (
+                  <span className="inline-flex items-center rounded-full bg-amber-400/90 text-slate-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                    {PROMO_PCT}% off
+                  </span>
+                )}
+              </div>
+              <p className="mt-[2px] text-[11px] text-blue-100 leading-snug line-clamp-2">
                 {subtitle}
               </p>
             </div>
             {isPurchased ? (
-              <div className="ml-auto text-green-700 text-xs font-semibold">
-                ● ALREADY PURCHASED
-              </div>
+              <span className="ml-auto inline-flex items-center rounded-full bg-emerald-300/90 text-emerald-900 px-2.5 py-1 text-[11px] font-semibold">
+                ✅ Purchased
+              </span>
             ) : (
               <button
                 onClick={goToPayment}
-                className="ml-auto bg-blue-600 text-white text-sm px-3 py-2 rounded-lg active:scale-[0.98]"
+                className="ml-auto rounded-full bg-white text-[11px] font-semibold text-blue-700 px-3 py-1.5 active:scale-[0.96] shadow-sm"
               >
-                Unlock full report
+                Unlock now
               </button>
             )}
           </div>
@@ -301,73 +325,156 @@ const ReportsDisplayMobile = () => {
 
         {/* Content */}
         <main className="relative flex-1 overflow-auto">
+          {/* Loader */}
           {isLoading && (
             <div className="flex items-center justify-center h-[70vh]">
-              <div className="text-center">
-                <svg className="mx-auto animate-spin" viewBox="0 0 100 100" width="56" height="56">
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#e6e6e6" strokeWidth="8" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#0263c7" strokeWidth="8" strokeLinecap="round" strokeDasharray="251" strokeDashoffset="70" />
+              <div className="text-center text-white/90">
+                <svg
+                  className="mx-auto animate-spin"
+                  viewBox="0 0 100 100"
+                  width="50"
+                  height="50"
+                >
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="rgba(148,163,184,0.5)"
+                    strokeWidth="8"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="#fbbf24"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray="251"
+                    strokeDashoffset="70"
+                  />
                 </svg>
-                <p className="mt-3 text-sm text-gray-800">Fetching your report…</p>
+                <p className="mt-3 text-sm font-medium">
+                  Preparing your preview…
+                </p>
+                <p className="mt-1 text-[11px] text-slate-300">
+                  Loading the latest version of this report.
+                </p>
               </div>
             </div>
           )}
 
+          {/* Error state */}
           {!isLoading && error && (
-            <div className="px-5 py-8 text-center">
-              <p className="text-sm text-red-600 mb-3">{error}</p>
+            <div className="px-5 py-10 text-center text-white">
+              <p className="text-sm text-amber-300 mb-3 font-semibold">
+                {error}
+              </p>
+              <p className="text-xs text-slate-300 mb-5">
+                You can go back and re-open the report, or try reloading this
+                page.
+              </p>
               <div className="flex items-center justify-center gap-3">
-                <button onClick={() => navigate(-1)} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm">
-                  Go Back
+                <button
+                  onClick={() => navigate(-1)}
+                  className="px-4 py-2 rounded-lg border border-slate-500 text-slate-100 text-sm bg-transparent active:scale-[0.98]"
+                >
+                  Go back
                 </button>
-                <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 rounded-lg bg-amber-400 text-slate-900 text-sm font-semibold active:scale-[0.98]"
+                >
                   Retry
                 </button>
               </div>
             </div>
           )}
 
+          {/* PDF Viewer */}
           {!isLoading && !error && pdfUrl && (
-            <div className="relative h-[calc(100vh-150px)] sm:h-[calc(100vh-140px)]">
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-                <Viewer fileUrl={pdfUrl} />
-              </Worker>
+            <div className="relative h-[calc(100vh-150px)] sm:h-[calc(100vh-140px)] bg-slate-900">
+              <div className="h-full bg-white">
+                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                  <Viewer fileUrl={pdfUrl} />
+                </Worker>
+              </div>
 
+              {/* PREVIEW LOCK OVERLAY (blocks interaction when not purchased) */}
               {!isPurchased && (
                 <>
+                  {/* Interaction blocker */}
                   <div className="absolute inset-0 z-10 bg-transparent" />
+
+                  {/* Blur / gradient */}
                   <div className="absolute inset-0 z-20 pointer-events-none">
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white/95 backdrop-blur-[2px]" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/40 to-slate-950/95 backdrop-blur-[3px]" />
                   </div>
 
-                  <div className="absolute inset-x-0 bottom-6 z-30 px-4">
-                    <div className="mx-auto max-w-md rounded-2xl border border-blue-200 bg-white shadow-xl p-4">
-                      <div className="text-sm font-semibold text-gray-900">
-                        You’re viewing a preview
+                  {/* Callout card with CTAs */}
+                  <div className="absolute inset-x-0 bottom-4 z-30 px-4">
+                    <div className="mx-auto max-w-sm rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-blue-500/40 shadow-[0_20px_45px_rgba(15,23,42,0.75)] px-4 py-4 text-white">
+                      {/* Header + short pitch */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="space-y-1">
+                          <div className="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-200 border border-blue-400/50">
+                            Locked preview
+                          </div>
+                          <div className="text-sm font-semibold">
+                            Get the full industry report + 2-page preview PDF
+                          </div>
+                        </div>
+                        <div className="text-right text-[11px]">
+                          <div className="line-through text-slate-400">
+                            ₹{MRP.toLocaleString("en-IN")}
+                          </div>
+                          <div className="text-base font-semibold text-amber-300 leading-tight">
+                            ₹{FINAL.toLocaleString("en-IN")}
+                          </div>
+                          <div className="text-[10px] text-emerald-300">
+                            {PROMO_PCT}% launch discount
+                          </div>
+                        </div>
                       </div>
-                      <div className="mt-1 text-xs text-gray-600">
-                        Unlock the complete report: market size, 5-year forecast, competitor list, pricing trends & risks.
-                      </div>
-                      <div className="mt-3 flex gap-2">
+
+                      {/* Bullets */}
+                      <ul className="mt-2 space-y-1.5 text-[11px] text-slate-200 list-disc list-inside">
+                        <li>Exact market size & 5-year forecast</li>
+                        <li>Competitor list, pricing bands & margins</li>
+                        <li>Risks, regulations & “go / no-go” checklist</li>
+                      </ul>
+
+                      {/* CTA block – P4: Two-row with OR */}
+                      <div className="mt-3 space-y-2">
                         <button
                           onClick={goToPayment}
-                          className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98]"
+                          className="w-full rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm py-2.5 font-semibold active:scale-[0.98]"
                         >
-                          Unlock full report — ₹{FINAL.toLocaleString("en-IN")}
+                          Pay & unlock full report — ₹
+                          {FINAL.toLocaleString("en-IN")}
                         </button>
+
+                        <div className="text-center text-[10px] text-slate-300 uppercase tracking-[0.18em]">
+                          or
+                        </div>
+
                         <button
                           onClick={openLead}
-                          className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                          className="w-full rounded-xl border border-slate-500 bg-slate-900/80 text-[13px] font-medium text-slate-50 py-2.5 active:scale-[0.98]"
                         >
-                          Get 2-page summary
+                          Get a{" "}
+                          <span className="font-semibold">
+                            free 2-page preview
+                          </span>{" "}
+                          first
                         </button>
                       </div>
-                      <div className="mt-2 flex items-center gap-2 text-[11px] text-gray-600">
-                        <span>🔒 Secure UPI/Cards</span>
-                        <span>•</span>
-                        <span>✅ 7-day money-back</span>
-                        <span>•</span>
-                        <span>⏱️ Instant access</span>
+
+                      {/* Trust note */}
+                      <div className="mt-2 text-[10px] text-slate-300 text-center">
+                        Free preview helps you evaluate the report before you
+                        decide to buy.
                       </div>
                     </div>
                   </div>
@@ -377,24 +484,40 @@ const ReportsDisplayMobile = () => {
           )}
         </main>
 
-        <div className="sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur">
-          <div className="px-4 py-3 flex items-center gap-3">
+        {/* Sticky Bottom Bar */}
+        <div className="sticky bottom-0 z-30 border-t border-slate-800 bg-slate-950/95 backdrop-blur">
+          <div className="px-4 py-3 flex items-center gap-3 text-white">
             <div className="min-w-0">
-              <p className="text-xs text-gray-500 leading-none">Report ID</p>
-              <p className="text-sm font-medium text-gray-900 truncate">{reportId || "—"}</p>
+              <p className="text-[11px] text-slate-400 leading-none">
+                Report ID
+              </p>
+              <p className="text-sm font-medium truncate">
+                {reportId || "—"}
+              </p>
             </div>
 
             {isPurchased ? (
-              <div className="ml-auto text-green-700 text-sm font-semibold">✅ Already purchased</div>
+              <div className="ml-auto inline-flex items-center rounded-full bg-emerald-400/20 px-3 py-1.5 text-xs font-semibold text-emerald-300 border border-emerald-500/60">
+                ✅ Already purchased
+              </div>
             ) : (
               <>
                 <div className="ml-2 text-right">
-                  <div className="text-[11px] text-gray-500 line-through">₹{MRP.toLocaleString("en-IN")}</div>
-                  <div className="text-base font-semibold text-gray-900 leading-tight">₹{FINAL.toLocaleString("en-IN")}</div>
-                  <div className="text-[11px] text-green-600">RBideas25 applied</div>
+                  <div className="text-[11px] text-slate-500 line-through">
+                    ₹{MRP.toLocaleString("en-IN")}
+                  </div>
+                  <div className="text-base font-semibold text-amber-300 leading-tight">
+                    ₹{FINAL.toLocaleString("en-IN")}
+                  </div>
+                  <div className="text-[11px] text-emerald-300">
+                    RBideas25 applied
+                  </div>
                 </div>
-                <button onClick={goToPayment} className="ml-auto bg-blue-600 text-white text-sm px-4 py-2.5 rounded-xl active:scale-[0.98]">
-                  Unlock full report
+                <button
+                  onClick={goToPayment}
+                  className="ml-auto rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm px-4 py-2.5 font-semibold active:scale-[0.97] shadow-[0_10px_25px_rgba(15,23,42,0.8)]"
+                >
+                  Pay & unlock now
                 </button>
               </>
             )}
@@ -413,15 +536,19 @@ const ReportsDisplayMobile = () => {
           <Login onClose={() => setOpenModel(false)} returnTo="/payment" />
           {status && (
             <div style={{ textAlign: "center" }}>
-              <p className="success-head">The Report has been successfully sent to</p>
+              <p className="success-head">
+                The report has been successfully sent to
+              </p>
               <p className="success-email">{email}</p>
-              <button className="btn btn-primary" onClick={changeStatus}>Ok</button>
+              <button className="btn btn-primary" onClick={changeStatus}>
+                Ok
+              </button>
             </div>
           )}
         </ModalBody>
       </Modal>
 
-      {/* Lead Capture Modal */}
+      {/* Lead Capture Modal (email OTP + WhatsApp consent) */}
       {leadOpen && (
         <div
           role="dialog"
@@ -429,27 +556,29 @@ const ReportsDisplayMobile = () => {
           className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={() => setLeadOpen(false)}
         >
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[3px]" />
           <div
-            className="relative z-10 w:[92%] max-w-sm rounded-2xl shadow-2xl border border-blue-100 bg-white p-5"
+            className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-[0_18px_45px_rgba(15,23,42,0.85)] border border-slate-700 bg-slate-950 text-white p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
-              <h3 className="text-base font-semibold text-gray-900">
-                Get a 2-page executive summary
+              <h3 className="text-base font-semibold">
+                Get a 2-page preview PDF
               </h3>
               <button
                 onClick={() => setLeadOpen(false)}
-                className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center"
+                className="h-8 w-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center"
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
-            <p className="mt-1 text-xs text-gray-600">
-              We’ll send a short teaser to your email or WhatsApp after a quick verification.
+            <p className="mt-1 text-[11px] text-slate-300">
+              We’ll send a concise 2-page preview of this report to your email
+              or WhatsApp after a quick verification.
             </p>
 
+            {/* Step 1: capture contact */}
             {leadStep === "form" && (
               <>
                 <div className="mt-3 space-y-2">
@@ -458,35 +587,40 @@ const ReportsDisplayMobile = () => {
                     value={leadEmail}
                     onChange={(e) => setLeadEmail(e.target.value)}
                     placeholder="Your email (optional)"
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
                   />
                   <input
                     type="tel"
                     value={leadPhone}
                     onChange={(e) => setLeadPhone(e.target.value)}
                     placeholder="WhatsApp number (optional, with country code)"
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
                   />
                 </div>
-                {leadMsg && <div className="mt-2 text-xs text-gray-700">{leadMsg}</div>}
+                {leadMsg && (
+                  <div className="mt-2 text-[11px] text-amber-200">
+                    {leadMsg}
+                  </div>
+                )}
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={submitLead}
                     disabled={leadBusy}
-                    className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] disabled:opacity-60"
+                    className="flex-1 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-semibold"
                   >
-                    {leadBusy ? "Sending…" : "Send"}
+                    {leadBusy ? "Sending…" : "Send preview"}
                   </button>
                   <button
                     onClick={goToPayment}
-                    className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                    className="px-3 py-2.5 text-sm rounded-xl border border-slate-600 text-slate-100 bg-slate-900 active:scale-[0.98]"
                   >
-                    Unlock now
+                    Unlock full report
                   </button>
                 </div>
               </>
             )}
 
+            {/* Step 2 (email): OTP UI */}
             {leadStep === "otp" && leadChannel === "email" && (
               <>
                 <div className="mt-3 space-y-2">
@@ -497,17 +631,21 @@ const ReportsDisplayMobile = () => {
                     maxLength={6}
                     inputMode="numeric"
                     placeholder="Enter 6-digit code"
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-[0.3em] text-center"
+                    className="w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-center tracking-[0.3em] text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
                   />
                 </div>
-                {leadMsg && <div className="mt-2 text-xs text-gray-700">{leadMsg}</div>}
+                {leadMsg && (
+                  <div className="mt-2 text-[11px] text-amber-200">
+                    {leadMsg}
+                  </div>
+                )}
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={submitOtp}
                     disabled={leadBusy}
-                    className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98] disabled:opacity-60"
+                    className="flex-1 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-semibold"
                   >
-                    {leadBusy ? "Verifying…" : "Verify & send summary"}
+                    {leadBusy ? "Verifying…" : "Verify & send preview"}
                   </button>
                   <button
                     onClick={() => {
@@ -517,7 +655,7 @@ const ReportsDisplayMobile = () => {
                       setLeadChannel("");
                       setLeadToken("");
                     }}
-                    className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                    className="px-3 py-2.5 text-sm rounded-xl border border-slate-600 text-slate-100 bg-slate-900 active:scale-[0.98]"
                   >
                     Start again
                   </button>
@@ -525,25 +663,38 @@ const ReportsDisplayMobile = () => {
               </>
             )}
 
+            {/* Step 2 (WhatsApp): Check WhatsApp screen */}
             {leadStep === "wa_wait" && leadChannel === "whatsapp" && (
               <>
-                <div className="mt-4 space-y-2 text-sm text-gray-800">
-                  <div className="text-lg">📲 Check WhatsApp to confirm</div>
-                  <p className="text-xs text-gray-600">
-                    We’ve sent you a message on WhatsApp from <strong>Rajan Business Ideas – Prod</strong>.
+                <div className="mt-4 space-y-2 text-sm text-slate-100">
+                  <div className="text-lg font-semibold">
+                    📲 Check WhatsApp to confirm
+                  </div>
+                  <p className="text-[11px] text-slate-300">
+                    We’ve sent you a message on WhatsApp from{" "}
+                    <strong>Rajan Business Ideas – Prod</strong>.
                   </p>
-                  <ul className="mt-2 list-disc list-inside text-xs text-gray-700 space-y-1">
+                  <ul className="mt-2 list-disc list-inside text-[11px] text-slate-200 space-y-1">
                     <li>Open WhatsApp on your phone.</li>
-                    <li>Find the message about “{reportSlug.replace(/_/g, " ")} in India”.</li>
-                    <li>Tap <strong>“Yes, I requested”</strong>.</li>
-                    <li>You’ll immediately receive the 2-page preview with a link.</li>
+                    <li>
+                      Find the message about “
+                      {reportSlug.replace(/_/g, " ")} in India”.
+                    </li>
+                    <li>
+                      Tap <strong>“Yes, I requested”</strong>.
+                    </li>
+                    <li>You’ll immediately receive the 2-page preview.</li>
                   </ul>
                 </div>
-                {leadMsg && <div className="mt-3 text-xs text-gray-700">{leadMsg}</div>}
+                {leadMsg && (
+                  <div className="mt-3 text-[11px] text-amber-200">
+                    {leadMsg}
+                  </div>
+                )}
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => setLeadOpen(false)}
-                    className="flex-1 bg-blue-600 text-white text-sm py-2.5 rounded-xl active:scale-[0.98]"
+                    className="flex-1 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm py-2.5 active:scale-[0.98] font-semibold"
                   >
                     Okay, I’ll check WhatsApp
                   </button>
@@ -554,7 +705,7 @@ const ReportsDisplayMobile = () => {
                       setLeadToken("");
                       setLeadMsg("");
                     }}
-                    className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 text-gray-800 bg-white active:scale-[0.98]"
+                    className="px-3 py-2.5 text-sm rounded-xl border border-slate-600 text-slate-100 bg-slate-900 active:scale-[0.98]"
                   >
                     Use email instead
                   </button>
@@ -562,8 +713,9 @@ const ReportsDisplayMobile = () => {
               </>
             )}
 
-            <div className="mt-2 text-[11px] text-gray-600">
-              🔒 We only use your contact to send the summary. No spam.
+            <div className="mt-2 text-[10px] text-slate-400">
+              🔒 We only use your contact to send the 2-page preview. No spam,
+              no sharing with third parties.
             </div>
           </div>
         </div>
