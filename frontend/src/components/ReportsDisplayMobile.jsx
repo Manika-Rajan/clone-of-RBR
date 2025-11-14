@@ -149,8 +149,8 @@ const ReportsDisplayMobile = () => {
 
   const title = `${reportSlug.replace(/_/g, " ")} in India`;
   const subtitle = isPurchased
-    ? "You’ve unlocked the full report. Access the complete analysis below."
-    : "Preview of this RBR industry report. Unlock the full version for detailed data & forecasts.";
+    ? "You’ve unlocked this report from Rajan Business Reports."
+    : "Preview of this Rajan Business Reports industry study. Unlock the full report for complete data & forecasts.";
 
   // ====== Lead capture ======
   const openLead = () => {
@@ -284,9 +284,9 @@ const ReportsDisplayMobile = () => {
 
   return (
     <>
-      <div className="min-h-screen flex flex-col bg-[#f5f5f7]">
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-slate-50">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-30 bg-[#f5f5f7]/95 backdrop-blur border-b border-slate-200">
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
           <div className="flex items-center gap-3 px-4 py-3">
             <Link to="/" className="shrink-0">
               <img
@@ -303,9 +303,19 @@ const ReportsDisplayMobile = () => {
                 {subtitle}
               </p>
             </div>
-            <span className="ml-auto rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-              Preview
-            </span>
+
+            {isPurchased ? (
+              <span className="ml-auto inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 border border-emerald-100">
+                <span className="mr-1 text-xs">●</span> Purchased
+              </span>
+            ) : (
+              <button
+                onClick={goToPayment}
+                className="ml-auto rounded-full border border-blue-500/70 bg-blue-50/70 px-3 py-1.5 text-[11px] font-medium text-blue-700 active:scale-[0.97]"
+              >
+                Unlock full report
+              </button>
+            )}
           </div>
         </header>
 
@@ -368,7 +378,7 @@ const ReportsDisplayMobile = () => {
                 </button>
                 <button
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm active:scale-[0.98]"
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm active:scale-[0.98]"
                 >
                   Retry
                 </button>
@@ -391,32 +401,38 @@ const ReportsDisplayMobile = () => {
 
                   {/* Blur / gradient */}
                   <div className="absolute inset-0 z-20 pointer-events-none">
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-white/95 backdrop-blur-[3px]" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white/95 backdrop-blur-[3px]" />
                   </div>
 
                   {/* Callout card */}
                   <div className="absolute inset-x-0 bottom-4 z-30 px-4">
-                    <div className="mx-auto max-w-sm rounded-2xl border border-slate-200 bg-white shadow-lg px-4 py-3.5">
-                      <div className="space-y-1">
-                        <div className="text-sm font-semibold text-slate-900">
-                          You’re viewing a locked preview
-                        </div>
-                        <div className="text-xs text-slate-600">
-                          Unlock the complete report with market size, 5-year
-                          forecast, competitor list, pricing trends & risks.
+                    <div className="mx-auto max-w-sm rounded-2xl border border-slate-200 bg-white shadow-xl px-4 py-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700 border border-blue-100">
+                            Preview locked
+                          </div>
+                          <div className="mt-2 text-sm font-semibold text-slate-900">
+                            Unlock the complete industry report
+                          </div>
+                          <ul className="mt-1.5 space-y-1.5 text-[11px] text-slate-600 list-disc list-inside">
+                            <li>Market size & 5-year forecast</li>
+                            <li>Competitor list & pricing benchmarks</li>
+                            <li>Key risks, margins & growth drivers</li>
+                          </ul>
                         </div>
                       </div>
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-3 flex gap-2">
                         <button
                           onClick={goToPayment}
-                          className="w-full rounded-xl bg-slate-900 text-white text-sm py-2.5 font-medium active:scale-[0.98]"
+                          className="flex-1 rounded-xl bg-blue-600 text-white text-sm py-2.5 font-medium active:scale-[0.98] shadow-sm"
                         >
                           Unlock full report — ₹
                           {FINAL.toLocaleString("en-IN")}
                         </button>
                         <button
                           onClick={openLead}
-                          className="w-full rounded-xl border border-slate-300 bg-white text-sm py-2.5 text-slate-800 active:scale-[0.98]"
+                          className="w-[42%] rounded-xl border border-slate-300 bg-white text-xs font-medium text-slate-800 py-2.5 active:scale-[0.98]"
                         >
                           Get 2-page preview
                         </button>
@@ -467,7 +483,7 @@ const ReportsDisplayMobile = () => {
                 </div>
                 <button
                   onClick={goToPayment}
-                  className="ml-auto rounded-xl bg-slate-900 text-white text-sm px-4 py-2.5 font-medium active:scale-[0.98]"
+                  className="ml-auto rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white text-sm px-4 py-2.5 font-medium active:scale-[0.98] shadow-sm"
                 >
                   Unlock full report
                 </button>
@@ -539,14 +555,14 @@ const ReportsDisplayMobile = () => {
                     value={leadEmail}
                     onChange={(e) => setLeadEmail(e.target.value)}
                     placeholder="Your email (optional)"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/70"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/80"
                   />
                   <input
                     type="tel"
                     value={leadPhone}
                     onChange={(e) => setLeadPhone(e.target.value)}
                     placeholder="WhatsApp number (optional, with country code)"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/70"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/80"
                   />
                 </div>
                 {leadMsg && (
@@ -556,7 +572,7 @@ const ReportsDisplayMobile = () => {
                   <button
                     onClick={submitLead}
                     disabled={leadBusy}
-                    className="flex-1 rounded-xl bg-slate-900 text-white text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-medium"
+                    className="flex-1 rounded-xl bg-blue-600 text-white text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-medium shadow-sm"
                   >
                     {leadBusy ? "Sending…" : "Send preview"}
                   </button>
@@ -581,7 +597,7 @@ const ReportsDisplayMobile = () => {
                     maxLength={6}
                     inputMode="numeric"
                     placeholder="Enter 6-digit code"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/70 tracking-[0.3em] text-center"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/80 tracking-[0.3em] text-center"
                   />
                 </div>
                 {leadMsg && (
@@ -591,7 +607,7 @@ const ReportsDisplayMobile = () => {
                   <button
                     onClick={submitOtp}
                     disabled={leadBusy}
-                    className="flex-1 rounded-xl bg-slate-900 text-white text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-medium"
+                    className="flex-1 rounded-xl bg-blue-600 text-white text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-medium shadow-sm"
                   >
                     {leadBusy ? "Verifying…" : "Verify & send preview"}
                   </button>
@@ -640,7 +656,7 @@ const ReportsDisplayMobile = () => {
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => setLeadOpen(false)}
-                    className="flex-1 rounded-xl bg-slate-900 text-white text-sm py-2.5 active:scale-[0.98] font-medium"
+                    className="flex-1 rounded-xl bg-blue-600 text-white text-sm py-2.5 active:scale-[0.98] font-medium shadow-sm"
                   >
                     Okay, I’ll check WhatsApp
                   </button>
