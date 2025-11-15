@@ -1,946 +1,152 @@
 // RBR/frontend/src/components/ReportsDisplay.jsx
-import React, { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import logo from "../assets/logo.svg";
-import "./ReportsDisplay.css";
-import { Worker, Viewer } from "@react-pdf-viewer/core";
-import "@react-pdf-viewer/core/lib/styles/index.css";
-import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
-import "@react-pdf-viewer/default-layout/lib/styles/index.css";
-import Login from "./Login";
-import { useStore } from "../Store";
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import logo from '../assets/logo.svg';
+import './ReportsDisplay.css';
+import { Worker } from '@react-pdf-viewer/core';
+import { Viewer } from '@react-pdf-viewer/core';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import Login from './Login';
+import { useStore } from '../Store';
 import { Modal, ModalBody } from "reactstrap";
-
-// ====== Pricing ======
-const MRP = 2999;
-const PROMO_PCT = 25;
-const FINAL = Math.round(MRP * (1 - PROMO_PCT / 100));
-
-// ====== Lead API ======
-const LEAD_API_URL =
-  "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook";
 
 const ReportsDisplay = () => {
   const location = useLocation();
-  const fileKeyFromState = location.state?.fileKey || "";
-  const reportId = location.state?.reportId || "";
-  const reportSlugFromState = location.state?.reportSlug || "";
+  const fileKey = location.state?.fileKey || '';
+  const reportId = location.state?.reportId || '';
+  console.log("Received fileKey:", fileKey, "reportId:", reportId);
 
   const navigate = useNavigate();
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-
   const { state, dispatch: cxtDispatch } = useStore();
-  const {
-    status = false,
-    email = "",
-    userInfo = {},
-    isLogin: storeIsLogin = false,
-  } = state || {};
-  const isLoggedIn = !!(userInfo?.isLogin || storeIsLogin);
+  const { isLogin = false, name = '', status = false, email = '' } = state || {};
 
-  const purchases = userInfo?.purchases || [];
-
-  // Derive slug from fileKey if needed (e.g. paper_industry_preview.pdf)
-  const derivedSlugFromFileKey = useMemo(() => {
-    if (!fileKeyFromState) return "";
-    const m = fileKeyFromState.match(/([a-z0-9_]+)(?:_preview)?\.pdf$/i);
-    return m ? m[1] : "";
-  }, [fileKeyFromState]);
-
-  const reportSlug =
-    reportSlugFromState || derivedSlugFromFileKey || "paper_industry";
-
-  const isPurchased = purchases.includes(reportSlug);
-
-  // For viewing: preview if not purchased, full if purchased
-  const desiredKey = `${reportSlug}${isPurchased ? "" : "_preview"}.pdf`;
-
-  // UI state
   const [openModel, setOpenModel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [pdfUrl, setPdfUrl] = useState("");
-  const [error, setError] = useState("");
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [localFileKey, setLocalFileKey] = useState(fileKey);
+  const [localReportId, setLocalReportId] = useState(reportId);
 
-  // Lead capture state
-  const [leadOpen, setLeadOpen] = useState(false);
-  const [leadEmail, setLeadEmail] = useState("");
-  const [leadPhone, setLeadPhone] = useState("");
-  const [leadBusy, setLeadBusy] = useState(false);
-  const [leadMsg, setLeadMsg] = useState("");
-  const [leadStep, setLeadStep] = useState("form"); // "form" | "otp" | "wa_wait"
-  const [leadToken, setLeadToken] = useState("");
-  const [leadChannel, setLeadChannel] = useState(""); // "email" | "whatsapp"
-  const [leadOtp, setLeadOtp] = useState("");
+  useEffect(() => {
+    console.log("ReportsDisplay - isLogin:", isLogin);
+  }, [isLogin]);
 
-  // ====== Fetch presigned URL ======
+  const handlePayment = () => {
+    console.log("handlePayment - isLogin:", isLogin, "fileKey:", localFileKey, "reportId:", localReportId);
+    
+    // ✅ Save fileKey and reportId in Store for Payment
+    cxtDispatch({ type: 'SET_FILE_REPORT', payload: { fileKey: localFileKey, reportId: localReportId } });
+    
+    setOpenModel(true);
+  };
+
+  const changeStatus = () => {
+    setOpenModel(false);
+    cxtDispatch({ type: 'SET_REPORT_STATUS' });
+  };
+
   useEffect(() => {
     const fetchPresignedUrl = async () => {
-      if (!desiredKey) {
-        console.error("No desiredKey found. Skipping API request.");
+      if (!localFileKey) {
+        console.error("No fileKey found. Skipping API request.");
         setIsLoading(false);
-        setError("No report key determined. Please try again.");
         return;
       }
+      console.log("Fetching presigned URL for fileKey:", localFileKey);
       setIsLoading(true);
-      setError("");
       try {
-        const response = await fetch(
-          "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ file_key: desiredKey }),
-          }
-        );
-        if (!response.ok) {
-          const txt = await response.text();
-          throw new Error(`HTTP error! status: ${response.status} body: ${txt}`);
-        }
+        const response = await fetch('https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_key: localFileKey }),
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        console.log('API Response:', data);
         if (data.presigned_url) setPdfUrl(data.presigned_url);
         else throw new Error(`No presigned URL returned: ${JSON.stringify(data)}`);
-      } catch (err) {
-        console.error("Error fetching presigned URL:", err);
-        setPdfUrl("");
-        setError("Failed to load report. Please try again.");
+      } catch (error) {
+        console.error('Error fetching presigned URL:', error.message);
+        setPdfUrl(null);
       } finally {
         setIsLoading(false);
       }
     };
     fetchPresignedUrl();
-  }, [desiredKey]);
+  }, [localFileKey]);
 
-  // GA: report preview view
   useEffect(() => {
-    if (pdfUrl) {
-      window.gtag?.("event", "report_preview_view_desktop", {
-        event_category: "engagement",
-        report_slug: reportSlug,
-        is_purchased: isPurchased ? "yes" : "no",
-      });
-    }
-  }, [pdfUrl, reportSlug, isPurchased]);
-
-  // ====== Payment flow ======
-  const handlePayment = () => {
-    window.gtag?.("event", "buy_now_click_desktop", {
-      event_category: "engagement",
-      event_label: "desktop_reports_display",
-      value: FINAL,
-      report_id: reportId,
-      report_slug: reportSlug,
-      price_mrp: MRP,
-      price_final: FINAL,
-      promo: "RBideas25",
-    });
-
-    // Use full report key for delivery post-purchase
-    cxtDispatch({
-      type: "SET_FILE_REPORT",
-      payload: { fileKey: `${reportSlug}.pdf`, reportId, reportSlug },
-    });
-
-    if (isLoggedIn) {
-      navigate("/payment", { state: { fromReport: true } });
-    } else {
-      setOpenModel(true);
-    }
-  };
-
-  const changeStatus = () => {
-    setOpenModel(false);
-    cxtDispatch({ type: "SET_REPORT_STATUS" });
-  };
-
-  const title = `${reportSlug.replace(/_/g, " ")} in India`;
-  const subtitle = isPurchased
-    ? "You’ve unlocked this report from Rajan Business Reports."
-    : "Preview of this Rajan Business Reports industry study. Unlock the full report for complete data & forecasts.";
-
-  // ====== Lead capture ======
-  const openLead = () => {
-    setLeadMsg("");
-    setLeadEmail("");
-    setLeadPhone("");
-    setLeadOtp("");
-    setLeadToken("");
-    setLeadChannel("");
-    setLeadStep("form");
-    setLeadOpen(true);
-    window.gtag?.("event", "lead_capture_open_desktop", {
-      event_category: "engagement",
-      report_slug: reportSlug,
-    });
-  };
-
-  // Step 1: request OTP / WA consent
-  const submitLead = async () => {
-    if (!leadEmail && !leadPhone) {
-      setLeadMsg("Please enter your email or WhatsApp number.");
-      return;
-    }
-
-    setLeadBusy(true);
-    setLeadMsg("");
-    try {
-      const resp = await fetch(LEAD_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-RBR-Action": "request",
-        },
-        body: JSON.stringify({
-          email: leadEmail || undefined,
-          phone: leadPhone || undefined,
-          report_slug: reportSlug,
-        }),
-      });
-
-      const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) {
-        throw new Error(data.error || `Request failed (${resp.status})`);
-      }
-
-      const channel = data.channel || (leadPhone ? "whatsapp" : "email");
-      setLeadToken(data.token || "");
-      setLeadChannel(channel);
-
-      if (channel === "email") {
-        setLeadStep("otp");
-        setLeadMsg(
-          "We’ve sent a 6-digit code to your email. Enter it below to receive your 2-page preview."
-        );
-      } else {
-        setLeadStep("wa_wait");
-        setLeadMsg(
-          "We’ve sent you a WhatsApp message. Tap “Yes, I requested” in WhatsApp to receive your 2-page preview there."
-        );
-      }
-
-      window.gtag?.("event", "lead_capture_submit_desktop", {
-        event_category: "engagement",
-        report_slug: reportSlug,
-        channel,
-        phase: channel === "email" ? "otp_sent" : "consent_sent",
-      });
-    } catch (e) {
-      console.error(e);
-      setLeadMsg("Something went wrong. Please try again.");
-    } finally {
-      setLeadBusy(false);
-    }
-  };
-
-  // Step 2: verify OTP (EMAIL ONLY)
-  const submitOtp = async () => {
-    if (leadChannel === "whatsapp") {
-      setLeadMsg(
-        'For WhatsApp, no code is needed. Just tap “Yes, I requested” in WhatsApp.'
-      );
-      return;
-    }
-
-    if (!leadOtp.trim()) {
-      setLeadMsg("Please enter the 6-digit code.");
-      return;
-    }
-    if (!leadToken) {
-      setLeadMsg("Session expired. Please start again.");
-      setLeadStep("form");
-      return;
-    }
-
-    setLeadBusy(true);
-    setLeadMsg("");
-    try {
-      const resp = await fetch(LEAD_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-RBR-Action": "verify-send",
-        },
-        body: JSON.stringify({
-          token: leadToken,
-          otp: leadOtp.trim(),
-        }),
-      });
-
-      const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) {
-        throw new Error(data.error || `Verification failed (${resp.status})`);
-      }
-
-      window.gtag?.("event", "lead_capture_submit_desktop", {
-        event_category: "engagement",
-        report_slug: reportSlug,
-        channel: leadChannel || (leadPhone ? "whatsapp" : "email"),
-        phase: "verified_and_sent",
-      });
-
-      setLeadMsg("✅ Verified! We’ve sent your 2-page preview.");
-      setTimeout(() => setLeadOpen(false), 1500);
-    } catch (e) {
-      console.error(e);
-      setLeadMsg("Incorrect or expired code. Please check and try again.");
-    } finally {
-      setLeadBusy(false);
-    }
-  };
+    console.log("ReportsDisplay useEffect - isLogin updated to:", isLogin, "Path:", location.pathname);
+    setLocalFileKey(fileKey);
+    setLocalReportId(reportId);
+  }, [isLogin, location.pathname, fileKey, reportId]);
 
   return (
     <>
-      <div
-        className="report-display"
-        style={{
-          minHeight: "100vh",
-          background: "#020617",
-          overflowX: "hidden",
-        }}
-      >
-        {/* ORIGINAL NAVBAR STYLE (kept consistent with rest of site) */}
+      <div className='report-display'>
         <nav className="navbar navbar-expand-lg bg-light">
           <div className="container-fluid">
             <div className="nav-left">
               <div className="logo">
                 <Link to="/" className="navbar-brand">
-                  <img
-                    src={logo}
-                    alt="RBR"
-                    style={{ width: "60px", height: "60px" }}
-                  />
+                  <img src={logo} alt="" style={{ width: "60px", height: "60px" }} />
                 </Link>
               </div>
               <div className="text">
-                <p
-                  className="report-display-title"
-                  style={{ fontSize: "28px" }}
-                >
-                  {title}
-                </p>
-                <p
-                  className="report-display-desc"
-                  style={{ marginTop: "-10px", width: "70%" }}
-                >
-                  {subtitle}
+                <p className='report-display-title' style={{ fontSize: "28px" }}>Paper Industry In India</p>
+                <p className='report-display-desc' style={{ marginTop: "-10px", width: "70%" }}>
+                  Candy production is a seasonal business, with the majority of those involved in market normally doubling their staffs during the winter months
                 </p>
               </div>
             </div>
-            <button
-              className="navbar-toggler"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarSupportedContent"
-            >
-              <span className="navbar-toggler-icon" />
+            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+              <span className="navbar-toggler-icon"></span>
             </button>
-            <div
-              className="collapse navbar-collapse"
-              id="navbarSupportedContent"
-            >
+            <div className="collapse navbar-collapse" id="navbarSupportedContent">
               <ul className="navbar-nav ms-auto">
-                {!isPurchased && (
-                  <li className="nav-item">
-                    <button
-                      className="buy-btn"
-                      onClick={handlePayment}
-                      style={{ color: "white" }}
-                    >
-                      BUY NOW
-                    </button>
-                  </li>
-                )}
-                {isPurchased && (
-                  <li className="nav-item">
-                    <span
-                      style={{
-                        padding: "8px 14px",
-                        borderRadius: 999,
-                        background: "rgba(22,163,74,0.1)",
-                        color: "#15803d",
-                        fontWeight: 600,
-                        fontSize: 13,
-                      }}
-                    >
-                      ✅ Purchased
-                    </span>
-                  </li>
-                )}
+                <li className="nav-item">
+                  <button className="buy-btn" onClick={handlePayment} style={{ color: "white" }}>BUY NOW</button>
+                </li>
               </ul>
             </div>
           </div>
         </nav>
-
-        {/* PDF viewer */}
-        <div
-          className="viewer"
-          style={{
-            position: "relative",
-            margin: "16px auto 24px",
-            width: "100%",
-            maxWidth: "1100px",
-            borderRadius: 12,
-            overflow: "hidden",
-            backgroundColor: "#020617",
-          }}
-        >
+        <div className='viewer col-md-11 col-sm-11 col-11'>
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
             {isLoading ? (
-              <div
-                className="d-flex justify-content-center align-items-center"
-                style={{ height: "70vh" }}
-              >
-                <div className="text-center text-muted">
-                  <div className="spinner-border" role="status" />
-                  <div style={{ marginTop: 8, fontSize: 13 }}>
-                    Preparing your preview…
-                  </div>
-                </div>
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
               </div>
             ) : pdfUrl ? (
-              <Viewer
-                fileUrl={pdfUrl}
-                plugins={[defaultLayoutPluginInstance]}
-              />
+              <Viewer fileUrl={pdfUrl} plugins={[defaultLayoutPluginInstance]} />
             ) : (
-              <div
-                className="error-message text-danger text-center"
-                style={{ padding: 24 }}
-              >
-                {error || "Failed to load report. No fileKey or API issue."}
-              </div>
+              <div className="error-message">Failed to load report. No fileKey or API issue.</div>
             )}
           </Worker>
-
-          {/* Locked preview overlay */}
-          {!isPurchased && pdfUrl && !isLoading && (
-            <>
-              {/* Block interaction with PDF */}
-              <div
-                className="position-absolute"
-                style={{
-                  inset: 0,
-                  zIndex: 10,
-                  background: "transparent",
-                }}
-              />
-
-              {/* Blur / darken */}
-              <div
-                className="position-absolute"
-                style={{
-                  inset: 0,
-                  zIndex: 11,
-                  pointerEvents: "none",
-                  background:
-                    "linear-gradient(to bottom, rgba(15,23,42,0) 0%, rgba(15,23,42,0.4) 40%, rgba(15,23,42,0.9) 100%)",
-                  backdropFilter: "blur(2px)",
-                }}
-              />
-
-              {/* Callout card */}
-              <div
-                className="position-absolute d-flex justify-content-center"
-                style={{
-                  insetInline: 0,
-                  bottom: 24,
-                  zIndex: 20,
-                  pointerEvents: "none",
-                }}
-              >
-                <div
-                  style={{
-                    pointerEvents: "auto",
-                    maxWidth: 520,
-                    width: "90%",
-                    borderRadius: 18,
-                    padding: "16px 18px 14px",
-                    background:
-                      "radial-gradient(circle at top left,#1f2937,#020617)",
-                    border: "1px solid rgba(59,130,246,0.6)",
-                    boxShadow: "0 24px 60px rgba(15,23,42,0.9)",
-                    color: "white",
-                    fontSize: 13,
-                  }}
-                >
-                  <div className="d-flex justify-content-between align-items-start gap-3">
-                    <div>
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          borderRadius: 999,
-                          padding: "2px 8px",
-                          fontSize: 10,
-                          fontWeight: 600,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.09em",
-                          background: "rgba(59,130,246,0.2)",
-                          border: "1px solid rgba(96,165,250,0.7)",
-                          color: "#bfdbfe",
-                          marginBottom: 4,
-                        }}
-                      >
-                        Locked preview
-                      </div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>
-                        Get the full industry report + 2-page preview PDF
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right", fontSize: 11 }}>
-                      <div
-                        style={{
-                          textDecoration: "line-through",
-                          color: "#9ca3af",
-                        }}
-                      >
-                        ₹{MRP.toLocaleString("en-IN")}
-                      </div>
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          fontSize: 16,
-                          color: "#facc15",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        ₹{FINAL.toLocaleString("en-IN")}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 10,
-                          color: "#6ee7b7",
-                        }}
-                      >
-                        {PROMO_PCT}% launch discount
-                      </div>
-                    </div>
-                  </div>
-
-                  <ul
-                    style={{
-                      marginTop: 8,
-                      paddingLeft: 18,
-                      fontSize: 11,
-                      color: "#e5e7eb",
-                    }}
-                  >
-                    <li>Exact market size &amp; 5-year forecast</li>
-                    <li>Competitor list, pricing bands &amp; margins</li>
-                    <li>Risks, regulations &amp; “go / no-go” checklist</li>
-                  </ul>
-
-                  {/* CTA block – Pay OR Preview */}
-                  <div style={{ marginTop: 10 }}>
-                    <button
-                      onClick={handlePayment}
-                      style={{
-                        width: "100%",
-                        borderRadius: 12,
-                        border: "none",
-                        padding: "10px 12px",
-                        fontSize: 13,
-                        fontWeight: 600,
-                        background:
-                          "linear-gradient(90deg,#facc15,#fbbf24,#fde047)",
-                        color: "#111827",
-                        boxShadow: "0 14px 30px rgba(15,23,42,0.85)",
-                      }}
-                    >
-                      Pay &amp; unlock full report — ₹
-                      {FINAL.toLocaleString("en-IN")}
-                    </button>
-
-                    <div
-                      style={{
-                        textAlign: "center",
-                        fontSize: 10,
-                        color: "#d1d5db",
-                        marginTop: 6,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.18em",
-                      }}
-                    >
-                      or
-                    </div>
-
-                    <button
-                      onClick={openLead}
-                      style={{
-                        width: "100%",
-                        marginTop: 4,
-                        borderRadius: 12,
-                        padding: "9px 12px",
-                        fontSize: 13,
-                        fontWeight: 500,
-                        background: "rgba(15,23,42,0.9)",
-                        color: "#f9fafb",
-                        border: "1px solid rgba(148,163,184,0.9)",
-                      }}
-                    >
-                      Get a <strong>free 2-page preview</strong> first
-                    </button>
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 10,
-                      textAlign: "center",
-                      color: "#d1d5db",
-                    }}
-                  >
-                    Free preview helps you evaluate the report before you decide
-                    to buy.
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </div>
-
-      {/* Login / Payment Modal */}
       <Modal
         isOpen={openModel}
         toggle={() => setOpenModel(false)}
-        style={{ maxWidth: "650px", width: "100%", marginTop: "15%" }}
+        style={{ maxWidth: '650px', width: '100%', marginTop: "15%" }}
         size="lg"
       >
         <ModalBody>
-          <Login onClose={() => setOpenModel(false)} returnTo="/payment" />
+          <Login
+            onClose={() => setOpenModel(false)}
+            returnTo="/payment"
+          />
           {status && (
             <div style={{ textAlign: "center" }}>
-              <p className="success-head">
-                The report has been successfully sent to
-              </p>
-              <p className="success-email">{email}</p>
-              <button className="btn btn-primary" onClick={changeStatus}>
-                Ok
-              </button>
+              <p className='success-head'>The Report has been successfully sent to</p>
+              <p className='success-email'>{email}</p>
+              <button className='btn btn-primary' onClick={changeStatus}>Ok</button>
             </div>
           )}
         </ModalBody>
       </Modal>
-
-      {/* Lead Capture Modal (email OTP + WhatsApp consent) */}
-      {leadOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 d-flex align-items-center justify-content-center"
-          onClick={() => setLeadOpen(false)}
-        >
-          <div
-            className="position-absolute w-100 h-100"
-            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(3px)" }}
-          />
-          <div
-            className="position-relative"
-            style={{
-              zIndex: 10,
-              width: "92%",
-              maxWidth: 420,
-              borderRadius: 18,
-              boxShadow: "0 22px 55px rgba(15,23,42,0.9)",
-              border: "1px solid rgba(75,85,99,0.8)",
-              background: "#020617",
-              color: "white",
-              padding: 20,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="d-flex justify-content-between align-items-start">
-              <h3 style={{ fontSize: 16, fontWeight: 600 }}>
-                Get a 2-page preview PDF
-              </h3>
-              <button
-                onClick={() => setLeadOpen(false)}
-                aria-label="Close"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "999px",
-                  border: "none",
-                  background: "#111827",
-                  color: "#e5e7eb",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <p
-              style={{
-                marginTop: 4,
-                fontSize: 11,
-                color: "#9ca3af",
-              }}
-            >
-              We’ll send a concise 2-page preview of this report to your email
-              or WhatsApp after a quick verification.
-            </p>
-
-            {/* Step 1: capture contact */}
-            {leadStep === "form" && (
-              <>
-                <div style={{ marginTop: 12 }}>
-                  <input
-                    type="email"
-                    value={leadEmail}
-                    onChange={(e) => setLeadEmail(e.target.value)}
-                    placeholder="Your email (optional)"
-                    style={{
-                      width: "100%",
-                      borderRadius: 12,
-                      border: "1px solid #4b5563",
-                      background: "#020617",
-                      padding: "8px 10px",
-                      fontSize: 13,
-                      color: "white",
-                      marginBottom: 8,
-                    }}
-                  />
-                  <input
-                    type="tel"
-                    value={leadPhone}
-                    onChange={(e) => setLeadPhone(e.target.value)}
-                    placeholder="WhatsApp number (optional, with country code)"
-                    style={{
-                      width: "100%",
-                      borderRadius: 12,
-                      border: "1px solid #4b5563",
-                      background: "#020617",
-                      padding: "8px 10px",
-                      fontSize: 13,
-                      color: "white",
-                    }}
-                  />
-                </div>
-                {leadMsg && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 11,
-                      color: "#facc15",
-                    }}
-                  >
-                    {leadMsg}
-                  </div>
-                )}
-                <div className="d-flex gap-2" style={{ marginTop: 14 }}>
-                  <button
-                    onClick={submitLead}
-                    disabled={leadBusy}
-                    style={{
-                      flex: 1,
-                      borderRadius: 12,
-                      border: "none",
-                      padding: "9px 10px",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      background:
-                        "linear-gradient(90deg,#facc15,#fbbf24,#fde047)",
-                      color: "#111827",
-                      opacity: leadBusy ? 0.7 : 1,
-                    }}
-                  >
-                    {leadBusy ? "Sending…" : "Send preview"}
-                  </button>
-                  <button
-                    onClick={handlePayment}
-                    style={{
-                      borderRadius: 12,
-                      border: "1px solid #4b5563",
-                      padding: "9px 12px",
-                      fontSize: 13,
-                      background: "#020617",
-                      color: "#e5e7eb",
-                    }}
-                  >
-                    Unlock full report
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Step 2 (email): OTP UI */}
-            {leadStep === "otp" && leadChannel === "email" && (
-              <>
-                <div style={{ marginTop: 12 }}>
-                  <input
-                    type="text"
-                    value={leadOtp}
-                    onChange={(e) => setLeadOtp(e.target.value)}
-                    maxLength={6}
-                    inputMode="numeric"
-                    placeholder="Enter 6-digit code"
-                    style={{
-                      width: "100%",
-                      borderRadius: 12,
-                      border: "1px solid #4b5563",
-                      background: "#020617",
-                      padding: "8px 10px",
-                      fontSize: 16,
-                      letterSpacing: "0.3em",
-                      textAlign: "center",
-                      color: "white",
-                    }}
-                  />
-                </div>
-                {leadMsg && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 11,
-                      color: "#facc15",
-                    }}
-                  >
-                    {leadMsg}
-                  </div>
-                )}
-                <div className="d-flex gap-2" style={{ marginTop: 14 }}>
-                  <button
-                    onClick={submitOtp}
-                    disabled={leadBusy}
-                    style={{
-                      flex: 1,
-                      borderRadius: 12,
-                      border: "none",
-                      padding: "9px 10px",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      background:
-                        "linear-gradient(90deg,#facc15,#fbbf24,#fde047)",
-                      color: "#111827",
-                      opacity: leadBusy ? 0.7 : 1,
-                    }}
-                  >
-                    {leadBusy ? "Verifying…" : "Verify & send preview"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setLeadStep("form");
-                      setLeadOtp("");
-                      setLeadMsg("");
-                      setLeadChannel("");
-                      setLeadToken("");
-                    }}
-                    style={{
-                      borderRadius: 12,
-                      border: "1px solid #4b5563",
-                      padding: "9px 12px",
-                      fontSize: 13,
-                      background: "#020617",
-                      color: "#e5e7eb",
-                    }}
-                  >
-                    Start again
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Step 2 (WhatsApp): Check WhatsApp screen */}
-            {leadStep === "wa_wait" && leadChannel === "whatsapp" && (
-              <>
-                <div style={{ marginTop: 14, fontSize: 13, color: "#e5e7eb" }}>
-                  <div style={{ fontSize: 16, fontWeight: 600 }}>
-                    📲 Check WhatsApp to confirm
-                  </div>
-                  <p
-                    style={{
-                      marginTop: 4,
-                      fontSize: 11,
-                      color: "#9ca3af",
-                    }}
-                  >
-                    We’ve sent you a message on WhatsApp from{" "}
-                    <strong>Rajan Business Ideas – Prod</strong>.
-                  </p>
-                  <ul
-                    style={{
-                      marginTop: 6,
-                      paddingLeft: 18,
-                      fontSize: 11,
-                      color: "#e5e7eb",
-                    }}
-                  >
-                    <li>Open WhatsApp on your phone.</li>
-                    <li>
-                      Find the message about “
-                      {reportSlug.replace(/_/g, " ")} in India”.
-                    </li>
-                    <li>
-                      Tap <strong>“Yes, I requested”</strong>.
-                    </li>
-                    <li>You’ll immediately receive the 2-page preview.</li>
-                  </ul>
-                </div>
-                {leadMsg && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 11,
-                      color: "#facc15",
-                    }}
-                  >
-                    {leadMsg}
-                  </div>
-                )}
-                <div className="d-flex gap-2" style={{ marginTop: 14 }}>
-                  <button
-                    onClick={() => setLeadOpen(false)}
-                    style={{
-                      flex: 1,
-                      borderRadius: 12,
-                      border: "none",
-                      padding: "9px 10px",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      background:
-                        "linear-gradient(90deg,#facc15,#fbbf24,#fde047)",
-                      color: "#111827",
-                    }}
-                  >
-                    Okay, I’ll check WhatsApp
-                  </button>
-                  <button
-                    onClick={() => {
-                      setLeadStep("form");
-                      setLeadChannel("");
-                      setLeadToken("");
-                      setLeadMsg("");
-                    }}
-                    style={{
-                      borderRadius: 12,
-                      border: "1px solid #4b5563",
-                      padding: "9px 12px",
-                      fontSize: 13,
-                      background: "#020617",
-                      color: "#e5e7eb",
-                    }}
-                  >
-                    Use email instead
-                  </button>
-                </div>
-              </>
-            )}
-
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 10,
-                color: "#9ca3af",
-              }}
-            >
-              🔒 We only use your contact to send the 2-page preview. No spam,
-              no sharing with third parties.
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };
