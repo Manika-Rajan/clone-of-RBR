@@ -62,6 +62,9 @@ const ReportsDisplayMobile = () => {
   const [leadBusy, setLeadBusy] = useState(false);
   const [leadMsg, setLeadMsg] = useState("");
 
+  // NEW: country code for WhatsApp
+  const [leadCountryCode, setLeadCountryCode] = useState("+91");
+
   // OTP / consent flow
   const [leadStep, setLeadStep] = useState("form"); // "form" | "otp" | "wa_wait"
   const [leadToken, setLeadToken] = useState("");
@@ -175,6 +178,17 @@ const ReportsDisplayMobile = () => {
       return;
     }
 
+    // Normalise phone into +E.164 if provided
+    let normalizedPhone: string | undefined = undefined;
+    if (leadPhone) {
+      const digitsOnly = leadPhone.replace(/\D/g, ""); // strip spaces, dashes, etc.
+      if (!digitsOnly) {
+        setLeadMsg("Please enter a valid WhatsApp number.");
+        return;
+      }
+      normalizedPhone = `${leadCountryCode}${digitsOnly}`;
+    }
+
     setLeadBusy(true);
     setLeadMsg("");
     try {
@@ -186,7 +200,7 @@ const ReportsDisplayMobile = () => {
         },
         body: JSON.stringify({
           email: leadEmail || undefined,
-          phone: leadPhone || undefined,
+          phone: normalizedPhone,
           report_slug: reportSlug,
         }),
       });
@@ -196,7 +210,7 @@ const ReportsDisplayMobile = () => {
         throw new Error(data.error || `Request failed (${resp.status})`);
       }
 
-      const channel = data.channel || (leadPhone ? "whatsapp" : "email");
+      const channel = data.channel || (normalizedPhone ? "whatsapp" : "email");
       setLeadToken(data.token || "");
       setLeadChannel(channel);
 
@@ -589,13 +603,29 @@ const ReportsDisplayMobile = () => {
                     placeholder="Your email (optional)"
                     className="w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
                   />
-                  <input
-                    type="tel"
-                    value={leadPhone}
-                    onChange={(e) => setLeadPhone(e.target.value)}
-                    placeholder="WhatsApp number (optional, with country code)"
-                    className="w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
-                  />
+                  <div className="flex gap-2">
+                    {/* Country Code Dropdown */}
+                    <select
+                      value={leadCountryCode}
+                      onChange={(e) => setLeadCountryCode(e.target.value)}
+                      className="w-[90px] rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-400/80"
+                    >
+                      <option value="+91">🇮🇳 +91</option>
+                      <option value="+971">🇦🇪 +971</option>
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="+44">🇬🇧 +44</option>
+                      {/* You can add more later */}
+                    </select>
+
+                    {/* Phone Number Input */}
+                    <input
+                      type="tel"
+                      value={leadPhone}
+                      onChange={(e) => setLeadPhone(e.target.value)}
+                      placeholder="WhatsApp number"
+                      className="flex-1 rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
+                    />
+                  </div>
                 </div>
                 {leadMsg && (
                   <div className="mt-2 text-[11px] text-amber-200">
