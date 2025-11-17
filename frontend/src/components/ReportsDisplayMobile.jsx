@@ -179,7 +179,7 @@ const ReportsDisplayMobile = () => {
     }
 
     // Normalise phone into +E.164 if provided
-    let normalizedPhone: string | undefined = undefined;
+    let normalizedPhone = undefined;
     if (leadPhone) {
       const digitsOnly = leadPhone.replace(/\D/g, ""); // strip spaces, dashes, etc.
       if (!digitsOnly) {
@@ -603,12 +603,14 @@ const ReportsDisplayMobile = () => {
                     placeholder="Your email (optional)"
                     className="w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
                   />
-                  <div className="flex gap-2">
+
+                  {/* ROW: country code + phone, constrained to popup width */}
+                  <div className="flex w-full gap-2">
                     {/* Country Code Dropdown */}
                     <select
                       value={leadCountryCode}
                       onChange={(e) => setLeadCountryCode(e.target.value)}
-                      className="w-[90px] rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-400/80"
+                      className="shrink-0 w-[80px] rounded-xl border border-slate-600 bg-slate-900 px-2 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-400/80"
                     >
                       <option value="+91">🇮🇳 +91</option>
                       <option value="+971">🇦🇪 +971</option>
@@ -623,7 +625,7 @@ const ReportsDisplayMobile = () => {
                       value={leadPhone}
                       onChange={(e) => setLeadPhone(e.target.value)}
                       placeholder="WhatsApp number"
-                      className="flex-1 rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
+                      className="flex-1 min-w-0 rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
                     />
                   </div>
                 </div>
