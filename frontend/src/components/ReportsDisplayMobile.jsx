@@ -596,6 +596,7 @@ const ReportsDisplayMobile = () => {
             {leadStep === "form" && (
               <>
                 <div className="mt-3 space-y-2">
+                  {/* Email input */}
                   <input
                     type="email"
                     value={leadEmail}
@@ -603,6 +604,15 @@ const ReportsDisplayMobile = () => {
                     placeholder="Your email (optional)"
                     className="w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
                   />
+
+                  {/* OR divider */}
+                  <div className="flex items-center justify-center my-1">
+                    <div className="flex-1 h-px bg-slate-700" />
+                    <span className="mx-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                      or
+                    </span>
+                    <div className="flex-1 h-px bg-slate-700" />
+                  </div>
 
                   {/* ROW: country code + phone, constrained to popup width */}
                   <div className="flex w-full gap-2">
@@ -624,11 +634,18 @@ const ReportsDisplayMobile = () => {
                       type="tel"
                       value={leadPhone}
                       onChange={(e) => setLeadPhone(e.target.value)}
-                      placeholder="WhatsApp number"
+                      placeholder="WhatsApp number (optional)"
                       className="flex-1 min-w-0 rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/80"
                     />
                   </div>
+
+                  {/* Helper text: either is fine */}
+                  <p className="text-[10px] text-slate-400">
+                    You can fill either email or WhatsApp number. One is enough
+                    to get your preview.
+                  </p>
                 </div>
+
                 {leadMsg && (
                   <div className="mt-2 text-[11px] text-amber-200">
                     {leadMsg}
