@@ -48,6 +48,10 @@ const SEARCH_LOG_URL = "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/
 const PRESIGN_URL    = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL";
 const SUGGEST_URL    = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/suggest";
 
+// 🔴 NEW: when no report exists, we queue a creation request (72-hour promise)
+const REQUEST_REPORT_URL =
+  "https://your-api-url-for-request-report"; // TODO: replace with real API Gateway URL
+
 // Loader
 const LoaderRing = () => (
   <svg viewBox="0 0 100 100" className="w-14 h-14 animate-spin-slow">
@@ -131,6 +135,33 @@ const ReportsMobile = () => {
     }
   };
 
+  // 🔴 NEW: when no matching report exists, queue a “create this report” request
+  const requestNewReport = async (query) => {
+    if (!REQUEST_REPORT_URL) return; // in case you haven't wired backend yet
+    try {
+      const payload = {
+        search_query: query,
+        user: {
+          name: state?.userInfo?.name || "Unknown",
+          email: state?.userInfo?.email || "",
+          phone: state?.userInfo?.phone || "",
+          userId: state?.userInfo?.userId || state?.userInfo?.phone || "",
+        },
+      };
+      const resp = await fetch(REQUEST_REPORT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        console.error("requestNewReport failed:", resp.status, txt);
+      }
+    } catch (e) {
+      console.error("requestNewReport error:", e);
+    }
+  };
+
   // 🔗 Given a slug, verify preview existence and navigate
   const goToReportBySlug = async (reportSlug) => {
     if (!reportSlug) return;
@@ -182,7 +213,7 @@ const ReportsMobile = () => {
     }
   };
 
-  // log → (resolve) → navigate OR suggest
+  // log → (resolve) → navigate OR suggest → (if nothing) queue a new report request
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -223,7 +254,7 @@ const ReportsMobile = () => {
       // 1) Try strict router first (no fallback)
       const reportSlug = resolveSlug(trimmed);
       if (!reportSlug) {
-        // 1a) Ask suggest API
+        // 1a) Ask suggest API (this should search rbrfinalfiles in S3)
         const { items } = await fetchSuggestions(trimmed);
         if (items && items.length > 0) {
           // Map API -> modal items with slug (so clicks can jump straight to report)
@@ -235,8 +266,13 @@ const ReportsMobile = () => {
           setSuggestOpen(true);
           return;
         }
-        // 1b) Nothing to suggest → coming soon
-        setModalMsg("📢 We don’t have a ready-made report for that yet. We’ve logged your request and will add it soon.");
+
+        // 1b) Nothing to suggest → tell user we'll create it, and queue a request
+        await requestNewReport(trimmed);
+
+        setModalMsg(
+          "📢 We don’t have this exact report yet. We’ve queued your request and will add it within 72 hours. Please check back here using the same search."
+        );
         setOpenModal(true);
         return;
       }
@@ -413,14 +449,26 @@ const ReportsMobile = () => {
 
       {/* Error / Coming soon modal */}
       {openModal && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={closeModal}>
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          onClick={closeModal}
+        >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="text-lg font-semibold mb-2">📊 This data is coming soon</div>
             <p className="text-gray-700 text-sm leading-relaxed mb-4">
               {modalMsg || "We’re adding this report to our catalog. Please check back soon!"}
             </p>
-            <button ref={modalBtnRef} onClick={closeModal} className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]">
+            <button
+              ref={modalBtnRef}
+              onClick={closeModal}
+              className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
+            >
               Okay
             </button>
           </div>
