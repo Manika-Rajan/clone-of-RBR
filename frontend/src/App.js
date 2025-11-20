@@ -22,6 +22,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'r
 import PrivateRoute from "./components/PrivateRoute";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import ReportsDisplayMobile from './components/ReportsDisplayMobile';
+import ReportRequestsDashboard from "./components/ReportRequestsDashboard";
 
 
 function AppContent() {
@@ -50,6 +51,7 @@ function AppContent() {
         <Route path="/careers" element={<Careers />} />
         <Route path="/partner" element={<Partner />} />
         <Route path="/analytics" element={<PrivateRoute roleRequired="admin"> <AnalyticsDashboard /> </PrivateRoute> } />
+        <Route path="/team/report-requests" element={<ReportRequestsDashboard />} />
         <Route path='/payment' element={
           <ProtectedRoute>
             <Payment />
