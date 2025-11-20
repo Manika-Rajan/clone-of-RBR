@@ -50,7 +50,7 @@ const SUGGEST_URL    = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/
 
 // 🔴 NEW: when no report exists, we queue a creation request (72-hour promise)
 const REQUEST_REPORT_URL =
-  "https://your-api-url-for-request-report"; // TODO: replace with real API Gateway URL
+  "https://sicgpldzo8.execute-api.ap-south-1.amazonaws.com/report-request"; 
 
 // Loader
 const LoaderRing = () => (
