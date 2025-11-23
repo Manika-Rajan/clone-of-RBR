@@ -1,28 +1,34 @@
 // RBR/frontend/src/components/PurchaseSuccess.jsx
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { triggerRbrPurchaseConversion } from "./googleAdsConversion";
 
 const PurchaseSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // If you ever pass amount as a query param (?amount=2249), we’ll use it
+  // Prefer data passed via navigate state from Payment.js
+  const stateData = location.state || {};
+  const {
+    amount: stateAmount,
+    reportId,
+    fileKey,
+    razorpayPaymentId,
+  } = stateData;
+
+  // Fallback: if you ever pass amount as a query param (?amount=2249), we’ll use it
   const searchParams = new URLSearchParams(location.search);
   const amountParam = searchParams.get("amount");
-  const amount = amountParam ? Number(amountParam) : 2249;
+
+  const amount = stateAmount ?? (amountParam ? Number(amountParam) : 2249);
 
   useEffect(() => {
-    // Fire Google Ads purchase conversion once on page load
-    triggerRbrPurchaseConversion(amount);
-
     // Auto-redirect to My Profile after a few seconds
     const timer = setTimeout(() => {
-      navigate("/profile"); // 🔁 update if your My Profile route is different
+      navigate("/profile");
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [amount, navigate]);
+  }, [navigate]);
 
   return (
     <div
@@ -76,12 +82,46 @@ const PurchaseSuccess = () => {
           style={{
             fontSize: "15px",
             color: "#475569",
-            marginBottom: "16px",
+            marginBottom: "8px",
           }}
         >
           Thank you for purchasing an{" "}
           <strong>RBR market / industry report</strong>.
         </p>
+
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#64748b",
+            marginBottom: "12px",
+          }}
+        >
+          Amount paid: <strong>₹{amount}</strong>
+        </p>
+
+        {reportId && (
+          <p
+            style={{
+              fontSize: "12px",
+              color: "#94a3b8",
+              marginBottom: "4px",
+            }}
+          >
+            Report ID: <strong>{reportId}</strong>
+          </p>
+        )}
+
+        {razorpayPaymentId && (
+          <p
+            style={{
+              fontSize: "12px",
+              color: "#94a3b8",
+              marginBottom: "20px",
+            }}
+          >
+            Payment ID: <strong>{razorpayPaymentId}</strong>
+          </p>
+        )}
 
         <p
           style={{
@@ -96,7 +136,7 @@ const PurchaseSuccess = () => {
         </p>
 
         <button
-          onClick={() => navigate("/profile")} // 🔁 change if needed
+          onClick={() => navigate("/profile")}
           style={{
             width: "100%",
             padding: "10px 14px",
