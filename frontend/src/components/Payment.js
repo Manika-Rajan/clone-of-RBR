@@ -36,6 +36,12 @@ function fireGoogleAdsPurchase({ paymentId, valueINR }) {
 }
 
 const Payment = () => {
+  // 🔍 Debug: see what React sees from .env at runtime
+  console.log(
+    'FRONTEND RAZORPAY KEY FROM ENV (process.env):',
+    process.env.REACT_APP_RAZORPAY_KEY_ID
+  );
+
   // Pull userInfo and report from state
   const {
     state: { userInfo, report },
@@ -94,7 +100,7 @@ const Payment = () => {
   const amount = resolvedAmount;
   const file_key = resolvedFileKey;
 
-  // Persist payment context so refresh doesn't lose it (and optionally into store if you add actions later)
+  // Persist payment context so refresh doesn't lose it
   useEffect(() => {
     if (reportId) {
       localStorage.setItem('reportId', reportId);
@@ -363,8 +369,6 @@ const Payment = () => {
       const orderCurrency = parsedBody?.razorpay_response?.currency || 'INR';
       const keyFromOrder = parsedBody?.key_id || null;
 
-      // ✅ Critical fix: prefer the key_id returned by the order API.
-      //    Only if it's missing, fall back to env/window/localStorage.
       const razorpayKey =
         keyFromOrder ||
         process.env.REACT_APP_RAZORPAY_KEY_ID ||
@@ -372,6 +376,11 @@ const Payment = () => {
         localStorage.getItem('razorpayKey') ||
         null;
 
+      console.log(
+        'ENV RAZORPAY KEY (inside handlePayment):',
+        process.env.REACT_APP_RAZORPAY_KEY_ID
+      );
+      console.log('keyFromOrder:', keyFromOrder);
       console.log('Resolved Razorpay key:', razorpayKey, 'Order ID:', orderId);
 
       if (!razorpayKey) {
@@ -468,8 +477,19 @@ const Payment = () => {
               valueINR: Number(amount),
             });
 
+            // ✅ Save user details then go to Purchase Success screen
             await saveUserDetails();
-            navigate('/profile', { state: { showSuccess: true } });
+
+            navigate('/purchase-success', {
+              replace: true,
+              state: {
+                amount: Number(amount),
+                reportId,
+                fileKey: file_key,
+                razorpayPaymentId: response.razorpay_payment_id,
+                loggedIn: true,
+              },
+            });
           } catch (err) {
             console.error('Payment verification error:', err.message, err.stack);
             setError(`Payment verification failed: ${err.message}`);
