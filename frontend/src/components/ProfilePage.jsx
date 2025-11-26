@@ -7,6 +7,8 @@ import "./ProfilePage.css";
 const ProfilePage = () => {
   const { state } = useStore() || {};
 
+  console.log("PROFILE PAGE STATE =>", state);
+
   // 🔧 Adjust these keys to match your Store.js structure
   const user = state?.user || {};
   const purchases = state?.purchases || []; // e.g. [{ id, title, date, amount, downloadUrl }]
