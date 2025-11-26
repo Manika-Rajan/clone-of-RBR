@@ -36,33 +36,36 @@ const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [newPhoto, setNewPhoto] = useState(null);
 
+  // 🔐 Derive login status from userInfo + localStorage
+  const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
+  const storedUserId =
+    storedUserInfo?.user_id ||
+    storedUserInfo?.userId ||
+    localStorage.getItem('user_id') ||
+    localStorage.getItem('userId');
+
+  const isLoggedIn = Boolean(userInfo?.user_id || storedUserId);
+
   useEffect(() => {
-    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    let storedUserId =
-      storedUserInfo?.user_id ||
-      storedUserInfo?.userId ||
-      localStorage.getItem('user_id') ||
-      localStorage.getItem('userId');
-
-    let authToken = localStorage.getItem('authToken') || '';
-
+    // If not logged in, skip fetching (we'll show the "not logged in" UI)
     if (!storedUserId) {
-      console.warn('User ID missing.');
       setLoading(false);
-      setError('User ID not found. Please log in again.');
       return;
     }
 
+    const storedUserInfoLocal = JSON.parse(localStorage.getItem('userInfo'));
+    let authToken = localStorage.getItem('authToken') || '';
+
     // normalize storage
     localStorage.setItem('user_id', storedUserId);
-    if (storedUserInfo) {
-      storedUserInfo.user_id = storedUserId;
-      delete storedUserInfo.userId;
-      localStorage.setItem('userInfo', JSON.stringify(storedUserInfo));
+    if (storedUserInfoLocal) {
+      storedUserInfoLocal.user_id = storedUserId;
+      delete storedUserInfoLocal.userId;
+      localStorage.setItem('userInfo', JSON.stringify(storedUserInfoLocal));
     }
 
-    if (!authToken && storedUserInfo?.token) {
-      authToken = storedUserInfo.token;
+    if (!authToken && storedUserInfoLocal?.token) {
+      authToken = storedUserInfoLocal.token;
       localStorage.setItem('authToken', authToken);
     }
 
@@ -142,7 +145,7 @@ const ProfilePage = () => {
     return () => {
       isActive = false;
     };
-  }, [cxtDispatch, userInfo?.user_id]);
+  }, [cxtDispatch, userInfo?.user_id, storedUserId]);
 
   // Use existing presigned-URL Lambda
   const fetchPresignedUrl = async (fileKey) => {
@@ -203,10 +206,10 @@ const ProfilePage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const storedUserInfoUp = JSON.parse(localStorage.getItem('userInfo'));
     const uid =
-      storedUserInfo?.user_id ||
-      storedUserInfo?.userId ||
+      storedUserInfoUp?.user_id ||
+      storedUserInfoUp?.userId ||
       localStorage.getItem('user_id') ||
       localStorage.getItem('userId');
     const authToken = localStorage.getItem('authToken') || '';
@@ -248,7 +251,7 @@ const ProfilePage = () => {
       setPhotoUrl(presignedGetUrl);
       setNewPhoto(null);
       alert('Photo uploaded successfully!');
-      const updatedUserInfo = { ...storedUserInfo, user_id: uid, photo_url: presignedGetUrl };
+      const updatedUserInfo = { ...storedUserInfoUp, user_id: uid, photo_url: presignedGetUrl };
       cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
       localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
     } catch (error) {
@@ -260,8 +263,8 @@ const ProfilePage = () => {
   };
 
   const handleRemovePhoto = async () => {
-    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const user_id = storedUserInfo?.user_id || localStorage.getItem('user_id');
+    const storedUserInfoLocal = JSON.parse(localStorage.getItem('userInfo'));
+    const user_id = storedUserInfoLocal?.user_id || localStorage.getItem('user_id');
     const authToken = localStorage.getItem('authToken') || '';
     if (!user_id) {
       alert('User ID is missing.');
@@ -274,7 +277,7 @@ const ProfilePage = () => {
         user_id,
         name: nameInput,
         email: emailInput,
-        phone: storedUserInfo?.phone || '',
+        phone: storedUserInfoLocal?.phone || '',
         photo_url: null,
       };
       const response = await fetch(
@@ -302,8 +305,8 @@ const ProfilePage = () => {
   };
 
   const saveProfile = async () => {
-    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const user_id = storedUserInfo?.user_id || localStorage.getItem('user_id');
+    const storedUserInfoLocal = JSON.parse(localStorage.getItem('userInfo'));
+    const user_id = storedUserInfoLocal?.user_id || localStorage.getItem('user_id');
     if (!user_id) {
       alert('User ID is missing.');
       return;
@@ -313,7 +316,7 @@ const ProfilePage = () => {
       user_id,
       name: nameInput,
       email: emailInput,
-      phone: storedUserInfo?.phone || '',
+      phone: storedUserInfoLocal?.phone || '',
       photo_url: photoUrl || '',
     };
 
@@ -331,7 +334,7 @@ const ProfilePage = () => {
       await response.json();
       alert('Profile saved successfully');
       const updatedUserInfo = {
-        ...storedUserInfo,
+        ...storedUserInfoLocal,
         user_id,
         name: nameInput,
         email: emailInput,
@@ -350,31 +353,13 @@ const ProfilePage = () => {
   };
 
   if (loading) return <div className="loading-spinner">Loading...</div>;
-  if (error) return <div className="error-message">{error}</div>;
 
-  // 🔐 Use your existing logic to detect login status
-  const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
-  const storedUserId =
-    storedUserInfo?.user_id ||
-    storedUserInfo?.userId ||
-    localStorage.getItem('user_id') ||
-    localStorage.getItem('userId');
-
-  const isLoggedIn = Boolean(userInfo?.user_id || storedUserId);
-
-  // If not logged in, show the friendly message + button
+  // 🔴 If user is NOT logged in, show the simple message (no big header)
   if (!isLoggedIn) {
     return (
       <div className="profile-page">
         <div className="profile-container">
-          <header className="profile-header">
-            <h1>My Account</h1>
-            <p className="profile-subtitle">
-              View your details, purchased reports and downloads.
-            </p>
-          </header>
-
-          <div className="profile-card">
+          <div className="profile-card" style={{ textAlign: 'center' }}>
             <h2>You are not logged in</h2>
             <p>Please log in with your phone number to view your reports.</p>
             <button
@@ -388,6 +373,9 @@ const ProfilePage = () => {
       </div>
     );
   }
+
+  // Only show error UI for logged-in users (fetch problems)
+  if (error) return <div className="error-message">{error}</div>;
 
   const renderPurchasedOn = (r) => {
     const d = r.purchased_on || r.granted_on || r.granted_at || r.created_at || null;
@@ -406,14 +394,6 @@ const ProfilePage = () => {
       `}</style>
 
       <div className="profile-container">
-        {/* 🌟 New header, rest is your original layout */}
-        <header className="profile-header">
-          <h1>My Account</h1>
-          <p className="profile-subtitle">
-            View your details, purchased reports and downloads.
-          </p>
-        </header>
-
         <div className="profile-card">
           <div className="user-info">
             <div className="photo-section">
