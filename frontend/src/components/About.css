@@ -122,6 +122,11 @@ margin-top:1%;
   width:80%;
   height:80%;
 }
+.team{
+  flex: 1 1 200px;
+  max-width: 220px;
+}
+
 @media (max-width: 576px) { 
     .image-one{
         width: 165px;
