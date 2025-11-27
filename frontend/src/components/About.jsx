@@ -131,16 +131,14 @@ It has been observed that every year only 8% of the startups are able to sustain
       <div className='d-flex justify-content-center team-div'>
         <div className='team'>
           <div className='team-image'>
-            <img
-              src={team5}
-              style={{ width: "40%", height: "40%", objectFit: "cover" }}
-            ></img>
+            <img src={team5}></img>
           </div>
           <div className='team-info'>
             <p><strong>Sushmita Pati</strong><br/>Backend Developer (Intern)</p>
           </div>
         </div>
       </div>
+
 
 
      </div>
