@@ -130,7 +130,7 @@ It has been observed that every year only 8% of the startups are able to sustain
      {/* 🔹 Second row: only Sushmita, centered */}
       <div className='d-flex justify-content-center team-div'>
         <div className='team'>
-          <div className='team-image'>
+          <div className='team-image team-image-circle'>
             <img src={team5}></img>
           </div>
           <div className='team-info'>
@@ -138,8 +138,6 @@ It has been observed that every year only 8% of the startups are able to sustain
           </div>
         </div>
       </div>
-
-
 
      </div>
   )
