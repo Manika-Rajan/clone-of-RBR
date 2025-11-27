@@ -119,8 +119,10 @@ margin-top:1%;
     text-align: center;
 }
 .team-image img{
-  width:80%;
-  height:80%;
+  width: 80%;
+  height: auto;        /* keep aspect ratio */
+  max-height: 180px;   /* optional: keeps all photos similar height */
+  object-fit: cover;   /* nicely crops if needed */
 }
 .team{
   flex: 1 1 200px;
