@@ -128,16 +128,20 @@ It has been observed that every year only 8% of the startups are able to sustain
      </div>
 
      {/* 🔹 Second row: only Sushmita, centered */}
-     <div className='d-flex justify-content-center team-div'>
-       <div className='team'>
-         <div className='team-image'>
-           <img src={team5}></img>
-         </div>
-         <div className='team-info'>
-           <p><strong>Sushmita Pati</strong><br/>Backend Developer (Intern)</p>
-         </div>
-       </div>
-     </div>
+      <div className='d-flex justify-content-center team-div'>
+        <div className='team'>
+          <div className='team-image'>
+            <img
+              src={team5}
+              style={{ width: "80%", height: "80%", objectFit: "cover" }}
+            ></img>
+          </div>
+          <div className='team-info'>
+            <p><strong>Sushmita Pati</strong><br/>Backend Developer (Intern)</p>
+          </div>
+        </div>
+      </div>
+
 
      </div>
   )
