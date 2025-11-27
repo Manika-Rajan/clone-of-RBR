@@ -106,9 +106,6 @@ margin-top:1%;
 }
 .team-div{
   padding:1% 8%;
-  flex-wrap: wrap;        /* allow wrapping to next line */
-  gap: 24px;              /* even spacing between cards */
-  justify-content: center;/* override justify-content-between visually */
 }
 .team-info{
     padding-top:1%;
@@ -117,21 +114,11 @@ margin-top:1%;
 .team-image{
     margin: auto;
     text-align: center;
-    height: 180px;              /* fixed vertical scope */
-    display: flex;              /* center the image inside */
-    align-items: center;
-    justify-content: center;
 }
 .team-image img{
-  max-height: 100%;             /* fit inside the 180px box */
-  width: auto;                  /* keep aspect ratio */
-  /* no object-fit, no cropping */
+  width:80%;
+  height:80%;
 }
-.team{
-  flex: 1 1 200px;
-  max-width: 220px;
-}
-
 @media (max-width: 576px) { 
     .image-one{
         width: 165px;
