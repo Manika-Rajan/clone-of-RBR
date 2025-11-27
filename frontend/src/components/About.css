@@ -106,6 +106,9 @@ margin-top:1%;
 }
 .team-div{
   padding:1% 8%;
+  flex-wrap: wrap;        /* allow wrapping to next line */
+  gap: 24px;              /* even spacing between cards */
+  justify-content: center;/* override justify-content-between visually */
 }
 .team-info{
     padding-top:1%;
