@@ -128,7 +128,7 @@ It has been observed that every year only 8% of the startups are able to sustain
      </div>
 
      {/* 🔹 Second row: only Sushmita, centered */}
-      <div className='d-flex justify-content-center team-div'>
+      <div className='d-flex justify-content-start team-div'>
         <div className='team'>
           <div className='team-image'>
             <img src={team5} style={{width:"85%",borderRadius:"45%"}}></img>
