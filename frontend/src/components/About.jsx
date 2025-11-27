@@ -127,12 +127,11 @@ It has been observed that every year only 8% of the startups are able to sustain
           <img src={team5} style={{width:"85%",borderRadius:"45%"}}></img>
         </div>
         <div className='team-info'>
-          <p><strong>Sushmita Pati</strong><br/>backend developer(intern</p>
+          <p><strong>Sushmita Pati</strong><br/>backend developer(intern)</p>
         </div>
       </div>
     </div>
        
-     </div>
      </div>
   )
 }
