@@ -1,73 +1,114 @@
-.info-div{
-/* height: 185px; */
-left: 0px;
-top: 79px;
+.info-div {
+  /* height: 185px; */
+  left: 0px;
+  top: 79px;
 
-background: linear-gradient(180deg, #0263C7 0%, #293750 100%);
-display: flex;
-justify-content: space-between;
-color: white;
-padding: 5% 6%;
-}
-.contact-head{
-    font-family: 'Baskerville Old Face';
-font-style: normal;
-font-weight: 400;
-font-size: 29px;
-line-height: 29px;
-text-align: center;
-letter-spacing: 0.03em;
-
-color: #293750;
-
-}
-.form-div{
-    width:70%;
-    margin: auto;
-    padding: 5% 3%;
-    background: #FFFFFF;
-    border: 2px solid #0263C7;
-    border-radius: 10px;    filter: drop-shadow(7px 7px 17px rgba(197, 197, 197, 0.25));
-}
-.send-btn{
-    background: #0263C7;
-box-shadow: 4px 4px 15px rgba(78, 78, 78, 0.25);
-border-radius: 9px;
-color: white;
-justify-content: end;
-text-align: right;
-}
-.number-info{
-    font-family: 'Open Sans';
-font-style: normal;
-font-weight: 400;
-font-size: 13px;
-
-color: #293750;
-
+  background: linear-gradient(180deg, #0263C7 0%, #293750 100%);
+  /* Let Bootstrap's .row handle the flex layout */
+  /* display: flex; */
+  /* justify-content: space-between; */
+  color: white;
+  padding: 5% 6%;
 }
 
-
-
-.contact-input{
-    background: #ECECEC;
-    border: none;
-    border-radius: 5px;
-    border-color:#ECECEC;
-    height: 43px;
+/* Make each block (phone/email/location) nicely centered and vertical */
+.phone-div,
+.email-div,
+.location-div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center; /* backup in case inline style changes */
+  margin-bottom: 16px;
 }
+
+/* Fix icon sizes + spacing so they line up neatly */
+.phone-div img,
+.email-div img,
+.location-div img {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Heading text: "Let's Talk", "Or Email Us", "Visit Us" */
+.phone-div span,
+.email-div span,
+.location-div span {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* The line under each heading (phone number / email / address) */
+.phone-div p,
+.email-div p,
+.location-div p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Rest of your styles unchanged */
+.contact-head {
+  font-family: 'Baskerville Old Face';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 29px;
+  line-height: 29px;
+  text-align: center;
+  letter-spacing: 0.03em;
+  color: #293750;
+}
+
+.form-div {
+  width: 70%;
+  margin: auto;
+  padding: 5% 3%;
+  background: #FFFFFF;
+  border: 2px solid #0263C7;
+  border-radius: 10px;
+  filter: drop-shadow(7px 7px 17px rgba(197, 197, 197, 0.25));
+}
+
+.send-btn {
+  background: #0263C7;
+  box-shadow: 4px 4px 15px rgba(78, 78, 78, 0.25);
+  border-radius: 9px;
+  color: white;
+  justify-content: end;
+  text-align: right;
+}
+
+.number-info {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  color: #293750;
+}
+
+.contact-input {
+  background: #ECECEC;
+  border: none;
+  border-radius: 5px;
+  border-color: #ECECEC;
+  height: 43px;
+}
+
 .contact-input:focus {
-    border-color:#ECECEC;
-    box-shadow: 0 0 0 0.2rem rgba(245, 246, 245, 0.25);
-    background: #ECECEC;
+  border-color: #ECECEC;
+  box-shadow: 0 0 0 0.2rem rgba(245, 246, 245, 0.25);
+  background: #ECECEC;
+}
 
-} 
-.form-div .contact-label{
-    font-weight: 400;
-font-size: 20px;
-line-height: 27px;
-text-align: center;
-letter-spacing: 0.03em;
-
-color: #293750;
+.form-div .contact-label {
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 27px;
+  text-align: center;
+  letter-spacing: 0.03em;
+  color: #293750;
 }
