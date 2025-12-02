@@ -1,11 +1,15 @@
+/* RBR/frontend/src/components/Career.css */
+
 .career-page {
   background-color: #f4f7fc;
   min-height: 100vh;
   font-family: 'Roboto', sans-serif;
 }
 
+/* Hero */
+
 .hero-section {
-  background: linear-gradient(135deg, #0263C7 0%, #4a90e2 100%);
+  background: linear-gradient(135deg, #0263c7 0%, #4a90e2 100%);
   color: white;
   padding: 3rem 1rem;
   margin-bottom: 2rem;
@@ -20,15 +24,37 @@
 .hero-section .lead {
   font-size: 1.25rem;
   opacity: 0.9;
+  max-width: 780px;
+  margin: 0.5rem auto 1.5rem auto;
 }
+
+.hero-badges {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.hero-badge {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  backdrop-filter: blur(3px);
+}
+
+/* Main container */
 
 .career-container {
   padding: 2rem 0;
 }
 
+/* Section titles */
+
 .section-title {
   font-size: 1.75rem;
-  color: #0263C7;
+  color: #0263c7;
   font-weight: 600;
   margin-bottom: 1.5rem;
   position: relative;
@@ -40,9 +66,19 @@
   display: block;
   width: 50px;
   height: 3px;
-  background: #0263C7;
+  background: #0263c7;
   margin: 0.25rem auto;
 }
+
+.section-subtitle {
+  font-size: 0.95rem;
+  color: #555;
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto 1.5rem auto;
+}
+
+/* Regions & job cards */
 
 .region-section {
   margin-bottom: 2rem;
@@ -95,8 +131,8 @@
 
 .job-info h5 {
   margin: 0;
-  font-size: 1.1rem;
-  color: #0263C7;
+  font-size: 1.05rem;
+  color: #0263c7;
 }
 
 .job-info p {
@@ -110,6 +146,46 @@
   color: #666;
   font-style: italic;
 }
+
+/* Life at card */
+
+.life-at-card {
+  margin-top: 1.5rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.life-at-card h4 {
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
+  color: #0263c7;
+}
+
+.life-at-card ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.life-at-card li {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 0.4rem;
+  position: relative;
+  padding-left: 1.3rem;
+}
+
+.life-at-card li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #0263c7;
+}
+
+/* Form */
 
 .resume-form {
   background: white;
@@ -128,9 +204,9 @@
 
 .resume-form .form-label {
   font-weight: 500;
-  color: #0263C7;
+  color: #0263c7;
   position: absolute;
-  top: -1.0rem;
+  top: -1rem;
   left: 1rem;
   pointer-events: none;
   background: #fff;
@@ -142,11 +218,11 @@
 
 .resume-form .has-value .form-label {
   font-size: 0.75rem;
-  top: -1.0rem;
+  top: -1rem;
 }
 
 .resume-form .mobile-label {
-  top: -2.0rem;
+  top: -2rem;
   left: 0.5rem;
 }
 
@@ -162,28 +238,32 @@
 
 .resume-form .form-control:focus,
 .resume-form .form-select:focus {
-  border-color: #0263C7;
+  border-color: #0263c7;
   box-shadow: 0 0 5px rgba(2, 99, 199, 0.3);
   outline: none;
 }
 
 .resume-form .input-group .form-select {
   flex: 0 0 auto;
-  width: 100px;
+  width: 120px;
 }
 
 .resume-form .input-group .form-control {
   padding: 0.75rem;
 }
 
-.resume-form .input-group > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+.resume-form
+  .input-group
+  > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(
+    .invalid-feedback
+  ) {
   border-bottom-left-radius: 0;
   border-top-left-radius: 0;
   margin-left: -1px;
 }
 
 .submit-btn {
-  background: #0263C7;
+  background: #0263c7;
   border: none;
   padding: 0.75rem;
   font-size: 1.1rem;
@@ -196,6 +276,14 @@
   transform: scale(1.05);
 }
 
+.form-note {
+  font-size: 0.75rem;
+  color: #777;
+  margin-top: 0.75rem;
+}
+
+/* Animations */
+
 .animate-error {
   animation: shake 0.3s ease;
 }
@@ -206,64 +294,177 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
+/* Global margin tweak (kept from your version) */
 .mb-3 {
   margin-bottom: 1rem !important;
   margin-top: 2rem !important;
 }
 
+/* Hiring section */
+
+.hiring-section {
+  background: #ffffff;
+  padding: 2rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.hiring-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.hiring-step {
+  text-align: left;
+}
+
+.hiring-step h4 {
+  font-size: 1rem;
+  margin-bottom: 0.35rem;
+  color: #0263c7;
+}
+
+.hiring-step p {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0263c7;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+/* FAQ */
+
+.faq-section {
+  background: #ffffff;
+  padding: 2rem 1.5rem 2.5rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.faq-item + .faq-item {
+  margin-top: 1rem;
+}
+
+.faq-item h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: #333;
+}
+
+.faq-item p {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Responsive */
+
+@media (max-width: 991px) {
+  .hiring-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 767px) {
+  .hero-section {
+    padding: 2.5rem 1rem;
+  }
+
   .hero-section h1 {
     font-size: 2rem;
   }
+
   .hero-section .lead {
     font-size: 1rem;
   }
-  .region-section, .resume-form {
+
+  .region-section,
+  .resume-form {
     padding: 1rem;
   }
+
   .job-card {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
+
   .resume-form .form-group {
     margin-bottom: 1rem;
     margin-top: 2rem;
     padding: 0.75rem;
   }
+
   .resume-form .form-label {
-    top: -1.0rem;
+    top: -1rem;
     left: 0.8rem;
     font-size: 0.8rem;
   }
+
   .resume-form .has-value .form-label {
     font-size: 0.7rem;
-    top: -1.0rem;
+    top: -1rem;
   }
+
   .resume-form .mobile-label {
-    top: -2.0rem;
+    top: -2rem;
     left: 0.4rem;
   }
+
   .resume-form .form-control,
   .resume-form .form-select {
     padding: 0.6rem;
   }
+
   .resume-form .input-group .form-select {
-    width: 80px;
+    width: 90px;
   }
-  .resume-form .input-group > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+
+  .resume-form
+    .input-group
+    > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(
+      .invalid-feedback
+    ) {
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
     margin-left: -1px;
+  }
+
+  .hiring-steps {
+    grid-template-columns: 1fr;
   }
 }
