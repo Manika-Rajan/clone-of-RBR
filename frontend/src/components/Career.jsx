@@ -19,23 +19,40 @@ const Career = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // 🔹 Only this part is changed: RBR-specific roles
   const jobsByRegion = [
     {
-      region: 'Asia',
+      region: 'India',
       jobs: [
-        { title: 'Software Engineer', location: 'Bangalore, India', id: 'asia-1' },
-        { title: 'Product Manager', location: 'Mumbai, India', id: 'asia-2' },
+        {
+          title: 'Business Research Analyst – Rajan Business Reports',
+          location: 'Remote / Bangalore, India',
+          id: 'in-1',
+        },
+        {
+          title: 'Market Research Intern',
+          location: 'Remote, India',
+          id: 'in-2',
+        },
+        {
+          title: 'Full-Stack Developer – RBR Platform',
+          location: 'Remote / Bangalore, India',
+          id: 'in-3',
+        },
       ],
     },
     {
-      region: 'North America',
+      region: 'Middle East & Asia-Pacific',
       jobs: [
-        { title: 'Data Scientist', location: 'San Francisco, CA', id: 'na-1' },
-        { title: 'UX Designer', location: 'New York, NY', id: 'na-2' },
+        {
+          title: 'Freelance Industry Expert (Part-time)',
+          location: 'Remote',
+          id: 'me-ap-1',
+        },
       ],
     },
     {
-      region: 'Europe',
+      region: 'Europe & North America',
       jobs: [],
     },
   ];
@@ -47,7 +64,14 @@ const Career = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file && ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) {
+    if (
+      file &&
+      [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ].includes(file.type)
+    ) {
       setFormData({ ...formData, resume: file });
       setError('');
     } else {
@@ -68,15 +92,17 @@ const Career = () => {
       resume: formData.resume ? formData.resume.name : null,
     });
     setError('');
-    setSuccess('Application submitted successfully!');
+    setSuccess('Application submitted successfully! Our team will review and get back if there is a fit.');
     setTimeout(() => setSuccess(''), 3000);
   };
 
   return (
     <div className="career-page">
       <div className="hero-section text-center">
-        <h1>Join Rajan Business Ideas</h1>
-        <p className="lead">Explore exciting career opportunities and grow with us!</p>
+        <h1>Careers at Rajan Business Ideas</h1>
+        <p className="lead">
+          Work on Rajan Business Reports and help entrepreneurs, founders, and CXOs make smarter decisions.
+        </p>
       </div>
       <div className="container career-container">
         <div className="row">
@@ -93,12 +119,16 @@ const Career = () => {
                           <h5>{job.title}</h5>
                           <p>{job.location}</p>
                         </div>
-                        <Link to="/commingSoon" className="btn btn-outline-primary btn-sm">View Details</Link>
+                        <Link to="/commingSoon" className="btn btn-outline-primary btn-sm">
+                          View Details
+                        </Link>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="no-jobs">No openings currently available in {region.region}.</p>
+                  <p className="no-jobs">
+                    No openings currently available in {region.region}. You can still apply using the form on this page.
+                  </p>
                 )}
               </div>
             ))}
@@ -118,7 +148,9 @@ const Career = () => {
                   placeholder="Enter first name"
                   aria-label="First Name"
                 />
-                <label htmlFor="firstName" className="form-label">First Name *</label>
+                <label htmlFor="firstName" className="form-label">
+                  First Name *
+                </label>
               </div>
               <div className={`form-group mb-3 ${formData.lastName ? 'has-value' : ''}`}>
                 <input
@@ -132,7 +164,9 @@ const Career = () => {
                   placeholder="Enter last name"
                   aria-label="Last Name"
                 />
-                <label htmlFor="lastName" className="form-label">Last Name *</label>
+                <label htmlFor="lastName" className="form-label">
+                  Last Name *
+                </label>
               </div>
               <div className={`form-group mb-3 ${formData.gender ? 'has-value' : ''}`}>
                 <select
@@ -147,8 +181,11 @@ const Career = () => {
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
                 </select>
-                <label htmlFor="gender" className="form-label">Gender</label>
+                <label htmlFor="gender" className="form-label">
+                  Gender
+                </label>
               </div>
               <div className={`form-group mb-3 ${formData.country ? 'has-value' : ''}`}>
                 <select
@@ -166,7 +203,9 @@ const Career = () => {
                   <option value="Canada">Canada</option>
                   <option value="Other">Other</option>
                 </select>
-                <label htmlFor="country" className="form-label">Country *</label>
+                <label htmlFor="country" className="form-label">
+                  Country *
+                </label>
               </div>
               <div className={`form-group mb-3 ${formData.experience ? 'has-value' : ''}`}>
                 <select
@@ -180,10 +219,14 @@ const Career = () => {
                 >
                   <option value="">Select Experience</option>
                   {[...Array(21).keys()].map((year) => (
-                    <option key={year} value={year}>{year} {year === 1 ? 'year' : 'years'}</option>
+                    <option key={year} value={year}>
+                      {year} {year === 1 ? 'year' : 'years'}
+                    </option>
                   ))}
                 </select>
-                <label htmlFor="experience" className="form-label">Experience (Years) *</label>
+                <label htmlFor="experience" className="form-label">
+                  Experience (Years) *
+                </label>
               </div>
               <div className={`form-group mb-3 ${formData.email ? 'has-value' : ''}`}>
                 <input
@@ -197,7 +240,9 @@ const Career = () => {
                   placeholder="Enter email"
                   aria-label="Email"
                 />
-                <label htmlFor="email" className="form-label">Email ID *</label>
+                <label htmlFor="email" className="form-label">
+                  Email ID *
+                </label>
               </div>
               <div className={`form-group mb-3 ${formData.mobile ? 'has-value' : ''}`}>
                 <div className="input-group">
@@ -226,7 +271,9 @@ const Career = () => {
                     placeholder="Enter mobile number"
                     aria-label="Mobile Number"
                   />
-                  <label htmlFor="mobile" className="form-label mobile-label">Mobile Number *</label>
+                  <label htmlFor="mobile" className="form-label mobile-label">
+                    Mobile Number *
+                  </label>
                 </div>
               </div>
               <div className="form-group mb-3">
@@ -240,11 +287,15 @@ const Career = () => {
                   required
                   aria-label="Resume"
                 />
-                <label htmlFor="resume" className="form-label">Upload Resume (.doc, .docx, .pdf) *</label>
+                <label htmlFor="resume" className="form-label">
+                  Upload Resume (.doc, .docx, .pdf) *
+                </label>
               </div>
               {error && <p className="text-danger animate-error">{error}</p>}
               {success && <p className="text-success animate-success">{success}</p>}
-              <button type="submit" className="btn btn-primary w-100 submit-btn">Submit Application</button>
+              <button type="submit" className="btn btn-primary w-100 submit-btn">
+                Submit Application
+              </button>
             </form>
           </div>
         </div>
