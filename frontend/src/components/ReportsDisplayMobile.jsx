@@ -17,6 +17,10 @@ const FINAL = Math.round(MRP * (1 - PROMO_PCT / 100));
 const LEAD_API_URL =
   "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook";
 
+// 🔹 How many pages are fully free to read (0-based index)
+//    1 => pages 0 and 1 (i.e. page 1 & page 2)
+const UNLOCKED_MAX_PAGE = 1;
+
 const ReportsDisplayMobile = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,6 +74,13 @@ const ReportsDisplayMobile = () => {
   const [leadToken, setLeadToken] = useState("");
   const [leadChannel, setLeadChannel] = useState(""); // "email" or "whatsapp"
   const [leadOtp, setLeadOtp] = useState("");
+
+  // 🔹 NEW: track current page in the PDF viewer
+  const [currentPage, setCurrentPage] = useState(0);
+
+  // Whether to lock pages beyond the free sample
+  const shouldLock =
+    !isPurchased && typeof currentPage === "number" && currentPage > UNLOCKED_MAX_PAGE;
 
   // ====== Fetch presigned URL ======
   useEffect(() => {
@@ -411,12 +422,18 @@ const ReportsDisplayMobile = () => {
             <div className="relative h-[calc(100vh-150px)] sm:h-[calc(100vh-140px)] bg-slate-900">
               <div className="h-full bg-white">
                 <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-                  <Viewer fileUrl={pdfUrl} />
+                  <Viewer
+                    fileUrl={pdfUrl}
+                    onPageChange={(e) => {
+                      // e.currentPage is 0-based index
+                      setCurrentPage(e.currentPage);
+                    }}
+                  />
                 </Worker>
               </div>
 
-              {/* PREVIEW LOCK OVERLAY (blocks interaction when not purchased) */}
-              {!isPurchased && (
+              {/* PREVIEW LOCK OVERLAY (blocks pages beyond free sample when not purchased) */}
+              {shouldLock && (
                 <>
                   {/* Interaction blocker */}
                   <div className="absolute inset-0 z-10 bg-transparent" />
@@ -426,17 +443,18 @@ const ReportsDisplayMobile = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/40 to-slate-950/95 backdrop-blur-[3px]" />
                   </div>
 
-                  {/* Callout card with CTAs */}
+                  {/* Callout card with softer CTAs */}
                   <div className="absolute inset-x-0 bottom-4 z-30 px-4">
                     <div className="mx-auto max-w-sm rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-blue-500/40 shadow-[0_20px_45px_rgba(15,23,42,0.75)] px-4 py-4 text-white">
                       {/* Header + short pitch */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="space-y-1">
                           <div className="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-200 border border-blue-400/50">
-                            Locked preview
+                            You’ve reached the detailed section
                           </div>
                           <div className="text-sm font-semibold">
-                            Get the full industry report + 2-page preview PDF
+                            Unlock the full report to continue beyond the free
+                            sample.
                           </div>
                         </div>
                         <div className="text-right text-[11px]">
@@ -454,12 +472,12 @@ const ReportsDisplayMobile = () => {
 
                       {/* Bullets */}
                       <ul className="mt-2 space-y-1.5 text-[11px] text-slate-200 list-disc list-inside">
-                        <li>Exact market size & 5-year forecast</li>
+                        <li>Full market size & 5-year forecast</li>
                         <li>Competitor list, pricing bands & margins</li>
                         <li>Risks, regulations & “go / no-go” checklist</li>
                       </ul>
 
-                      {/* CTA block – P4: Two-row with OR */}
+                      {/* CTA block */}
                       <div className="mt-3 space-y-2">
                         <button
                           onClick={goToPayment}
@@ -487,8 +505,8 @@ const ReportsDisplayMobile = () => {
 
                       {/* Trust note */}
                       <div className="mt-2 text-[10px] text-slate-300 text-center">
-                        Free preview helps you evaluate the report before you
-                        decide to buy.
+                        You can scroll back anytime to re-read the free sample
+                        pages. Unlocking gives you the complete report.
                       </div>
                     </div>
                   </div>
