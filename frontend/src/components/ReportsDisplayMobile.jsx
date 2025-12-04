@@ -49,11 +49,11 @@ const ReportsDisplayMobile = () => {
   // Key to pre-sign
   const desiredKey = `${reportSlug}${isPurchased ? "" : "_preview"}.pdf`;
 
-  // 🔹 Option B: pick sample image based on slug (file is in public/samples)
-  // e.g. clone-of-RBR/frontend/public/samples/paper_industry_sample_page1.jpg
-  const sampleImageSrc =
+  // 🔹 Option C: 2-page sample PDF (stored in public/samples)
+  // e.g. clone-of-RBR/frontend/public/samples/paper_industry_sample_2pages.pdf
+  const samplePdfUrl =
     reportSlug === "paper_industry"
-      ? `/samples/${reportSlug}_sample_page1.jpg`
+      ? `/samples/${reportSlug}_sample_2pages.pdf`
       : null;
 
   // UI state
@@ -62,7 +62,7 @@ const ReportsDisplayMobile = () => {
   const [pdfUrl, setPdfUrl] = useState("");
   const [error, setError] = useState("");
 
-  // 🔹 NEW: Sample modal state
+  // 🔹 NEW: Sample PDF modal state
   const [sampleOpen, setSampleOpen] = useState(false);
 
   // Lead capture modal
@@ -436,7 +436,7 @@ const ReportsDisplayMobile = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/40 to-slate-950/95 backdrop-blur-[3px]" />
                   </div>
 
-                  {/* Callout card with CTAs + Option B sample button */}
+                  {/* Callout card with CTAs + Option C sample button */}
                   <div className="absolute inset-x-0 bottom-4 z-30 px-4">
                     <div className="mx-auto max-w-sm rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-blue-500/40 shadow-[0_20px_45px_rgba(15,23,42,0.75)] px-4 py-4 text-white">
                       {/* Header + short pitch */}
@@ -469,7 +469,7 @@ const ReportsDisplayMobile = () => {
                         <li>Risks, regulations &amp; “go / no-go” checklist</li>
                       </ul>
 
-                      {/* CTA block – with Option B sample button */}
+                      {/* CTA block – with Option C sample button */}
                       <div className="mt-3 space-y-2">
                         <button
                           onClick={goToPayment}
@@ -494,21 +494,21 @@ const ReportsDisplayMobile = () => {
                           first
                         </button>
 
-                        {/* 🔹 Option B: view sample page button */}
-                        {sampleImageSrc && (
+                        {/* 🔹 Option C: view 2-page sample PDF button */}
+                        {samplePdfUrl && (
                           <button
                             type="button"
                             onClick={() => setSampleOpen(true)}
                             className="w-full rounded-xl border border-dashed border-slate-600 bg-slate-950/70 text-[11px] text-slate-200 py-2 active:scale-[0.98]"
                           >
-                            👀 View a real sample page from this report
+                            📄 View 2-page sample from this report
                           </button>
                         )}
                       </div>
 
                       {/* Trust note */}
                       <div className="mt-2 text-[10px] text-slate-300 text-center">
-                        Free preview + sample page help you evaluate the report
+                        Free preview + sample pages help you evaluate the report
                         before you decide to buy.
                       </div>
                     </div>
@@ -790,8 +790,8 @@ const ReportsDisplayMobile = () => {
         </div>
       )}
 
-      {/* 🔹 Option B: Sample page fullscreen modal */}
-      {sampleOpen && sampleImageSrc && (
+      {/* 🔹 Option C: 2-page sample PDF fullscreen modal */}
+      {sampleOpen && samplePdfUrl && (
         <div
           role="dialog"
           aria-modal="true"
@@ -805,7 +805,7 @@ const ReportsDisplayMobile = () => {
           >
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-semibold">
-                Sample page from this report
+                2-page sample from this report
               </h3>
               <button
                 onClick={() => setSampleOpen(false)}
@@ -816,22 +816,19 @@ const ReportsDisplayMobile = () => {
               </button>
             </div>
             <p className="mt-1 text-[11px] text-slate-300">
-              This is a real page from the report so you can quickly judge the
-              writing style, charts, and structure.
+              Scroll through the first 2 pages to quickly judge the structure,
+              charts, and writing style of the report.
             </p>
 
-            <div className="mt-3 max-h-[70vh] overflow-auto rounded-xl bg-slate-900">
-              <img
-                src={sampleImageSrc}
-                alt={`${title} sample page`}
-                className="w-full h-auto"
-              />
+            <div className="mt-3 max-h-[70vh] rounded-xl overflow-hidden bg-slate-900">
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                <Viewer fileUrl={samplePdfUrl} />
+              </Worker>
             </div>
 
             <p className="mt-2 text-[10px] text-slate-400">
-              Zoom with pinch or double-tap on mobile. This is just one page —
-              the full report includes many more pages with complete market
-              size, forecasts, competitors, and risks.
+              This is only a short sample. The full report includes all sections
+              with complete market size, forecasts, competitors, and risks.
             </p>
           </div>
         </div>
