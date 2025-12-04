@@ -17,6 +17,11 @@ const FINAL = Math.round(MRP * (1 - PROMO_PCT / 100));
 const LEAD_API_URL =
   "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook";
 
+// ====== Sample image base (Option A) ======
+// Put sample images in: public/samples/<reportSlug>_sample_page1.webp
+// e.g. public/samples/paper_industry_sample_page1.webp
+const SAMPLE_IMAGE_BASE = "/samples";
+
 const ReportsDisplayMobile = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,6 +53,9 @@ const ReportsDisplayMobile = () => {
 
   // Key to pre-sign
   const desiredKey = `${reportSlug}${isPurchased ? "" : "_preview"}.pdf`;
+
+  // Option A: sample image URL derived from slug
+  const sampleImageUrl = `${SAMPLE_IMAGE_BASE}/${reportSlug}_sample_page1.webp`;
 
   // UI state
   const [openModel, setOpenModel] = useState(false); // login/payment modal
@@ -406,6 +414,28 @@ const ReportsDisplayMobile = () => {
             </div>
           )}
 
+          {/* OPTION A: Quick sample section (only when not purchased) */}
+          {!isLoading && !error && !isPurchased && (
+            <section className="px-4 pt-4 pb-3 bg-slate-950 border-b border-slate-800">
+              <p className="text-[11px] font-semibold text-emerald-300 uppercase tracking-wide">
+                Quick sample from this report
+              </p>
+              <p className="mt-1 text-[11px] text-slate-300">
+                This is a real page from the report so you can quickly judge the
+                style, structure, and depth before you decide to buy.
+              </p>
+              <div className="mt-3 overflow-hidden rounded-xl border border-slate-700 bg-slate-900">
+                {/* If the image doesn&apos;t exist yet, it will just fail silently */}
+                <img
+                  src={sampleImageUrl}
+                  alt={`${title} sample page`}
+                  loading="lazy"
+                  className="w-full max-h-80 object-cover"
+                />
+              </div>
+            </section>
+          )}
+
           {/* PDF Viewer */}
           {!isLoading && !error && pdfUrl && (
             <div className="relative h-[calc(100vh-150px)] sm:h-[calc(100vh-140px)] bg-slate-900">
@@ -454,9 +484,9 @@ const ReportsDisplayMobile = () => {
 
                       {/* Bullets */}
                       <ul className="mt-2 space-y-1.5 text-[11px] text-slate-200 list-disc list-inside">
-                        <li>Exact market size & 5-year forecast</li>
-                        <li>Competitor list, pricing bands & margins</li>
-                        <li>Risks, regulations & “go / no-go” checklist</li>
+                        <li>Exact market size &amp; 5-year forecast</li>
+                        <li>Competitor list, pricing bands &amp; margins</li>
+                        <li>Risks, regulations &amp; “go / no-go” checklist</li>
                       </ul>
 
                       {/* CTA block – P4: Two-row with OR */}
@@ -465,7 +495,7 @@ const ReportsDisplayMobile = () => {
                           onClick={goToPayment}
                           className="w-full rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm py-2.5 font-semibold active:scale-[0.98]"
                         >
-                          Pay & unlock full report — ₹
+                          Pay &amp; unlock full report — ₹
                           {FINAL.toLocaleString("en-IN")}
                         </button>
 
@@ -531,7 +561,7 @@ const ReportsDisplayMobile = () => {
                   onClick={goToPayment}
                   className="ml-auto rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm px-4 py-2.5 font-semibold active:scale-[0.97] shadow-[0_10px_25px_rgba(15,23,42,0.8)]"
                 >
-                  Pay & unlock now
+                  Pay &amp; unlock now
                 </button>
               </>
             )}
@@ -694,7 +724,7 @@ const ReportsDisplayMobile = () => {
                     disabled={leadBusy}
                     className="flex-1 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-semibold"
                   >
-                    {leadBusy ? "Verifying…" : "Verify & send preview"}
+                    {leadBusy ? "Verifying…" : "Verify &amp; send preview"}
                   </button>
                   <button
                     onClick={() => {
