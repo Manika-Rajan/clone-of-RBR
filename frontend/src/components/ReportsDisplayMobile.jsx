@@ -8,9 +8,6 @@ import { useStore } from "../Store";
 import { Modal, ModalBody } from "reactstrap";
 import Login from "./Login";
 
-// 🔹 NEW: Sample image for Option B (hardcoded for now)
-import samplePagePaperIndustry from "../assets/paper_industry_sample_page1.jpg";
-
 // ====== Pricing ======
 const MRP = 2999;
 const PROMO_PCT = 25;
@@ -52,9 +49,12 @@ const ReportsDisplayMobile = () => {
   // Key to pre-sign
   const desiredKey = `${reportSlug}${isPurchased ? "" : "_preview"}.pdf`;
 
-  // 🔹 Option B: pick sample image based on slug (for now, only paper_industry)
+  // 🔹 Option B: pick sample image based on slug (file is in public/samples)
+  // e.g. clone-of-RBR/frontend/public/samples/paper_industry_sample_page1.jpg
   const sampleImageSrc =
-    reportSlug === "paper_industry" ? samplePagePaperIndustry : null;
+    reportSlug === "paper_industry"
+      ? `/samples/${reportSlug}_sample_page1.jpg`
+      : null;
 
   // UI state
   const [openModel, setOpenModel] = useState(false); // login/payment modal
