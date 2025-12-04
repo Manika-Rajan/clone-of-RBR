@@ -49,21 +49,11 @@ const ReportsDisplayMobile = () => {
   // Key to pre-sign
   const desiredKey = `${reportSlug}${isPurchased ? "" : "_preview"}.pdf`;
 
-  // 🔹 Option C: 2-page sample PDF (stored in public/samples)
-  // e.g. clone-of-RBR/frontend/public/samples/paper_industry_sample_2pages.pdf
-  const samplePdfUrl =
-    reportSlug === "paper_industry"
-      ? `/samples/${reportSlug}_sample_2pages.pdf`
-      : null;
-
   // UI state
   const [openModel, setOpenModel] = useState(false); // login/payment modal
   const [isLoading, setIsLoading] = useState(true);
   const [pdfUrl, setPdfUrl] = useState("");
   const [error, setError] = useState("");
-
-  // 🔹 NEW: Sample PDF modal state
-  const [sampleOpen, setSampleOpen] = useState(false);
 
   // Lead capture modal
   const [leadOpen, setLeadOpen] = useState(false);
@@ -436,7 +426,7 @@ const ReportsDisplayMobile = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/40 to-slate-950/95 backdrop-blur-[3px]" />
                   </div>
 
-                  {/* Callout card with CTAs + Option C sample button */}
+                  {/* Callout card with CTAs */}
                   <div className="absolute inset-x-0 bottom-4 z-30 px-4">
                     <div className="mx-auto max-w-sm rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-blue-500/40 shadow-[0_20px_45px_rgba(15,23,42,0.75)] px-4 py-4 text-white">
                       {/* Header + short pitch */}
@@ -464,18 +454,18 @@ const ReportsDisplayMobile = () => {
 
                       {/* Bullets */}
                       <ul className="mt-2 space-y-1.5 text-[11px] text-slate-200 list-disc list-inside">
-                        <li>Exact market size &amp; 5-year forecast</li>
-                        <li>Competitor list, pricing bands &amp; margins</li>
-                        <li>Risks, regulations &amp; “go / no-go” checklist</li>
+                        <li>Exact market size & 5-year forecast</li>
+                        <li>Competitor list, pricing bands & margins</li>
+                        <li>Risks, regulations & “go / no-go” checklist</li>
                       </ul>
 
-                      {/* CTA block – with Option C sample button */}
+                      {/* CTA block – P4: Two-row with OR */}
                       <div className="mt-3 space-y-2">
                         <button
                           onClick={goToPayment}
                           className="w-full rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm py-2.5 font-semibold active:scale-[0.98]"
                         >
-                          Pay &amp; unlock full report — ₹
+                          Pay & unlock full report — ₹
                           {FINAL.toLocaleString("en-IN")}
                         </button>
 
@@ -493,23 +483,12 @@ const ReportsDisplayMobile = () => {
                           </span>{" "}
                           first
                         </button>
-
-                        {/* 🔹 Option C: view 2-page sample PDF button */}
-                        {samplePdfUrl && (
-                          <button
-                            type="button"
-                            onClick={() => setSampleOpen(true)}
-                            className="w-full rounded-xl border border-dashed border-slate-600 bg-slate-950/70 text-[11px] text-slate-200 py-2 active:scale-[0.98]"
-                          >
-                            📄 View 2-page sample from this report
-                          </button>
-                        )}
                       </div>
 
                       {/* Trust note */}
                       <div className="mt-2 text-[10px] text-slate-300 text-center">
-                        Free preview + sample pages help you evaluate the report
-                        before you decide to buy.
+                        Free preview helps you evaluate the report before you
+                        decide to buy.
                       </div>
                     </div>
                   </div>
@@ -552,7 +531,7 @@ const ReportsDisplayMobile = () => {
                   onClick={goToPayment}
                   className="ml-auto rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm px-4 py-2.5 font-semibold active:scale-[0.97] shadow-[0_10px_25px_rgba(15,23,42,0.8)]"
                 >
-                  Pay &amp; unlock now
+                  Pay & unlock now
                 </button>
               </>
             )}
@@ -635,7 +614,7 @@ const ReportsDisplayMobile = () => {
                     <div className="flex-1 h-px bg-slate-700" />
                   </div>
 
-                  {/* ROW: country code + phone */}
+                  {/* ROW: country code + phone, constrained to popup width */}
                   <div className="flex w-full gap-2">
                     {/* Country Code Dropdown */}
                     <select
@@ -647,6 +626,7 @@ const ReportsDisplayMobile = () => {
                       <option value="+971">🇦🇪 +971</option>
                       <option value="+1">🇺🇸 +1</option>
                       <option value="+44">🇬🇧 +44</option>
+                      {/* You can add more later */}
                     </select>
 
                     {/* Phone Number Input */}
@@ -659,7 +639,7 @@ const ReportsDisplayMobile = () => {
                     />
                   </div>
 
-                  {/* Helper text */}
+                  {/* Helper text: either is fine */}
                   <p className="text-[10px] text-slate-400">
                     You can fill either email or WhatsApp number. One is enough
                     to get your preview.
@@ -714,7 +694,7 @@ const ReportsDisplayMobile = () => {
                     disabled={leadBusy}
                     className="flex-1 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm py-2.5 active:scale-[0.98] disabled:opacity-60 font-semibold"
                   >
-                    {leadBusy ? "Verifying…" : "Verify &amp; send preview"}
+                    {leadBusy ? "Verifying…" : "Verify & send preview"}
                   </button>
                   <button
                     onClick={() => {
@@ -786,50 +766,6 @@ const ReportsDisplayMobile = () => {
               🔒 We only use your contact to send the 2-page preview. No spam,
               no sharing with third parties.
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* 🔹 Option C: 2-page sample PDF fullscreen modal */}
-      {sampleOpen && samplePdfUrl && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-[60] flex items-center justify-center"
-          onClick={() => setSampleOpen(false)}
-        >
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          <div
-            className="relative z-10 w-[94%] max-w-md rounded-2xl bg-slate-950 border border-slate-700 shadow-[0_20px_60px_rgba(0,0,0,0.85)] p-4 text-white"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold">
-                2-page sample from this report
-              </h3>
-              <button
-                onClick={() => setSampleOpen(false)}
-                className="h-8 w-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center text-lg leading-none"
-                aria-label="Close sample"
-              >
-                ×
-              </button>
-            </div>
-            <p className="mt-1 text-[11px] text-slate-300">
-              Scroll through the first 2 pages to quickly judge the structure,
-              charts, and writing style of the report.
-            </p>
-
-            <div className="mt-3 max-h-[70vh] rounded-xl overflow-hidden bg-slate-900">
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-                <Viewer fileUrl={samplePdfUrl} />
-              </Worker>
-            </div>
-
-            <p className="mt-2 text-[10px] text-slate-400">
-              This is only a short sample. The full report includes all sections
-              with complete market size, forecasts, competitors, and risks.
-            </p>
           </div>
         </div>
       )}
