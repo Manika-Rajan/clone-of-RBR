@@ -17,10 +17,10 @@ const FINAL = Math.round(MRP * (1 - PROMO_PCT / 100));
 const LEAD_API_URL =
   "https://k00o7isai2.execute-api.ap-south-1.amazonaws.com/wa-webhook";
 
-// ====== Sample image base (Option A) ======
-// Put sample images in: public/samples/<reportSlug>_sample_page1.webp
-// e.g. public/samples/paper_industry_sample_page1.webp
-const SAMPLE_IMAGE_BASE = "/samples";
+// ====== Sample PDF base (Option A) ======
+// Put sample PDFs in: public/samples/<reportSlug>_sample_2pages.pdf
+// e.g. public/samples/paper_industry_sample_2pages.pdf
+const SAMPLE_PDF_BASE = "/samples";
 
 const ReportsDisplayMobile = () => {
   const navigate = useNavigate();
@@ -54,8 +54,8 @@ const ReportsDisplayMobile = () => {
   // Key to pre-sign
   const desiredKey = `${reportSlug}${isPurchased ? "" : "_preview"}.pdf`;
 
-  // Option A: sample image URL derived from slug
-  const sampleImageUrl = `${SAMPLE_IMAGE_BASE}/${reportSlug}_sample_page1.jpg`;
+  // Option A: sample PDF URL derived from slug
+  const samplePdfUrl = `${SAMPLE_PDF_BASE}/${reportSlug}_sample_2pages.pdf`;
 
   // UI state
   const [openModel, setOpenModel] = useState(false); // login/payment modal
@@ -421,18 +421,26 @@ const ReportsDisplayMobile = () => {
                 Quick sample from this report
               </p>
               <p className="mt-1 text-[11px] text-slate-300">
-                This is a real page from the report so you can quickly judge the
-                style, structure, and depth before you decide to buy.
+                This 2-page sample is from the actual report so you can judge
+                the writing style, structure, and depth before you decide to
+                buy.
               </p>
+
               <div className="mt-3 overflow-hidden rounded-xl border border-slate-700 bg-slate-900">
-                {/* If the image doesn&apos;t exist yet, it will just fail silently */}
-                <img
-                  src={sampleImageUrl}
-                  alt={`${title} sample page`}
-                  loading="lazy"
-                  className="w-full max-h-80 object-cover"
+                {/* Scrollable inline PDF sample */}
+                <iframe
+                  src={samplePdfUrl}
+                  title={`${title} sample preview`}
+                  className="w-full h-64"
+                  style={{ border: "none" }}
                 />
               </div>
+
+              <p className="mt-2 text-[10px] text-slate-400">
+                The full report includes many more pages with complete market
+                size, forecasts, competitor list, risks, and more. This is just
+                a short glimpse.
+              </p>
             </section>
           )}
 
