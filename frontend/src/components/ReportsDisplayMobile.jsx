@@ -55,7 +55,7 @@ const ReportsDisplayMobile = () => {
   const desiredKey = `${reportSlug}${isPurchased ? "" : "_preview"}.pdf`;
 
   // Option A: sample image URL derived from slug
-  const sampleImageUrl = `${SAMPLE_IMAGE_BASE}/${reportSlug}_sample_page1.pdf`;
+  const sampleImageUrl = `${SAMPLE_IMAGE_BASE}/${reportSlug}_sample_page1.jpg`;
 
   // UI state
   const [openModel, setOpenModel] = useState(false); // login/payment modal
