@@ -6,7 +6,7 @@ import Login from "./Login";
 import { Modal, ModalBody } from "reactstrap";
 import { Store } from "../Store";
 import avatar from "../assets/avatar.svg";
-import "./Navbar.css";
+import './Navbar.css';
 
 const Navbar = () => {
   const [openModel, setOpenModel] = useState(false);
@@ -18,10 +18,6 @@ const Navbar = () => {
   const { name = "", isLogin = false } = userInfo;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  // 🔹 NEW: control mobile collapse via React instead of Bootstrap JS
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -29,14 +25,7 @@ const Navbar = () => {
     console.log("Navbar rerendered - isLogin:", isLogin, "name:", name);
   }, [isLogin, name]);
 
-  // 🔹 Close menu + dropdown whenever route changes
-  useEffect(() => {
-    setIsMenuOpen(false);
-    setDropdownOpen(false);
-  }, [location.pathname]);
-
   const hideNavbar = location.pathname === "/report-display";
-
   const toggleDropdown = () => setDropdownOpen((v) => !v);
 
   const handleLogout = () => {
@@ -59,11 +48,7 @@ const Navbar = () => {
         <nav className="navbar navbar-expand-md navbar-light bg-light fixed-top">
           <div className="container-fluid">
             {/* Brand */}
-            <Link
-              to="/"
-              className="navbar-brand d-flex align-items-center"
-              onClick={() => setIsMenuOpen(false)}
-            >
+            <Link to="/" className="navbar-brand d-flex align-items-center">
               <img
                 src={logo}
                 alt="Logo"
@@ -78,33 +63,26 @@ const Navbar = () => {
               </div>
             </Link>
 
-            {/* Toggler – now uses React state, no data-bs-* */}
+            {/* Toggler */}
             <button
               className="navbar-toggler"
               type="button"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarSupportedContent"
               aria-controls="navbarSupportedContent"
-              aria-expanded={isMenuOpen ? "true" : "false"}
+              aria-expanded="false"
               aria-label="Toggle navigation"
             >
               <span className="navbar-toggler-icon" />
             </button>
 
-            {/* Collapsible content – React adds/removes .show */}
-            <div
-              id="navbarSupportedContent"
-              className={
-                "collapse navbar-collapse" + (isMenuOpen ? " show" : "")
-              }
-            >
+            {/* Collapsible content */}
+            <div className="collapse navbar-collapse" id="navbarSupportedContent">
               <ul className="navbar-nav ms-auto align-items-md-center mt-3 mt-md-0">
                 <li className="nav-item me-md-4">
                   <NavLink
                     to="/about"
-                    className={({ isActive }) =>
-                      "nav-link" + (isActive ? " active" : "")
-                    }
-                    onClick={() => setIsMenuOpen(false)}
+                    className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
                   >
                     About
                   </NavLink>
@@ -114,10 +92,7 @@ const Navbar = () => {
                   <NavLink
                     to="/"
                     end
-                    className={({ isActive }) =>
-                      "nav-link" + (isActive ? " active" : "")
-                    }
-                    onClick={() => setIsMenuOpen(false)}
+                    className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
                   >
                     Reports
                   </NavLink>
@@ -126,10 +101,7 @@ const Navbar = () => {
                 <li className="nav-item me-md-4">
                   <NavLink
                     to="/contact"
-                    className={({ isActive }) =>
-                      "nav-link" + (isActive ? " active" : "")
-                    }
-                    onClick={() => setIsMenuOpen(false)}
+                    className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
                   >
                     Contact
                   </NavLink>
@@ -148,9 +120,7 @@ const Navbar = () => {
                         className="rounded-circle me-2"
                         style={{ width: 32, height: 32 }}
                       />
-                      <span className="text-nowrap">
-                        {name?.trim() || "User"}
-                      </span>
+                      <span className="text-nowrap">{name?.trim() || "User"}</span>
                     </button>
                     {dropdownOpen && (
                       <ul
@@ -162,19 +132,13 @@ const Navbar = () => {
                           <Link
                             to="/profile"
                             className="dropdown-item"
-                            onClick={() => {
-                              setDropdownOpen(false);
-                              setIsMenuOpen(false);
-                            }}
+                            onClick={() => setDropdownOpen(false)}
                           >
                             My Profile
                           </Link>
                         </li>
                         <li>
-                          <button
-                            className="dropdown-item"
-                            onClick={handleLogout}
-                          >
+                          <button className="dropdown-item" onClick={handleLogout}>
                             Logout
                           </button>
                         </li>
@@ -188,7 +152,6 @@ const Navbar = () => {
                       onClick={() => {
                         resetModal();
                         setOpenModel(true);
-                        setIsMenuOpen(false);
                       }}
                     >
                       LOGIN
