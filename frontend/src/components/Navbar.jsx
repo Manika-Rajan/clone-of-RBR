@@ -18,7 +18,9 @@ const Navbar = () => {
   const { name = "", isLogin = false } = userInfo;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // 🔹 React-controlled mobile menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,9 +29,9 @@ const Navbar = () => {
     console.log("Navbar rerendered - isLogin:", isLogin, "name:", name);
   }, [isLogin, name]);
 
-  // Close mobile menu whenever route changes
+  // Close menus whenever route changes
   useEffect(() => {
-    setMobileMenuOpen(false);
+    setIsMenuOpen(false);
     setDropdownOpen(false);
   }, [location.pathname]);
 
@@ -40,7 +42,7 @@ const Navbar = () => {
   const handleLogout = () => {
     cxtDispatch?.({ type: "LOGOUT" });
     setDropdownOpen(false);
-    setMobileMenuOpen(false);
+    setIsMenuOpen(false);
     navigate("/");
   };
 
@@ -50,16 +52,124 @@ const Navbar = () => {
     setVerify(false);
   };
 
+  const handleNavClick = () => {
+    // When clicking any nav link on mobile, close the mobile menu
+    setIsMenuOpen(false);
+  };
+
   if (hideNavbar) return null;
+
+  // Reusable nav items (so desktop & mobile stay in sync)
+  const NavItems = () => (
+    <>
+      <li className="nav-item me-md-4">
+        <NavLink
+          to="/about"
+          className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+          onClick={handleNavClick}
+        >
+          About
+        </NavLink>
+      </li>
+
+      <li className="nav-item me-md-4">
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+          onClick={handleNavClick}
+        >
+          Reports
+        </NavLink>
+      </li>
+
+      <li className="nav-item me-md-4">
+        <NavLink
+          to="/contact"
+          className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+          onClick={handleNavClick}
+        >
+          Contact
+        </NavLink>
+      </li>
+    </>
+  );
+
+  const AuthBlock = ({ isMobile = false }) =>
+    isLogin ? (
+      <li className="nav-item dropdown">
+        <button
+          className={
+            "btn btn-link nav-link d-flex align-items-center p-0" +
+            (isMobile ? " w-100 justify-content-start px-3 py-2" : "")
+          }
+          onClick={() => setDropdownOpen((v) => !v)}
+          aria-expanded={dropdownOpen ? "true" : "false"}
+        >
+          <img
+            src={avatar}
+            alt="User"
+            className="rounded-circle me-2"
+            style={{ width: 32, height: 32 }}
+          />
+          <span className="text-nowrap">{name?.trim() || "User"}</span>
+        </button>
+        {/* Desktop dropdown (positioned near avatar). On mobile we list links below instead */}
+        {dropdownOpen && !isMobile && (
+          <ul
+            className="dropdown-menu dropdown-menu-end show"
+            style={{ position: "absolute" }}
+            onMouseLeave={() => setDropdownOpen(false)}
+          >
+            <li>
+              <Link
+                to="/profile"
+                className="dropdown-item"
+                onClick={() => {
+                  setDropdownOpen(false);
+                  setIsMenuOpen(false);
+                }}
+              >
+                My Profile
+              </Link>
+            </li>
+            <li>
+              <button className="dropdown-item" onClick={handleLogout}>
+                Logout
+              </button>
+            </li>
+          </ul>
+        )}
+      </li>
+    ) : (
+      <li className="nav-item">
+        <button
+          className={"btn btn-primary" + (isMobile ? " w-100 mt-2" : "")}
+          onClick={() => {
+            resetModal();
+            setOpenModel(true);
+            setIsMenuOpen(false);
+          }}
+        >
+          LOGIN
+        </button>
+      </li>
+    );
 
   return (
     <>
       <div className="header">
-        {/* ===== DESKTOP NAVBAR (md and up) ===== */}
-        <nav className="navbar navbar-expand-md navbar-light bg-light fixed-top d-none d-md-flex">
+        <nav className="navbar navbar-expand-md navbar-light bg-light fixed-top rbr-navbar">
           <div className="container-fluid">
             {/* Brand */}
-            <Link to="/" className="navbar-brand d-flex align-items-center">
+            <Link
+              to="/"
+              className="navbar-brand d-flex align-items-center"
+              onClick={() => {
+                setIsMenuOpen(false);
+                setDropdownOpen(false);
+              }}
+            >
               <img
                 src={logo}
                 alt="Logo"
@@ -76,227 +186,70 @@ const Navbar = () => {
               </div>
             </Link>
 
-            {/* Desktop links (no collapse on md+) */}
-            <div className="navbar-collapse show">
+            {/* Toggler – purely React, Bootstrap JS not required */}
+            <button
+              className="navbar-toggler"
+              type="button"
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              aria-controls="rbr-navbar-desktop"
+              aria-expanded={isMenuOpen ? "true" : "false"}
+              aria-label="Toggle navigation"
+            >
+              <span className="navbar-toggler-icon" />
+            </button>
+
+            {/* DESKTOP NAV (≥ md) – normal Bootstrap collapse, always visible on md+ */}
+            <div
+              id="rbr-navbar-desktop"
+              className="collapse navbar-collapse d-none d-md-flex"
+            >
               <ul className="navbar-nav ms-auto align-items-md-center mt-3 mt-md-0">
-                <li className="nav-item me-md-4">
-                  <NavLink
-                    to="/about"
-                    className={({ isActive }) =>
-                      "nav-link" + (isActive ? " active" : "")
-                    }
-                  >
-                    About
-                  </NavLink>
-                </li>
-
-                <li className="nav-item me-md-4">
-                  <NavLink
-                    to="/"
-                    end
-                    className={({ isActive }) =>
-                      "nav-link" + (isActive ? " active" : "")
-                    }
-                  >
-                    Reports
-                  </NavLink>
-                </li>
-
-                <li className="nav-item me-md-4">
-                  <NavLink
-                    to="/contact"
-                    className={({ isActive }) =>
-                      "nav-link" + (isActive ? " active" : "")
-                    }
-                  >
-                    Contact
-                  </NavLink>
-                </li>
-
-                {isLogin ? (
-                  <li className="nav-item dropdown">
-                    <button
-                      className="btn btn-link nav-link d-flex align-items-center p-0"
-                      onClick={toggleDropdown}
-                      aria-expanded={dropdownOpen ? "true" : "false"}
-                    >
-                      <img
-                        src={avatar}
-                        alt="User"
-                        className="rounded-circle me-2"
-                        style={{ width: 32, height: 32 }}
-                      />
-                      <span className="text-nowrap">
-                        {name?.trim() || "User"}
-                      </span>
-                    </button>
-                    {dropdownOpen && (
-                      <ul
-                        className="dropdown-menu dropdown-menu-end show"
-                        style={{ position: "absolute" }}
-                        onMouseLeave={() => setDropdownOpen(false)}
-                      >
-                        <li>
-                          <Link
-                            to="/profile"
-                            className="dropdown-item"
-                            onClick={() => setDropdownOpen(false)}
-                          >
-                            My Profile
-                          </Link>
-                        </li>
-                        <li>
-                          <button
-                            className="dropdown-item"
-                            onClick={handleLogout}
-                          >
-                            Logout
-                          </button>
-                        </li>
-                      </ul>
-                    )}
-                  </li>
-                ) : (
-                  <li className="nav-item">
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => {
-                        resetModal();
-                        setOpenModel(true);
-                      }}
-                    >
-                      LOGIN
-                    </button>
-                  </li>
-                )}
+                <NavItems />
+                <AuthBlock />
               </ul>
             </div>
           </div>
         </nav>
 
-        {/* ===== MOBILE NAVBAR (below md) ===== */}
-        <nav className="navbar navbar-light bg-light fixed-top d-flex d-md-none mobile-navbar">
-          <div className="container-fluid">
-            {/* Brand */}
-            <Link
-              to="/"
-              className="navbar-brand d-flex align-items-center"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <img
-                src={logo}
-                alt="Logo"
-                style={{ width: 40, height: 40 }}
-                className="me-2"
-              />
-              <div className="d-flex flex-column">
-                <span className="fw-semibold" style={{ fontSize: 14 }}>
-                  Rajan Business Reports
-                </span>
-                <small className="text-muted" style={{ fontSize: 11 }}>
-                  Rajan Business Ideas
-                </small>
-              </div>
-            </Link>
-
-            {/* Mobile toggler (pure React, no Bootstrap collapse) */}
-            <button
-              className="navbar-toggler"
-              type="button"
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              aria-expanded={mobileMenuOpen ? "true" : "false"}
-              aria-label="Toggle navigation"
-            >
-              <span className="navbar-toggler-icon" />
-            </button>
-          </div>
-        </nav>
-
-        {/* Mobile slide-down menu (separate from Bootstrap collapse) */}
-        {mobileMenuOpen && (
-          <div className="mobile-menu d-md-none">
-            <ul className="list-unstyled mb-0">
-              <li>
-                <NavLink
-                  to="/about"
-                  className={({ isActive }) =>
-                    "nav-link mobile-nav-link" + (isActive ? " active" : "")
-                  }
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  About
-                </NavLink>
-              </li>
-              <li>
-                <NavLink
-                  to="/"
-                  end
-                  className={({ isActive }) =>
-                    "nav-link mobile-nav-link" + (isActive ? " active" : "")
-                  }
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Reports
-                </NavLink>
-              </li>
-              <li>
-                <NavLink
-                  to="/contact"
-                  className={({ isActive }) =>
-                    "nav-link mobile-nav-link" + (isActive ? " active" : "")
-                  }
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Contact
-                </NavLink>
-              </li>
-
-              {isLogin ? (
-                <>
-                  <li className="mobile-menu-divider" />
-                  <li>
-                    <NavLink
-                      to="/profile"
-                      className="nav-link mobile-nav-link"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      My Profile
-                    </NavLink>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      className="nav-link mobile-nav-link mobile-logout-btn"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </button>
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li className="mobile-menu-divider" />
-                  <li>
-                    <button
-                      type="button"
-                      className="btn btn-primary w-100 mobile-login-btn"
-                      onClick={() => {
-                        resetModal();
-                        setOpenModel(true);
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      LOGIN
-                    </button>
-                  </li>
-                </>
-              )}
-            </ul>
-          </div>
-        )}
+        {/* MOBILE NAV ( < md ) – our own overlay menu */}
+        <div
+          className={
+            "rbr-mobile-menu d-md-none" + (isMenuOpen ? " rbr-mobile-menu-open" : "")
+          }
+        >
+          <ul className="navbar-nav flex-column w-100 px-2 pt-2 pb-3">
+            <NavItems />
+            {/* On mobile, show Profile + Logout as full-width list items instead of tiny dropdown */}
+            {isLogin ? (
+              <>
+                <li className="nav-item mt-2">
+                  <Link
+                    to="/profile"
+                    className="nav-link rbr-mobile-link"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    My Profile
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className="nav-link rbr-mobile-link text-start"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </li>
+              </>
+            ) : (
+              <AuthBlock isMobile />
+            )}
+          </ul>
+        </div>
       </div>
 
-      {/* Login Modal (common for both desktop + mobile) */}
       <Modal
         isOpen={openModel}
         toggle={() => {
