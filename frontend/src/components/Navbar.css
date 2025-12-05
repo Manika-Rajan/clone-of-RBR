@@ -63,11 +63,11 @@
   margin: 2px 0 0 0;
 }
 
-/* ===== NAV LINKS (base) ===== */
+/* ===== NAV LINKS ===== */
 .navbar-nav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 28px; /* works fine with your current JSX */
 }
 
 .nav-item { margin-right: 0; }
@@ -83,27 +83,31 @@
   outline: none;
 }
 
-/* Tabs: semibold (600), no underline; active = brand blue */
-a.nav-link {
-  font-weight: 600 !important;
-  color: var(--ink-700) !important;
-}
-
-/* kill underline pseudo for anchors */
+/* animated underline — scoped to anchors to avoid styling the avatar button */
 a.nav-link::after {
-  content: none !important;
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--speed) ease;
+  border-radius: 2px;
+  opacity: 0.95;
 }
 
-/* hover/focus: darker text */
 a.nav-link:hover,
 a.nav-link:focus-visible {
   color: var(--ink-900) !important;
 }
 
-/* active page: theme blue */
-a.nav-link.active {
-  color: var(--brand-600) !important;
-  font-weight: 600 !important;
+a.nav-link:hover::after,
+a.nav-link:focus-visible::after,
+a.nav-link.active::after {
+  transform: scaleX(1);
 }
 
 /* focus ring for accessibility (anchors only) */
@@ -214,35 +218,78 @@ button.btn.btn-primary {
 }
 .navbar-toggler:focus { box-shadow: 0 0 0 6px var(--ring) !important; }
 
-/* ===== DESKTOP ONLY (>= 992px) ===== */
+/* ===== MOTION PREFERENCES ===== */
+@media (prefers-reduced-motion: reduce) {
+  .navbar, a.nav-link, .dropdown-menu, .btn.btn-primary {
+    transition: none !important; animation: none !important;
+  }
+}
+
+/* === RESTORE the spacing that looked good === */
+.navbar-nav {
+  gap: 28px;            /* you were using gap instead of me-md-4 */
+}
+
+/* === DESKTOP ALIGNMENT LOCK (only ≥ 992px) === */
 @media (min-width: 992px) {
-  .navbar .navbar-nav {
-    flex-wrap: nowrap;              /* keep About/Reports/Contact on one row */
-    gap: 28px;
+  .navbar .navbar-nav { 
+    flex-wrap: nowrap;    /* keep About/Reports/Contact on one row on desktop */
   }
   .navbar .nav-item {
     display: flex;
     align-items: center;
   }
   .navbar .nav-link {
-    display: inline-flex;
+    display: inline-flex;          /* anchor behaves as one pill-ish unit */
     align-items: center;
     justify-content: center;
-    white-space: nowrap;
-    line-height: 1;
-    min-height: 36px;
-    padding: 10px 14px;
+    white-space: nowrap;           /* never break the label */
+    line-height: 1;                /* avoid tall line box */
+    min-height: 36px;              /* consistent click target */
+    padding: 10px 14px;            /* inner space you liked */
   }
 }
 
-/* ===== MOBILE (<= 991px) ===== */
+/* === Tabs: semibold (600), no underline; active = theme blue === */
+/* Only target the three page links (anchors), not the avatar button */
+a.nav-link {
+  font-weight: 600 !important;         /* semibold, not heavy */
+  color: var(--ink-700) !important;    /* default */
+}
+
+/* remove any underline pseudo */
+a.nav-link::after {
+  content: none !important;
+}
+
+/* hover/focus: a bit darker */
+a.nav-link:hover,
+a.nav-link:focus-visible {
+  color: var(--ink-900) !important;
+}
+
+/* active page: theme blue, still semibold */
+a.nav-link.active {
+  color: var(--brand-600) !important;
+  font-weight: 600 !important;
+}
+
+/* ===== RESPONSIVE / MOBILE COLLAPSE PANEL FIX ===== */
 @media (max-width: 991px) {
   .container-fluid {
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
 
-  /* Solid panel behind the mobile menu instead of glass over page content */
+  /* Place the collapse PANEL just under the navbar, above page content */
+  .navbar .navbar-collapse {
+    position: absolute;
+    top: 100%;          /* immediately below the navbar bar */
+    left: 0;
+    right: 0;
+    z-index: 1040;      /* above page content */
+  }
+
   .navbar .navbar-collapse.show {
     background: var(--surface);
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
@@ -261,11 +308,23 @@ button.btn.btn-primary {
     width: 100%;
   }
 
+  /* Make links big, left-aligned, and clearly visible */
   .navbar .navbar-collapse.show .nav-link {
     width: 100%;
     justify-content: flex-start;
     padding: 10px 18px;
     color: var(--ink-900) !important;
+  }
+
+  .dropdown-toggle.user-menu {
+    padding-left: 0;
+  }
+
+  .navbar-nav .nav-item.dropdown .dropdown-menu {
+    right: 0 !important;
+    left: 0 !important;
+    width: 100%;
+    transform-origin: top center;
   }
 }
 
@@ -283,11 +342,4 @@ button.btn.btn-primary {
   .logo img { box-shadow: 0 2px 10px rgba(0,0,0,0.45); }
   .dropdown-item:hover { background: rgba(255,255,255,0.06); }
   .logout-btn:hover { background: rgba(220, 38, 38, 0.18); }
-}
-
-/* ===== MOTION PREFERENCES ===== */
-@media (prefers-reduced-motion: reduce) {
-  .navbar, a.nav-link, .dropdown-menu, .btn.btn-primary {
-    transition: none !important; animation: none !important;
-  }
 }
