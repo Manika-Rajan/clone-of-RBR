@@ -6,8 +6,8 @@
   --ink-700: #334155;
   --ink-500: #64748b;
   --surface: #ffffff;
-  --glass: rgba(255,255,255,0.65);
-  --ring: rgba(59,130,246,0.25);
+  --glass: rgba(255, 255, 255, 0.65);
+  --ring: rgba(59, 130, 246, 0.25);
   --radius-xl: 16px;
   --shadow-md: 0 6px 24px rgba(2, 6, 23, 0.06);
   --shadow-lg: 0 10px 40px rgba(2, 6, 23, 0.10);
@@ -22,12 +22,15 @@
   padding: 10px 20px;
   box-shadow: var(--shadow-md);
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  transition: background var(--speed) ease, box-shadow var(--speed) ease, transform var(--speed) ease;
+  transition:
+    background var(--speed) ease,
+    box-shadow var(--speed) ease,
+    transform var(--speed) ease;
 }
 
 /* optional: add/remove .scrolled via JS if desired */
 .navbar.scrolled {
-  background: rgba(255,255,255,0.9) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
   box-shadow: var(--shadow-lg);
 }
 
@@ -38,13 +41,17 @@
 }
 
 /* ===== LEFT: LOGO + TEXT ===== */
-.nav-left { display: flex; align-items: center; gap: 12px; }
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
 .logo img {
   width: 52px;
   height: 52px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(2,6,23,0.08);
+  box-shadow: 0 2px 10px rgba(2, 6, 23, 0.08);
 }
 
 .text { margin-left: 2px; }
@@ -63,16 +70,19 @@
   margin: 2px 0 0 0;
 }
 
-/* ===== NAV LINKS ===== */
+/* ===== NAV LINKS (BASE) ===== */
 .navbar-nav {
   display: flex;
   align-items: center;
-  gap: 28px; /* works fine with your current JSX */
+  gap: 28px; /* works fine with current JSX */
 }
 
-.nav-item { margin-right: 0; }
+.nav-item {
+  margin-right: 0;
+}
 
-.nav-link {
+.nav-link,
+a.nav-link {
   position: relative;
   text-decoration: none;
   color: var(--ink-700) !important;
@@ -83,31 +93,21 @@
   outline: none;
 }
 
-/* animated underline — scoped to anchors to avoid styling the avatar button */
+/* Remove any underline pseudo (we'll keep it clean) */
 a.nav-link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 4px;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform var(--speed) ease;
-  border-radius: 2px;
-  opacity: 0.95;
+  content: none !important;
 }
 
+/* Hover / focus */
 a.nav-link:hover,
 a.nav-link:focus-visible {
   color: var(--ink-900) !important;
 }
 
-a.nav-link:hover::after,
-a.nav-link:focus-visible::after,
-a.nav-link.active::after {
-  transform: scaleX(1);
+/* Active tab style */
+a.nav-link.active {
+  color: var(--brand-600) !important;
+  font-weight: 600 !important;
 }
 
 /* focus ring for accessibility (anchors only) */
@@ -125,17 +125,26 @@ button.btn.btn-primary {
   border: none;
   background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
-  transition: transform var(--speed) ease, box-shadow var(--speed) ease, filter var(--speed) ease;
+  transition:
+    transform var(--speed) ease,
+    box-shadow var(--speed) ease,
+    filter var(--speed) ease;
 }
+
 .btn.btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 26px rgba(37, 99, 235, 0.35);
   filter: saturate(1.05);
 }
-.btn.btn-primary:active { transform: translateY(0); }
+
+.btn.btn-primary:active {
+  transform: translateY(0);
+}
 
 /* ===== USER PROFILE ===== */
-.nav-item.dropdown { position: relative; }
+.nav-item.dropdown {
+  position: relative;
+}
 
 .dropdown-toggle.user-menu {
   display: flex;
@@ -146,6 +155,7 @@ button.btn.btn-primary {
   border-radius: 12px;
   transition: background var(--speed) ease, box-shadow var(--speed) ease;
 }
+
 .dropdown-toggle.user-menu:hover {
   background: rgba(2, 6, 23, 0.03);
   box-shadow: 0 2px 12px rgba(2, 6, 23, 0.06) inset;
@@ -172,26 +182,40 @@ button.btn.btn-primary {
 
 /* ===== DROPDOWN MENU ===== */
 @keyframes fadeSlide {
-  from { opacity: 0; transform: translateY(6px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
+
 .navbar-nav .nav-item.dropdown .dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0 !important; left: auto !important;
+  right: 0 !important;
+  left: auto !important;
   display: block;
-  opacity: 0; pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
   transform: translateY(6px) scale(0.98);
   transform-origin: top right;
   background: var(--surface);
   border: 1px solid rgba(2, 6, 23, 0.06);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
-  min-width: 180px; padding: 8px; z-index: 1000;
+  min-width: 180px;
+  padding: 8px;
+  z-index: 1000;
   transition: opacity var(--speed) ease, transform var(--speed) ease;
 }
+
 .navbar-nav .nav-item.dropdown .dropdown-menu.show {
-  opacity: 1; pointer-events: auto; animation: fadeSlide var(--speed) ease;
+  opacity: 1;
+  pointer-events: auto;
+  animation: fadeSlide var(--speed) ease;
 }
 
 .dropdown-item {
@@ -201,31 +225,104 @@ button.btn.btn-primary {
   font-weight: 600;
   transition: background var(--speed) ease, color var(--speed) ease;
 }
+
 .dropdown-item:hover,
-.dropdown-item:focus-visible { background: rgba(2, 6, 23, 0.04); color: var(--ink-900); }
+.dropdown-item:focus-visible {
+  background: rgba(2, 6, 23, 0.04);
+  color: var(--ink-900);
+}
 
 .logout-btn {
-  border: none; background: transparent; width: 100%; text-align: left;
-  cursor: pointer; color: #dc2626; font-weight: 700;
-  padding: 10px 12px; border-radius: 10px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: #dc2626;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-radius: 10px;
   transition: background var(--speed) ease, transform var(--speed) ease;
 }
-.logout-btn:hover { background: rgba(220, 38, 38, 0.08); }
+
+.logout-btn:hover {
+  background: rgba(220, 38, 38, 0.08);
+}
 
 /* ===== BOOTSTRAP TOGGLER (visual touch) ===== */
 .navbar-toggler {
-  border-radius: 12px; border-color: rgba(2,6,23,0.12) !important; padding: 6px 9px;
+  border-radius: 12px;
+  border-color: rgba(2, 6, 23, 0.12) !important;
+  padding: 6px 9px;
 }
-.navbar-toggler:focus { box-shadow: 0 0 0 6px var(--ring) !important; }
 
-/* ===== RESPONSIVE ===== */
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 6px var(--ring) !important;
+}
+
+/* ===== DESKTOP ALIGNMENT LOCK (no wrapping) ===== */
+@media (min-width: 992px) {
+  .navbar .navbar-nav {
+    flex-wrap: nowrap;      /* keep About/Reports/Contact on one row on desktop */
+  }
+
+  .navbar .nav-item {
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar .nav-link {
+    display: inline-flex;   /* anchor behaves as one pill-ish unit */
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;    /* never break the label */
+    line-height: 1;         /* avoid tall line box */
+    min-height: 36px;       /* consistent click target */
+    padding: 10px 14px;     /* inner space */
+  }
+}
+
+/* ===== RESPONSIVE (MOBILE) ===== */
 @media (max-width: 991px) {
-  .container-fluid { padding-left: 16px !important; padding-right: 16px !important; }
-  .navbar-nav { align-items: flex-start; gap: 8px; padding: 10px 2px; }
-  .nav-link { padding: 10px 0; }
-  .dropdown-toggle.user-menu { padding-left: 0; }
+  .container-fluid {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* When collapsed panel is open */
+  .navbar .navbar-collapse.show {
+    background: var(--surface); /* solid light panel, not fully transparent */
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  }
+
+  .navbar .navbar-collapse.show .navbar-nav {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px;
+    padding: 8px 0 12px;
+    width: 100%;
+  }
+
+  .navbar .navbar-collapse.show .nav-item {
+    width: 100%;
+  }
+
+  .navbar .navbar-collapse.show .nav-link {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 10px 18px;
+    color: var(--ink-900) !important; /* strong dark text on light bg */
+  }
+
+  .dropdown-toggle.user-menu {
+    padding-left: 0;
+  }
+
   .navbar-nav .nav-item.dropdown .dropdown-menu {
-    right: 0 !important; left: 0 !important; width: 100%; transform-origin: top center;
+    right: 0 !important;
+    left: 0 !important;
+    width: 100%;
+    transform-origin: top center;
   }
 }
 
@@ -237,153 +334,33 @@ button.btn.btn-primary {
     --ink-900: #e5e7eb;
     --ink-700: #cbd5e1;
     --ink-500: #94a3b8;
-    --ring: rgba(59,130,246,0.35);
+    --ring: rgba(59, 130, 246, 0.35);
   }
-  .navbar { border-bottom-color: rgba(148,163,184,0.12); }
-  .logo img { box-shadow: 0 2px 10px rgba(0,0,0,0.45); }
-  .dropdown-item:hover { background: rgba(255,255,255,0.06); }
-  .logout-btn:hover { background: rgba(220, 38, 38, 0.18); }
+
+  .navbar {
+    border-bottom-color: rgba(148, 163, 184, 0.12);
+  }
+
+  .logo img {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  }
+
+  .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .logout-btn:hover {
+    background: rgba(220, 38, 38, 0.18);
+  }
 }
 
 /* ===== MOTION PREFERENCES ===== */
 @media (prefers-reduced-motion: reduce) {
-  .navbar, a.nav-link, .dropdown-menu, .btn.btn-primary {
-    transition: none !important; animation: none !important;
-  }
-}
-
-/* === RESTORE the spacing that looked good === */
-.navbar-nav {
-  gap: 28px;            /* you were using gap instead of me-md-4 */
-}
-
-/* === RESTORE the alignment lock so labels never slip/wrap === */
-.navbar .navbar-nav { 
-  flex-wrap: nowrap;    /* keep About/Reports/Contact on one row on desktop */
-}
-.navbar .nav-item {
-  display: flex;
-  align-items: center;
-}
-.navbar .nav-link {
-  display: inline-flex;          /* anchor behaves as one pill-ish unit */
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;           /* never break the label */
-  line-height: 1;                /* avoid tall line box */
-  min-height: 36px;              /* consistent click target */
-  padding: 10px 14px;            /* inner space you liked */
-}
-
-/* === RESTORE the original gradient underline (full width, from left) === */
-.nav-link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 4px;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform var(--speed) ease;
-  border-radius: 2px;
-  opacity: 0.95;
-}
-.nav-link:hover,
-.nav-link:focus-visible {
-  color: var(--ink-900) !important;
-}
-.nav-link:hover::after,
-.nav-link:focus-visible::after,
-.nav-link.active::after {
-  transform: scaleX(1);
-}
-
-/* === Tabs: always bold, no underline; active = theme blue === */
-/* Only target the three page links (anchors), not the avatar button */
-a.nav-link {
-  font-weight: 700;                 /* always bold */
-  color: var(--ink-700) !important; /* default text */
-}
-
-/* kill the underline animation */
-a.nav-link::after {
-  display: none !important;
-  content: none !important;
-}
-
-/* hover/focus: darker text, still bold */
-a.nav-link:hover,
-a.nav-link:focus-visible {
-  color: var(--ink-900) !important;
-}
-
-/* active page link: theme blue, still bold */
-a.nav-link.active {
-  color: var(--brand-600) !important;   /* or var(--brand-500) if you prefer lighter */
-}
-
-/* Force bold on the three page links (anchors) */
-a.nav-link {
-  font-weight: 700 !important;  /* make it stick */
-}
-
-/* Active stays blue + bold */
-a.nav-link.active {
-  color: var(--brand-600) !important;
-  font-weight: 700 !important;
-}
-
-/* === Tabs: semibold (600), no underline; active = theme blue === */
-a.nav-link {
-  font-weight: 600 !important;         /* semibold, not heavy */
-  color: var(--ink-700) !important;     /* default */
-}
-
-/* remove any underline pseudo */
-a.nav-link::after {
-  content: none !important;
-}
-
-/* hover/focus: a bit darker */
-a.nav-link:hover,
-a.nav-link:focus-visible {
-  color: var(--ink-900) !important;
-}
-
-/* active page: theme blue, still semibold */
-a.nav-link.active {
-  color: var(--brand-600) !important;
-  font-weight: 600 !important;
-}
-
-/* === MOBILE COLLAPSE PANEL FIX === */
-@media (max-width: 991px) {
-  /* Solid panel behind the mobile menu instead of transparent glass */
-  .navbar .navbar-collapse.show {
-    background: var(--surface);
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
-  }
-
-  /* Stack menu items vertically, full width */
-  .navbar .navbar-collapse.show .navbar-nav {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 4px;
-    padding: 8px 0 12px;
-    width: 100%;
-  }
-
-  .navbar .navbar-collapse.show .nav-item {
-    width: 100%;
-  }
-
-  /* Make links big, left-aligned, and clearly visible */
-  .navbar .navbar-collapse.show .nav-link {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 10px 18px;
-    color: var(--ink-900) !important;
+  .navbar,
+  a.nav-link,
+  .dropdown-menu,
+  .btn.btn-primary {
+    transition: none !important;
+    animation: none !important;
   }
 }
