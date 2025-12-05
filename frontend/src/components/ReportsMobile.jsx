@@ -44,22 +44,31 @@ const ROUTER = [
 ];
 
 // Endpoints
-const SEARCH_LOG_URL = "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/search-log";
-const PRESIGN_URL    = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL";
-const SUGGEST_URL    = "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/suggest";
+const SEARCH_LOG_URL =
+  "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/search-log";
+const PRESIGN_URL =
+  "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/RBR_report_pre-signed_URL";
+const SUGGEST_URL =
+  "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/suggest";
 
 // 🔴 NEW: when no report exists, we queue a creation request (72-hour promise)
 const REQUEST_REPORT_URL =
-  "https://sicgpldzo8.execute-api.ap-south-1.amazonaws.com/report-request"; 
+  "https://sicgpldzo8.execute-api.ap-south-1.amazonaws.com/report-request";
 
 // Loader
 const LoaderRing = () => (
   <svg viewBox="0 0 100 100" className="w-14 h-14 animate-spin-slow">
     <circle cx="50" cy="50" r="45" fill="none" stroke="#e6e6e6" strokeWidth="8" />
     <circle
-      cx="50" cy="50" r="45"
-      fill="none" stroke="#0263c7" strokeWidth="8"
-      strokeLinecap="round" strokeDasharray="283" strokeDashoffset="75"
+      cx="50"
+      cy="50"
+      r="45"
+      fill="none"
+      stroke="#0263c7"
+      strokeWidth="8"
+      strokeLinecap="round"
+      strokeDasharray="283"
+      strokeDashoffset="75"
     />
     <style>{`.animate-spin-slow{animation:spin 1.4s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
   </svg>
@@ -81,7 +90,11 @@ const ReportsMobile = () => {
   const [lastQuery, setLastQuery] = useState("");
 
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [dropdownRect, setDropdownRect] = useState({ left: 0, top: 0, width: 0 });
+  const [dropdownRect, setDropdownRect] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+  });
 
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -177,7 +190,9 @@ const ReportsMobile = () => {
       });
 
       if (!presignResp.ok) {
-        setModalMsg("📢 This report preview isn’t ready yet. Our team is adding it shortly.");
+        setModalMsg(
+          "📢 This report preview isn’t ready yet. Our team is adding it shortly."
+        );
         setOpenModal(true);
         return;
       }
@@ -185,17 +200,29 @@ const ReportsMobile = () => {
       const presignData = await presignResp.json();
       const url = presignData?.presigned_url;
       if (!url) {
-        setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+        setModalMsg(
+          "📢 This report preview isn’t ready yet. Please check back soon."
+        );
         setOpenModal(true);
         return;
       }
 
       // Small probe (be lenient; navigate even if probe fails network-wise)
       try {
-        const probe = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1" } });
-        const ct = (probe.headers.get("content-type") || "").toLowerCase();
-        if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.includes("pdf")) {
-          setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+        const probe = await fetch(url, {
+          method: "GET",
+          headers: { Range: "bytes=0-1" },
+        });
+        const ct = (probe.headers.get("content-type") || "")
+          .toLowerCase();
+        if (
+          !probe.ok ||
+          !(probe.status === 200 || probe.status === 206) ||
+          !ct.includes("pdf")
+        ) {
+          setModalMsg(
+            "📢 This report preview isn’t ready yet. Please check back soon."
+          );
           setOpenModal(true);
           return;
         }
@@ -206,7 +233,9 @@ const ReportsMobile = () => {
       navigate("/report-display", { state: { reportSlug, reportId } });
     } catch (e) {
       console.error("goToReportBySlug error:", e);
-      setModalMsg("⚠️ Something went wrong while opening the report. Please try again.");
+      setModalMsg(
+        "⚠️ Something went wrong while opening the report. Please try again."
+      );
       setOpenModal(true);
     } finally {
       setSearchLoading(false);
@@ -247,7 +276,9 @@ const ReportsMobile = () => {
       });
       if (!logResp.ok) {
         const t = await logResp.text();
-        throw new Error(`Failed search-log ${logResp.status}, body: ${t}`);
+        throw new Error(
+          `Failed search-log ${logResp.status}, body: ${t}`
+        );
       }
       await logResp.json();
 
@@ -281,7 +312,9 @@ const ReportsMobile = () => {
       await goToReportBySlug(reportSlug);
     } catch (e) {
       console.error("Error during search flow:", e);
-      setModalMsg("⚠️ Something went wrong while processing your request. Please try again later.");
+      setModalMsg(
+        "⚠️ Something went wrong while processing your request. Please try again later."
+      );
       setOpenModal(true);
     } finally {
       setSearchLoading(false);
@@ -347,26 +380,23 @@ const ReportsMobile = () => {
   }, [openModal, suggestOpen]);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-10">
-      {/* Header */}
-      <header className="w-full flex justify-between items-center mb-6">
-        <div className="text-xl font-extrabold text-gray-900 tracking-tight">RBR</div>
-        <button className="text-gray-700 text-2xl p-2 leading-none" aria-label="Open menu" type="button">
-          ☰
-        </button>
-      </header>
+    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-24 pb-10">
+      {/* (Header removed – global Navbar provides brand + menu) */}
 
       {/* Hero */}
       <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-3 px-1">
         Get Instant Market &amp; Business Reports
       </h1>
       <p className="text-gray-600 text-center mb-6 text-sm sm:text-base px-2">
-        Search 1000+ industry reports. Accurate. Reliable. Ready for your business.
+        Search 1000+ industry reports. Accurate. Reliable. Ready for your
+        business.
       </p>
 
       {/* Search */}
       <form onSubmit={onSubmit} className="w-full mb-3">
-        <label htmlFor="mobile-search" className="sr-only">Search reports</label>
+        <label htmlFor="mobile-search" className="sr-only">
+          Search reports
+        </label>
         <div className="w-full flex">
           <input
             ref={inputRef}
@@ -409,12 +439,18 @@ const ReportsMobile = () => {
       </div>
 
       {/* Inline autocomplete suggestions via PORTAL */}
-      {showSuggestions && matches.length > 0 &&
+      {showSuggestions &&
+        matches.length > 0 &&
         createPortal(
           <div
             ref={dropdownRef}
             className="z-[9999] border border-gray-200 bg-white shadow-lg max-h-48 overflow-auto rounded-b-xl"
-            style={{ position: "fixed", left: dropdownRect.left, top: dropdownRect.top, width: dropdownRect.width }}
+            style={{
+              position: "fixed",
+              left: dropdownRect.left,
+              top: dropdownRect.top,
+              width: dropdownRect.width,
+            }}
           >
             {matches.map((m) => (
               <button
@@ -433,15 +469,16 @@ const ReportsMobile = () => {
             ))}
           </div>,
           document.body
-        )
-      }
+        )}
 
       {/* Loader overlay */}
       {searchLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="relative z-10 bg-white rounded-2xl p-6 shadow-xl w-[90%] max-w-xs text-center">
-            <div className="flex items-center justify-center mb-3"><LoaderRing /></div>
+            <div className="flex items-center justify-center mb-3">
+              <LoaderRing />
+            </div>
             <div className="text-gray-800 text-sm">Fetching your request…</div>
           </div>
         </div>
@@ -460,9 +497,12 @@ const ReportsMobile = () => {
             className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-lg font-semibold mb-2">📊 This data is coming soon</div>
+            <div className="text-lg font-semibold mb-2">
+              📊 This data is coming soon
+            </div>
             <p className="text-gray-700 text-sm leading-relaxed mb-4">
-              {modalMsg || "We’re adding this report to our catalog. Please check back soon!"}
+              {modalMsg ||
+                "We’re adding this report to our catalog. Please check back soon!"}
             </p>
             <button
               ref={modalBtnRef}
@@ -492,7 +532,9 @@ const ReportsMobile = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-2">
-              <h3 className="text-base font-semibold text-blue-900">Did you mean…</h3>
+              <h3 className="text-base font-semibold text-blue-900">
+                Did you mean…
+              </h3>
               <button
                 onClick={() => setSuggestOpen(false)}
                 className="h-8 w-8 rounded-full bg-white/70 hover:bg-white text-blue-700 flex items-center justify-center"
@@ -528,7 +570,13 @@ const ReportsMobile = () => {
                   </div>
                   <div className="shrink-0 text-blue-400">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path
+                        d="M9 18l6-6-6-6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   </div>
                 </button>
