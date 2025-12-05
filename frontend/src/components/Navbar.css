@@ -22,9 +22,7 @@
   padding: 10px 20px;
   box-shadow: var(--shadow-md);
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  transition: background var(--speed) ease,
-              box-shadow var(--speed) ease,
-              transform var(--speed) ease;
+  transition: background var(--speed) ease, box-shadow var(--speed) ease, transform var(--speed) ease;
 }
 
 /* optional: add/remove .scrolled via JS if desired */
@@ -65,17 +63,16 @@
   margin: 2px 0 0 0;
 }
 
-/* ===== NAV LINKS ===== */
+/* ===== NAV LINKS (base) ===== */
 .navbar-nav {
   display: flex;
   align-items: center;
-  gap: 28px; /* works fine with your current JSX */
+  gap: 28px;
 }
 
 .nav-item { margin-right: 0; }
 
-.nav-link,
-a.nav-link {
+.nav-link {
   position: relative;
   text-decoration: none;
   color: var(--ink-700) !important;
@@ -86,18 +83,24 @@ a.nav-link {
   outline: none;
 }
 
-/* Remove underline pseudo (clean tabs look) */
+/* Tabs: semibold (600), no underline; active = brand blue */
+a.nav-link {
+  font-weight: 600 !important;
+  color: var(--ink-700) !important;
+}
+
+/* kill underline pseudo for anchors */
 a.nav-link::after {
   content: none !important;
 }
 
-/* hover/focus */
+/* hover/focus: darker text */
 a.nav-link:hover,
 a.nav-link:focus-visible {
   color: var(--ink-900) !important;
 }
 
-/* active page link */
+/* active page: theme blue */
 a.nav-link.active {
   color: var(--brand-600) !important;
   font-weight: 600 !important;
@@ -118,9 +121,7 @@ button.btn.btn-primary {
   border: none;
   background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
-  transition: transform var(--speed) ease,
-              box-shadow var(--speed) ease,
-              filter var(--speed) ease;
+  transition: transform var(--speed) ease, box-shadow var(--speed) ease, filter var(--speed) ease;
 }
 .btn.btn-primary:hover {
   transform: translateY(-1px);
@@ -213,23 +214,58 @@ button.btn.btn-primary {
 }
 .navbar-toggler:focus { box-shadow: 0 0 0 6px var(--ring) !important; }
 
-/* ===== DESKTOP ALIGNMENT LOCK (no wrapping) ===== */
+/* ===== DESKTOP ONLY (>= 992px) ===== */
 @media (min-width: 992px) {
-  .navbar .navbar-nav { 
-    flex-wrap: nowrap;    /* keep About/Reports/Contact on one row on desktop */
+  .navbar .navbar-nav {
+    flex-wrap: nowrap;              /* keep About/Reports/Contact on one row */
+    gap: 28px;
   }
   .navbar .nav-item {
     display: flex;
     align-items: center;
   }
   .navbar .nav-link {
-    display: inline-flex;          /* anchor behaves as one pill-ish unit */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    white-space: nowrap;           /* never break the label */
-    line-height: 1;                /* avoid tall line box */
-    min-height: 36px;              /* consistent click target */
-    padding: 10px 14px;            /* inner space you liked */
+    white-space: nowrap;
+    line-height: 1;
+    min-height: 36px;
+    padding: 10px 14px;
+  }
+}
+
+/* ===== MOBILE (<= 991px) ===== */
+@media (max-width: 991px) {
+  .container-fluid {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* Solid panel behind the mobile menu instead of glass over page content */
+  .navbar .navbar-collapse.show {
+    background: var(--surface);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  }
+
+  /* Stack menu items vertically, full width */
+  .navbar .navbar-collapse.show .navbar-nav {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px;
+    padding: 8px 0 12px;
+    width: 100%;
+  }
+
+  .navbar .navbar-collapse.show .nav-item {
+    width: 100%;
+  }
+
+  .navbar .navbar-collapse.show .nav-link {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 10px 18px;
+    color: var(--ink-900) !important;
   }
 }
 
@@ -253,74 +289,5 @@ button.btn.btn-primary {
 @media (prefers-reduced-motion: reduce) {
   .navbar, a.nav-link, .dropdown-menu, .btn.btn-primary {
     transition: none !important; animation: none !important;
-  }
-}
-
-/* ===== MOBILE CUSTOM NAVBAR & MENU ===== */
-@media (max-width: 991.98px) {
-  .container-fluid {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-  }
-
-  .mobile-navbar {
-    background: var(--glass) !important;
-    padding: 8px 16px;
-  }
-
-  .mobile-menu {
-    position: fixed;
-    top: 56px; /* roughly mobile navbar height */
-    left: 0;
-    right: 0;
-    z-index: 1040;
-    background: var(--surface);
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
-    padding: 8px 0 12px;
-  }
-
-  .mobile-menu ul {
-    margin: 0;
-    padding: 0;
-  }
-
-  .mobile-menu .mobile-nav-link {
-    width: 100%;
-    display: block;
-    padding: 10px 18px;
-    font-size: 15px;
-    color: var(--ink-900) !important;
-    text-decoration: none;
-  }
-
-  .mobile-menu .mobile-nav-link:hover {
-    background: rgba(15, 23, 42, 0.03);
-  }
-
-  .mobile-menu .mobile-nav-link.active {
-    color: var(--brand-600) !important;
-    font-weight: 600;
-    background: rgba(59, 130, 246, 0.06);
-  }
-
-  .mobile-menu-divider {
-    height: 1px;
-    margin: 6px 16px;
-    background: rgba(148, 163, 184, 0.4);
-  }
-
-  .mobile-login-btn {
-    margin-top: 4px;
-  }
-
-  .mobile-logout-btn {
-    border: none;
-    background: transparent;
-    text-align: left;
-    width: 100%;
-    color: #dc2626;
-    font-weight: 600;
-    padding-left: 18px;
-    padding-right: 18px;
   }
 }
