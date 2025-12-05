@@ -15,7 +15,7 @@
 }
 
 /* ===== NAVBAR CONTAINER ===== */
-.navbar {
+.rbr-navbar.navbar {
   background: var(--glass) !important; /* override .bg-light */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -26,7 +26,7 @@
 }
 
 /* optional: add/remove .scrolled via JS if desired */
-.navbar.scrolled {
+.rbr-navbar.navbar.scrolled {
   background: rgba(255,255,255,0.9) !important;
   box-shadow: var(--shadow-lg);
 }
@@ -63,11 +63,11 @@
   margin: 2px 0 0 0;
 }
 
-/* ===== NAV LINKS ===== */
+/* ===== NAV LINKS (DESKTOP) ===== */
 .navbar-nav {
   display: flex;
   align-items: center;
-  gap: 28px; /* works fine with your current JSX */
+  gap: 28px;
 }
 
 .nav-item { margin-right: 0; }
@@ -83,31 +83,20 @@
   outline: none;
 }
 
-/* animated underline — scoped to anchors to avoid styling the avatar button */
+/* No animated underline any more (kept it simple and clean) */
 a.nav-link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 4px;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform var(--speed) ease;
-  border-radius: 2px;
-  opacity: 0.95;
+  content: none !important;
 }
 
+/* hover/focus */
 a.nav-link:hover,
 a.nav-link:focus-visible {
   color: var(--ink-900) !important;
 }
 
-a.nav-link:hover::after,
-a.nav-link:focus-visible::after,
-a.nav-link.active::after {
-  transform: scaleX(1);
+/* active page link: theme blue */
+a.nav-link.active {
+  color: var(--brand-600) !important;
 }
 
 /* focus ring for accessibility (anchors only) */
@@ -134,7 +123,7 @@ button.btn.btn-primary {
 }
 .btn.btn-primary:active { transform: translateY(0); }
 
-/* ===== USER PROFILE ===== */
+/* ===== USER PROFILE (DESKTOP DROPDOWN) ===== */
 .nav-item.dropdown { position: relative; }
 
 .dropdown-toggle.user-menu {
@@ -178,20 +167,26 @@ button.btn.btn-primary {
 .navbar-nav .nav-item.dropdown .dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0 !important; left: auto !important;
+  right: 0 !important;
+  left: auto !important;
   display: block;
-  opacity: 0; pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
   transform: translateY(6px) scale(0.98);
   transform-origin: top right;
   background: var(--surface);
   border: 1px solid rgba(2, 6, 23, 0.06);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
-  min-width: 180px; padding: 8px; z-index: 1000;
+  min-width: 180px;
+  padding: 8px;
+  z-index: 1000;
   transition: opacity var(--speed) ease, transform var(--speed) ease;
 }
 .navbar-nav .nav-item.dropdown .dropdown-menu.show {
-  opacity: 1; pointer-events: auto; animation: fadeSlide var(--speed) ease;
+  opacity: 1;
+  pointer-events: auto;
+  animation: fadeSlide var(--speed) ease;
 }
 
 .dropdown-item {
@@ -202,129 +197,88 @@ button.btn.btn-primary {
   transition: background var(--speed) ease, color var(--speed) ease;
 }
 .dropdown-item:hover,
-.dropdown-item:focus-visible { background: rgba(2, 6, 23, 0.04); color: var(--ink-900); }
-
-.logout-btn {
-  border: none; background: transparent; width: 100%; text-align: left;
-  cursor: pointer; color: #dc2626; font-weight: 700;
-  padding: 10px 12px; border-radius: 10px;
-  transition: background var(--speed) ease, transform var(--speed) ease;
+.dropdown-item:focus-visible {
+  background: rgba(2, 6, 23, 0.04);
+  color: var(--ink-900);
 }
-.logout-btn:hover { background: rgba(220, 38, 38, 0.08); }
 
 /* ===== BOOTSTRAP TOGGLER (visual touch) ===== */
 .navbar-toggler {
-  border-radius: 12px; border-color: rgba(2,6,23,0.12) !important; padding: 6px 9px;
+  border-radius: 12px;
+  border-color: rgba(2,6,23,0.12) !important;
+  padding: 6px 9px;
 }
-.navbar-toggler:focus { box-shadow: 0 0 0 6px var(--ring) !important; }
-
-/* ===== MOTION PREFERENCES ===== */
-@media (prefers-reduced-motion: reduce) {
-  .navbar, a.nav-link, .dropdown-menu, .btn.btn-primary {
-    transition: none !important; animation: none !important;
-  }
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 6px var(--ring) !important;
 }
 
-/* === RESTORE the spacing that looked good === */
-.navbar-nav {
-  gap: 28px;            /* you were using gap instead of me-md-4 */
+/* ===== DESKTOP SPACING & ALIGNMENT ===== */
+.navbar .navbar-nav { 
+  flex-wrap: nowrap;
+}
+.navbar .nav-item {
+  display: flex;
+  align-items: center;
+}
+.navbar .nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  line-height: 1;
+  min-height: 36px;
+  padding: 10px 14px;
 }
 
-/* === DESKTOP ALIGNMENT LOCK (only ≥ 992px) === */
-@media (min-width: 992px) {
-  .navbar .navbar-nav { 
-    flex-wrap: nowrap;    /* keep About/Reports/Contact on one row on desktop */
-  }
-  .navbar .nav-item {
-    display: flex;
-    align-items: center;
-  }
-  .navbar .nav-link {
-    display: inline-flex;          /* anchor behaves as one pill-ish unit */
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;           /* never break the label */
-    line-height: 1;                /* avoid tall line box */
-    min-height: 36px;              /* consistent click target */
-    padding: 10px 14px;            /* inner space you liked */
-  }
+/* ===== MOBILE MENU OVERLAY (REACT-CONTROLLED) ===== */
+.rbr-mobile-menu {
+  display: none;
 }
 
-/* === Tabs: semibold (600), no underline; active = theme blue === */
-/* Only target the three page links (anchors), not the avatar button */
-a.nav-link {
-  font-weight: 600 !important;         /* semibold, not heavy */
-  color: var(--ink-700) !important;    /* default */
-}
-
-/* remove any underline pseudo */
-a.nav-link::after {
-  content: none !important;
-}
-
-/* hover/focus: a bit darker */
-a.nav-link:hover,
-a.nav-link:focus-visible {
-  color: var(--ink-900) !important;
-}
-
-/* active page: theme blue, still semibold */
-a.nav-link.active {
-  color: var(--brand-600) !important;
-  font-weight: 600 !important;
-}
-
-/* ===== RESPONSIVE / MOBILE COLLAPSE PANEL FIX ===== */
-@media (max-width: 991px) {
+@media (max-width: 767.98px) {
   .container-fluid {
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
 
-  /* Place the collapse PANEL just under the navbar, above page content */
-  .navbar .navbar-collapse {
-    position: absolute;
-    top: 100%;          /* immediately below the navbar bar */
+  /* Show fixed panel below navbar when menu open */
+  .rbr-mobile-menu {
+    position: fixed;
+    top: 64px;             /* approx navbar height; adjust if needed */
     left: 0;
     right: 0;
-    z-index: 1040;      /* above page content */
-  }
-
-  .navbar .navbar-collapse.show {
     background: var(--surface);
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+    z-index: 1040;         /* above page content, under any modals */
+    display: none;
   }
 
-  /* Stack menu items vertically, full width */
-  .navbar .navbar-collapse.show .navbar-nav {
-    flex-direction: column !important;
-    align-items: flex-start !important;
+  .rbr-mobile-menu-open {
+    display: block;
+  }
+
+  .rbr-mobile-menu .navbar-nav {
     gap: 4px;
-    padding: 8px 0 12px;
-    width: 100%;
+    align-items: stretch;
   }
 
-  .navbar .navbar-collapse.show .nav-item {
+  .rbr-mobile-menu .nav-item {
     width: 100%;
+    display: block;
   }
 
-  /* Make links big, left-aligned, and clearly visible */
-  .navbar .navbar-collapse.show .nav-link {
+  .rbr-mobile-menu .nav-link,
+  .rbr-mobile-link {
     width: 100%;
     justify-content: flex-start;
     padding: 10px 18px;
     color: var(--ink-900) !important;
+    text-align: left;
   }
 
-  .dropdown-toggle.user-menu {
-    padding-left: 0;
-  }
-
-  .navbar-nav .nav-item.dropdown .dropdown-menu {
-    right: 0 !important;
-    left: 0 !important;
-    width: 100%;
-    transform-origin: top center;
+  .rbr-mobile-menu .nav-link.active {
+    background: rgba(59,130,246,0.06);
+    border-radius: 10px;
   }
 }
 
@@ -338,8 +292,19 @@ a.nav-link.active {
     --ink-500: #94a3b8;
     --ring: rgba(59,130,246,0.35);
   }
-  .navbar { border-bottom-color: rgba(148,163,184,0.12); }
+  .rbr-navbar.navbar { border-bottom-color: rgba(148,163,184,0.12); }
   .logo img { box-shadow: 0 2px 10px rgba(0,0,0,0.45); }
   .dropdown-item:hover { background: rgba(255,255,255,0.06); }
-  .logout-btn:hover { background: rgba(220, 38, 38, 0.18); }
+}
+
+/* ===== MOTION PREFERENCES ===== */
+@media (prefers-reduced-motion: reduce) {
+  .navbar,
+  a.nav-link,
+  .dropdown-menu,
+  .btn.btn-primary,
+  .rbr-mobile-menu {
+    transition: none !important;
+    animation: none !important;
+  }
 }
