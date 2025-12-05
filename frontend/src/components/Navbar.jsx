@@ -6,7 +6,7 @@ import Login from "./Login";
 import { Modal, ModalBody } from "reactstrap";
 import { Store } from "../Store";
 import avatar from "../assets/avatar.svg";
-import './Navbar.css';
+import "./Navbar.css";
 
 const Navbar = () => {
   const [openModel, setOpenModel] = useState(false);
@@ -18,6 +18,8 @@ const Navbar = () => {
   const { name = "", isLogin = false } = userInfo;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -25,12 +27,20 @@ const Navbar = () => {
     console.log("Navbar rerendered - isLogin:", isLogin, "name:", name);
   }, [isLogin, name]);
 
+  // Close mobile menu whenever route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setDropdownOpen(false);
+  }, [location.pathname]);
+
   const hideNavbar = location.pathname === "/report-display";
+
   const toggleDropdown = () => setDropdownOpen((v) => !v);
 
   const handleLogout = () => {
     cxtDispatch?.({ type: "LOGOUT" });
     setDropdownOpen(false);
+    setMobileMenuOpen(false);
     navigate("/");
   };
 
@@ -45,7 +55,8 @@ const Navbar = () => {
   return (
     <>
       <div className="header">
-        <nav className="navbar navbar-expand-md navbar-light bg-light fixed-top">
+        {/* ===== DESKTOP NAVBAR (md and up) ===== */}
+        <nav className="navbar navbar-expand-md navbar-light bg-light fixed-top d-none d-md-flex">
           <div className="container-fluid">
             {/* Brand */}
             <Link to="/" className="navbar-brand d-flex align-items-center">
@@ -56,33 +67,24 @@ const Navbar = () => {
                 className="me-2"
               />
               <div className="d-flex flex-column">
-                <span className="fw-semibold">Rajan Business Report Services</span>
+                <span className="fw-semibold">
+                  Rajan Business Report Services
+                </span>
                 <small className="text-muted d-none d-lg-block">
                   A product by Rajan Business Ideas
                 </small>
               </div>
             </Link>
 
-            {/* Toggler */}
-            <button
-              className="navbar-toggler"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarSupportedContent"
-              aria-controls="navbarSupportedContent"
-              aria-expanded="false"
-              aria-label="Toggle navigation"
-            >
-              <span className="navbar-toggler-icon" />
-            </button>
-
-            {/* Collapsible content */}
-            <div className="collapse navbar-collapse" id="navbarSupportedContent">
+            {/* Desktop links (no collapse on md+) */}
+            <div className="navbar-collapse show">
               <ul className="navbar-nav ms-auto align-items-md-center mt-3 mt-md-0">
                 <li className="nav-item me-md-4">
                   <NavLink
                     to="/about"
-                    className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+                    className={({ isActive }) =>
+                      "nav-link" + (isActive ? " active" : "")
+                    }
                   >
                     About
                   </NavLink>
@@ -92,7 +94,9 @@ const Navbar = () => {
                   <NavLink
                     to="/"
                     end
-                    className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+                    className={({ isActive }) =>
+                      "nav-link" + (isActive ? " active" : "")
+                    }
                   >
                     Reports
                   </NavLink>
@@ -101,7 +105,9 @@ const Navbar = () => {
                 <li className="nav-item me-md-4">
                   <NavLink
                     to="/contact"
-                    className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+                    className={({ isActive }) =>
+                      "nav-link" + (isActive ? " active" : "")
+                    }
                   >
                     Contact
                   </NavLink>
@@ -120,7 +126,9 @@ const Navbar = () => {
                         className="rounded-circle me-2"
                         style={{ width: 32, height: 32 }}
                       />
-                      <span className="text-nowrap">{name?.trim() || "User"}</span>
+                      <span className="text-nowrap">
+                        {name?.trim() || "User"}
+                      </span>
                     </button>
                     {dropdownOpen && (
                       <ul
@@ -138,7 +146,10 @@ const Navbar = () => {
                           </Link>
                         </li>
                         <li>
-                          <button className="dropdown-item" onClick={handleLogout}>
+                          <button
+                            className="dropdown-item"
+                            onClick={handleLogout}
+                          >
                             Logout
                           </button>
                         </li>
@@ -162,8 +173,130 @@ const Navbar = () => {
             </div>
           </div>
         </nav>
+
+        {/* ===== MOBILE NAVBAR (below md) ===== */}
+        <nav className="navbar navbar-light bg-light fixed-top d-flex d-md-none mobile-navbar">
+          <div className="container-fluid">
+            {/* Brand */}
+            <Link
+              to="/"
+              className="navbar-brand d-flex align-items-center"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <img
+                src={logo}
+                alt="Logo"
+                style={{ width: 40, height: 40 }}
+                className="me-2"
+              />
+              <div className="d-flex flex-column">
+                <span className="fw-semibold" style={{ fontSize: 14 }}>
+                  Rajan Business Reports
+                </span>
+                <small className="text-muted" style={{ fontSize: 11 }}>
+                  Rajan Business Ideas
+                </small>
+              </div>
+            </Link>
+
+            {/* Mobile toggler (pure React, no Bootstrap collapse) */}
+            <button
+              className="navbar-toggler"
+              type="button"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-expanded={mobileMenuOpen ? "true" : "false"}
+              aria-label="Toggle navigation"
+            >
+              <span className="navbar-toggler-icon" />
+            </button>
+          </div>
+        </nav>
+
+        {/* Mobile slide-down menu (separate from Bootstrap collapse) */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu d-md-none">
+            <ul className="list-unstyled mb-0">
+              <li>
+                <NavLink
+                  to="/about"
+                  className={({ isActive }) =>
+                    "nav-link mobile-nav-link" + (isActive ? " active" : "")
+                  }
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/"
+                  end
+                  className={({ isActive }) =>
+                    "nav-link mobile-nav-link" + (isActive ? " active" : "")
+                  }
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Reports
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/contact"
+                  className={({ isActive }) =>
+                    "nav-link mobile-nav-link" + (isActive ? " active" : "")
+                  }
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Contact
+                </NavLink>
+              </li>
+
+              {isLogin ? (
+                <>
+                  <li className="mobile-menu-divider" />
+                  <li>
+                    <NavLink
+                      to="/profile"
+                      className="nav-link mobile-nav-link"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      My Profile
+                    </NavLink>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      className="nav-link mobile-nav-link mobile-logout-btn"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="mobile-menu-divider" />
+                  <li>
+                    <button
+                      type="button"
+                      className="btn btn-primary w-100 mobile-login-btn"
+                      onClick={() => {
+                        resetModal();
+                        setOpenModel(true);
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      LOGIN
+                    </button>
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
+        )}
       </div>
 
+      {/* Login Modal (common for both desktop + mobile) */}
       <Modal
         isOpen={openModel}
         toggle={() => {
