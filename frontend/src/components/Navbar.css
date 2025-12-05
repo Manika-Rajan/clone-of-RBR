@@ -15,7 +15,7 @@
 }
 
 /* ===== NAVBAR CONTAINER ===== */
-.rbr-navbar.navbar {
+.navbar {
   background: var(--glass) !important; /* override .bg-light */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -26,7 +26,7 @@
 }
 
 /* optional: add/remove .scrolled via JS if desired */
-.rbr-navbar.navbar.scrolled {
+.navbar.scrolled {
   background: rgba(255,255,255,0.9) !important;
   box-shadow: var(--shadow-lg);
 }
@@ -63,7 +63,7 @@
   margin: 2px 0 0 0;
 }
 
-/* ===== NAV LINKS (DESKTOP) ===== */
+/* ===== NAV LINKS (DESKTOP DEFAULT) ===== */
 .navbar-nav {
   display: flex;
   align-items: center;
@@ -83,23 +83,23 @@
   outline: none;
 }
 
-/* No animated underline any more (kept it simple and clean) */
+/* No underline animation (simple, clean tabs) */
 a.nav-link::after {
   content: none !important;
 }
 
-/* hover/focus */
+/* Hover/focus */
 a.nav-link:hover,
 a.nav-link:focus-visible {
   color: var(--ink-900) !important;
 }
 
-/* active page link: theme blue */
+/* Active page link: theme blue */
 a.nav-link.active {
   color: var(--brand-600) !important;
 }
 
-/* focus ring for accessibility (anchors only) */
+/* Focus ring (anchors only) */
 a.nav-link:focus-visible {
   box-shadow: 0 0 0 6px var(--ring);
   border-radius: 10px;
@@ -202,7 +202,7 @@ button.btn.btn-primary {
   color: var(--ink-900);
 }
 
-/* ===== BOOTSTRAP TOGGLER (visual touch) ===== */
+/* ===== TOGGLER BUTTON ===== */
 .navbar-toggler {
   border-radius: 12px;
   border-color: rgba(2,6,23,0.12) !important;
@@ -212,7 +212,7 @@ button.btn.btn-primary {
   box-shadow: 0 0 0 6px var(--ring) !important;
 }
 
-/* ===== DESKTOP SPACING & ALIGNMENT ===== */
+/* ===== DESKTOP ALIGNMENT LOCK ===== */
 .navbar .navbar-nav { 
   flex-wrap: nowrap;
 }
@@ -230,53 +230,53 @@ button.btn.btn-primary {
   padding: 10px 14px;
 }
 
-/* ===== MOBILE MENU OVERLAY (REACT-CONTROLLED) ===== */
-.rbr-mobile-menu {
-  display: none;
-}
-
-@media (max-width: 767.98px) {
+/* ===== MOBILE: FIX COLLAPSE PANEL (THIS WAS THE PROBLEM AREA) ===== */
+@media (max-width: 991.98px) {
   .container-fluid {
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
 
-  /* Show fixed panel below navbar when menu open */
-  .rbr-mobile-menu {
-    position: fixed;
-    top: 64px;             /* approx navbar height; adjust if needed */
+  /* Make collapse an absolute panel below fixed navbar so it doesn't hide behind anything */
+  .navbar .navbar-collapse {
+    position: absolute;
+    top: 60px;                 /* approx navbar height; tweak to 56/64px if needed */
     left: 0;
     right: 0;
     background: var(--surface);
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
-    z-index: 1040;         /* above page content, under any modals */
-    display: none;
+    padding: 8px 0 10px;
+    z-index: 1040;             /* above main content */
   }
 
-  .rbr-mobile-menu-open {
-    display: block;
+  /* Rely on Bootstrap collapse classes; hide when not .show */
+  .navbar .navbar-collapse.collapse:not(.show) {
+    display: none !important;
   }
 
-  .rbr-mobile-menu .navbar-nav {
+  /* Stack items vertically, full width */
+  .navbar .navbar-collapse .navbar-nav {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 4px;
-    align-items: stretch;
+    padding: 0 8px;
+    width: 100%;
   }
 
-  .rbr-mobile-menu .nav-item {
+  .navbar .navbar-collapse .nav-item {
     width: 100%;
     display: block;
   }
 
-  .rbr-mobile-menu .nav-link,
-  .rbr-mobile-link {
+  .navbar .navbar-collapse .nav-link {
     width: 100%;
     justify-content: flex-start;
-    padding: 10px 18px;
+    padding: 10px 16px;
     color: var(--ink-900) !important;
     text-align: left;
   }
 
-  .rbr-mobile-menu .nav-link.active {
+  .navbar .navbar-collapse .nav-link.active {
     background: rgba(59,130,246,0.06);
     border-radius: 10px;
   }
@@ -292,7 +292,7 @@ button.btn.btn-primary {
     --ink-500: #94a3b8;
     --ring: rgba(59,130,246,0.35);
   }
-  .rbr-navbar.navbar { border-bottom-color: rgba(148,163,184,0.12); }
+  .navbar { border-bottom-color: rgba(148,163,184,0.12); }
   .logo img { box-shadow: 0 2px 10px rgba(0,0,0,0.45); }
   .dropdown-item:hover { background: rgba(255,255,255,0.06); }
 }
@@ -302,8 +302,7 @@ button.btn.btn-primary {
   .navbar,
   a.nav-link,
   .dropdown-menu,
-  .btn.btn-primary,
-  .rbr-mobile-menu {
+  .btn.btn-primary {
     transition: none !important;
     animation: none !important;
   }
