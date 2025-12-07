@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { Store } from "../Store";
 
 const EXAMPLES = [
+  "Restaurant Business in india",
   "Paper industry in India",
   "FMCG market report",
   "IT industry analysis India",
