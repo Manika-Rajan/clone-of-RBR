@@ -1,0 +1,207 @@
+/* PaymentMobile.css */
+
+/* Page wrapper */
+.payments-page-mobile {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 12px 80px;
+  background: #f3f4f6;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+}
+
+/* Header */
+.payments-mobile-header {
+  margin-bottom: 12px;
+}
+
+.payments-mobile-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.payments-mobile-subtitle {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Generic card */
+.payments-mobile-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e5e7eb;
+}
+
+/* Order summary card emphasis */
+.payments-mobile-card--order {
+  border-color: #bfdbfe;
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.16);
+}
+
+/* Footer card (terms + button) */
+.payments-mobile-card--footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.12);
+}
+
+/* Card headers / labels */
+.payments-mobile-card-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+/* Icon row on cards (Personal / Delivery) */
+.payments-mobile-card-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.payments-mobile-icon {
+  height: 24px;
+}
+
+/* Row: label + value */
+.payments-mobile-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.payments-mobile-row--amount {
+  margin-top: 6px;
+}
+
+/* Labels & values */
+.payments-mobile-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.payments-mobile-value {
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.payments-mobile-amount {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+/* Fields block (Name, Phone, Email) */
+.payments-mobile-field {
+  margin-bottom: 12px;
+}
+
+.payments-mobile-field-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+/* Edit icon */
+.payments-mobile-edit-icon {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Input styles */
+.payments-mobile-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #0263c7;
+  padding: 4px 0;
+  font-size: 0.95rem;
+  color: #111827;
+  background: transparent;
+  outline: none;
+}
+
+/* Success message */
+.payments-mobile-success {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: #15803d;
+}
+
+.payments-mobile-success img {
+  width: 16px;
+  height: 16px;
+}
+
+/* Terms */
+.payments-mobile-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #4b5563;
+  margin-bottom: 10px;
+}
+
+.payments-mobile-checkbox {
+  margin-top: 2px;
+}
+
+.payments-mobile-terms-link {
+  color: #2563eb;
+  font-weight: 500;
+}
+
+/* Error */
+.payments-mobile-error {
+  font-size: 0.8rem;
+  color: #b91c1c;
+  margin-bottom: 8px;
+}
+
+/* Main CTA */
+.payments-mobile-button {
+  width: 100%;
+  border-radius: 999px;
+  padding: 10px 16px;
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.98rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.payments-mobile-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Gateway note */
+.payments-mobile-gateway-note {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Loading & error states if you reuse them */
+.payments-mobile-loading,
+.payments-mobile-error-page {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 0.95rem;
+}
