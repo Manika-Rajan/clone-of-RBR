@@ -14,12 +14,47 @@ const DEFAULT_PROFILE_ICON = '/default-avatar.png';
 const SAMPLE_FILE_KEY = 'samples/RBR_Welcome_Sample.pdf';
 const SAMPLE_VERSION = '1.0';
 
+// ---- Helpers ----
+const parseDateSafe = (r) => {
+  const d = r.purchased_on || r.granted_on || r.granted_at || r.created_at || null;
+  if (!d) return 0;
+  const dt = new Date(d);
+  return isNaN(dt.getTime()) ? 0 : dt.getTime();
+};
+
+const beautifyFileName = (fileKey) => {
+  if (!fileKey) return '';
+  const name = fileKey.split('/').pop() || fileKey;
+  const withoutExt = name.replace(/\.[^.]+$/, '');
+  return withoutExt
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+};
+
+const getCurrentUserIdFromStorage = () => {
+  try {
+    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+    return (
+      storedUserInfo?.user_id ||
+      storedUserInfo?.userId ||
+      localStorage.getItem('user_id') ||
+      localStorage.getItem('userId') ||
+      null
+    );
+  } catch {
+    return null;
+  }
+};
+
 const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
   const navigate = useNavigate();
 
   const [purchasedReports, setPurchasedReports] = useState([]);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -36,43 +71,49 @@ const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [newPhoto, setNewPhoto] = useState(null);
 
+  // Search / sort state for purchased reports
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('newest'); // 'newest' | 'oldest' | 'name-asc' | 'name-desc'
+
+  // ---- Load profile (with auto-refresh on window focus) ----
   useEffect(() => {
-    const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
-    let storedUserId =
-      storedUserInfo?.user_id ||
-      storedUserInfo?.userId ||
-      localStorage.getItem('user_id') ||
-      localStorage.getItem('userId');
-
-    let authToken = localStorage.getItem('authToken') || '';
-
-    if (!storedUserId) {
-      console.warn('User ID missing.');
-      setLoading(false);
-      setError('User ID not found. Please log in again.');
-      return;
-    }
-
-    // normalize storage
-    localStorage.setItem('user_id', storedUserId);
-    if (storedUserInfo) {
-      storedUserInfo.user_id = storedUserId;
-      delete storedUserInfo.userId;
-      localStorage.setItem('userInfo', JSON.stringify(storedUserInfo));
-    }
-
-    if (!authToken && storedUserInfo?.token) {
-      authToken = storedUserInfo.token;
-      localStorage.setItem('authToken', authToken);
-    }
-
-    if (!userInfo?.user_id) {
-      cxtDispatch({ type: 'SET_USER_ID', payload: storedUserId });
-    }
-
     let isActive = true;
 
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
+      const storedUserInfo = JSON.parse(localStorage.getItem('userInfo'));
+      let storedUserId =
+        storedUserInfo?.user_id ||
+        storedUserInfo?.userId ||
+        localStorage.getItem('user_id') ||
+        localStorage.getItem('userId');
+
+      let authToken = localStorage.getItem('authToken') || '';
+
+      if (!storedUserId) {
+        console.warn('User ID missing.');
+        if (!isActive) return;
+        setLoading(false);
+        setError('User ID not found. Please log in again.');
+        return;
+      }
+
+      // normalize storage
+      localStorage.setItem('user_id', storedUserId);
+      if (storedUserInfo) {
+        storedUserInfo.user_id = storedUserId;
+        delete storedUserInfo.userId;
+        localStorage.setItem('userInfo', JSON.stringify(storedUserInfo));
+      }
+
+      if (!authToken && storedUserInfo?.token) {
+        authToken = storedUserInfo.token;
+        localStorage.setItem('authToken', authToken);
+      }
+
+      if (!userInfo?.user_id) {
+        cxtDispatch({ type: 'SET_USER_ID', payload: storedUserId });
+      }
+
       setLoading(true);
       setError(null);
       try {
@@ -92,7 +133,10 @@ const ProfilePage = () => {
         if (!isActive) return;
 
         if (response.ok) {
-          setPurchasedReports(Array.isArray(data.reports) ? data.reports : []);
+          // reports may already be an array of objects
+          const reportsArray = Array.isArray(data.reports) ? data.reports : [];
+          setPurchasedReports(reportsArray);
+
           setNameInput(data.name || '');
           setEmailInput(data.email || '');
           const fetchedPhotoUrl = data.photo_url || null;
@@ -126,7 +170,9 @@ const ProfilePage = () => {
         } else {
           throw new Error(
             data.error ||
-              `Failed to fetch profile (Status: ${response.status}) - ${data.message || 'No additional details'}`
+              `Failed to fetch profile (Status: ${response.status}) - ${
+                data.message || 'No additional details'
+              }`
           );
         }
       } catch (err) {
@@ -138,15 +184,86 @@ const ProfilePage = () => {
       }
     };
 
-    fetchProfile();
+    // initial load
+    loadProfile();
+
+    // auto-refresh when window regains focus (e.g. after payment flow)
+    const handleFocus = () => {
+      loadProfile();
+    };
+    window.addEventListener('focus', handleFocus);
+
     return () => {
       isActive = false;
+      window.removeEventListener('focus', handleFocus);
     };
   }, [cxtDispatch, userInfo?.user_id]);
 
-  // Use existing presigned-URL Lambda
-  const fetchPresignedUrl = async (fileKey) => {
+  // ---- Load recently viewed reports from localStorage ----
+  useEffect(() => {
     try {
+      const uid = getCurrentUserIdFromStorage();
+      if (!uid) return;
+      const key = `rbr_recent_reports_${uid}`;
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        setRecentlyViewed(parsed);
+      }
+    } catch (e) {
+      console.warn('Failed to load recently viewed reports from localStorage:', e);
+    }
+  }, []);
+
+  // ---- Track recently viewed reports ----
+  const trackRecentlyViewed = (report) => {
+    try {
+      const uid = getCurrentUserIdFromStorage();
+      if (!uid) return;
+      const key = `rbr_recent_reports_${uid}`;
+
+      setRecentlyViewed((prev) => {
+        const cleanPrev = Array.isArray(prev) ? prev : [];
+        const base = {
+          report_id: report.report_id || report.reportId || '',
+          file_key: report.file_key || '',
+          title:
+            report.report_title ||
+            report.title ||
+            report._displayTitle ||
+            beautifyFileName(report.file_key) ||
+            'Report',
+        };
+
+        // Deduplicate by report_id + file_key
+        const filtered = cleanPrev.filter(
+          (r) =>
+            !(r.report_id === base.report_id && r.file_key === base.file_key)
+        );
+
+        const next = [
+          { ...base, viewed_at: new Date().toISOString() },
+          ...filtered,
+        ].slice(0, 5); // keep latest 5
+
+        localStorage.setItem(key, JSON.stringify(next));
+        return next;
+      });
+    } catch (e) {
+      console.warn('Failed to persist recently viewed reports:', e);
+    }
+  };
+
+  // ---- Presigned URL + view handling ----
+  const fetchPresignedUrl = async (report) => {
+    try {
+      const fileKey = report.file_key || SAMPLE_FILE_KEY;
+      if (!fileKey) {
+        alert('File key is missing for this report.');
+        return;
+      }
+
       setSelectedUrl(null);
       setLoadingFileKey(fileKey);
 
@@ -161,7 +278,9 @@ const ProfilePage = () => {
 
       if (!resp.ok) {
         const t = await resp.text().catch(() => '');
-        throw new Error(`Failed to get presigned URL. HTTP ${resp.status}. Body: ${t}`);
+        throw new Error(
+          `Failed to get presigned URL. HTTP ${resp.status}. Body: ${t}`
+        );
       }
 
       const data = await resp.json().catch(() => ({}));
@@ -170,6 +289,9 @@ const ProfilePage = () => {
       if (!data?.presigned_url) {
         throw new Error('No presigned_url returned by Lambda');
       }
+
+      // Track "recently viewed" only after we know the file is openable
+      trackRecentlyViewed(report);
 
       setSelectedUrl(data.presigned_url);
     } catch (error) {
@@ -184,19 +306,75 @@ const ProfilePage = () => {
     }
   };
 
-  // Fallback: sample row if no purchased reports
-  const displayReports = useMemo(() => {
-    if (purchasedReports && purchasedReports.length > 0) return purchasedReports;
-    return [
+  // ---- Derived purchased reports: decorate + filter + sort ----
+  const hasPurchases = purchasedReports && purchasedReports.length > 0;
+
+  const filteredReports = useMemo(() => {
+    if (!hasPurchases) return [];
+
+    // Decorate with display title
+    let arr = purchasedReports.map((r) => {
+      const displayTitle =
+        r.report_title ||
+        r.title ||
+        beautifyFileName(r.file_key) ||
+        r.report_id ||
+        'Report';
+      return {
+        ...r,
+        _displayTitle: displayTitle,
+      };
+    });
+
+    // Search filter
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      arr = arr.filter((r) => {
+        const title = (r._displayTitle || '').toLowerCase();
+        const rid = (r.report_id || r.reportId || '').toLowerCase();
+        const fkey = (r.file_key || '').toLowerCase();
+        return (
+          title.includes(q) ||
+          rid.includes(q) ||
+          fkey.includes(q)
+        );
+      });
+    }
+
+    // Sort
+    const sorted = [...arr].sort((a, b) => {
+      const dateA = parseDateSafe(a);
+      const dateB = parseDateSafe(b);
+
+      switch (sortOption) {
+        case 'oldest':
+          return dateA - dateB;
+        case 'name-asc':
+          return (a._displayTitle || '').localeCompare(b._displayTitle || '');
+        case 'name-desc':
+          return (b._displayTitle || '').localeCompare(a._displayTitle || '');
+        case 'newest':
+        default:
+          return dateB - dateA; // newest first
+      }
+    });
+
+    return sorted;
+  }, [hasPurchases, purchasedReports, searchTerm, sortOption]);
+
+  // ---- Sample row for brand-new accounts (no purchases) ----
+  const sampleReports = useMemo(
+    () => [
       {
         file_key: SAMPLE_FILE_KEY,
         report_version: SAMPLE_VERSION,
-        title: 'RBR Sample Report (Free Preview)',
+        _displayTitle: 'RBR Sample Report (Free Preview)',
         purchased_on: '—',
         _isSample: true,
       },
-    ];
-  }, [purchasedReports]);
+    ],
+    []
+  );
 
   // Photo upload
   const handlePhotoUpload = async (e) => {
@@ -231,7 +409,9 @@ const ProfilePage = () => {
       );
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
+        throw new Error(
+          `Failed to get presigned URL: ${response.status} - ${errorText}`
+        );
       }
       const { presignedPutUrl, presignedGetUrl } = await response.json();
 
@@ -242,13 +422,19 @@ const ProfilePage = () => {
       });
       if (!uploadResponse.ok) {
         const uploadErrorText = await uploadResponse.text();
-        throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
+        throw new Error(
+          `Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`
+        );
       }
 
       setPhotoUrl(presignedGetUrl);
       setNewPhoto(null);
       alert('Photo uploaded successfully!');
-      const updatedUserInfo = { ...storedUserInfo, user_id: uid, photo_url: presignedGetUrl };
+      const updatedUserInfo = {
+        ...storedUserInfo,
+        user_id: uid,
+        photo_url: presignedGetUrl,
+      };
       cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
       localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
     } catch (error) {
@@ -281,7 +467,10 @@ const ProfilePage = () => {
         'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
           body: JSON.stringify(profileData),
         }
       );
@@ -323,7 +512,12 @@ const ProfilePage = () => {
         'https://kwkxhezrsj.execute-api.ap-south-1.amazonaws.com/saveUserProfile-RBRmain-APIgateway',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('authToken') || ''}` },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${
+              localStorage.getItem('authToken') || ''
+            }`,
+          },
           body: JSON.stringify(profileData),
         }
       );
@@ -353,7 +547,8 @@ const ProfilePage = () => {
   if (error) return <div className="error-message">{error}</div>;
 
   const renderPurchasedOn = (r) => {
-    const d = r.purchased_on || r.granted_on || r.granted_at || r.created_at || null;
+    const d =
+      r.purchased_on || r.granted_on || r.granted_at || r.created_at || null;
     if (!d) return '—';
     const dt = new Date(d);
     return isNaN(dt.getTime()) ? String(d) : dt.toLocaleString();
@@ -366,6 +561,35 @@ const ProfilePage = () => {
         .rbr-viewer-content { height: 92vh; }
         .rbr-viewer-body { height: calc(92vh - 56px); padding: 0; overflow: hidden; }
         .rbr-viewer-scroll { height: 100%; width: 100%; overflow: auto; }
+        .rbr-report-cell {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .rbr-report-thumb {
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+          background: #f3f6ff;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+        }
+        .rbr-recent-list {
+          list-style: none;
+          padding-left: 0;
+          margin: 0;
+        }
+        .rbr-recent-item-button {
+          background: none;
+          border: none;
+          padding: 0;
+          color: #0d6efd;
+          text-decoration: underline;
+          cursor: pointer;
+          font-size: 0.95rem;
+        }
       `}</style>
 
       <div className="profile-container">
@@ -389,16 +613,24 @@ const ProfilePage = () => {
                   className="profile-photo"
                   onError={(e) => {
                     console.error('Default image failed to load:', e);
-                    e.target.src = 'https://via.placeholder.com/120?text=Default+Avatar';
+                    e.target.src =
+                      'https://via.placeholder.com/120?text=Default+Avatar';
                   }}
                 />
               )}
             </div>
             <div className="info-section">
               <h2 className="user-name">{nameInput || 'Not Available'}</h2>
-              <p className="user-detail"><strong>Phone:</strong> {userInfo?.phone || 'Not Available'}</p>
-              <p className="user-detail"><strong>Email:</strong> {emailInput || 'Not Available'}</p>
-              <button className="edit-profile-button" onClick={() => setShowEditModal(true)}>
+              <p className="user-detail">
+                <strong>Phone:</strong> {userInfo?.phone || 'Not Available'}
+              </p>
+              <p className="user-detail">
+                <strong>Email:</strong> {emailInput || 'Not Available'}
+              </p>
+              <button
+                className="edit-profile-button"
+                onClick={() => setShowEditModal(true)}
+              >
                 Edit Profile
               </button>
             </div>
@@ -409,30 +641,134 @@ const ProfilePage = () => {
         <div className="reports-section">
           <h3 className="section-title">Purchased Reports</h3>
 
-          {displayReports.length > 0 ? (
+          {hasPurchases ? (
+            <>
+              {/* Search + Sort controls only if more than 8 reports */}
+              {purchasedReports.length > 8 && (
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="flex-grow-1 me-3">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search your reports..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <select
+                      className="form-select"
+                      value={sortOption}
+                      onChange={(e) => setSortOption(e.target.value)}
+                    >
+                      <option value="newest">Newest first</option>
+                      <option value="oldest">Oldest first</option>
+                      <option value="name-asc">Name A → Z</option>
+                      <option value="name-desc">Name Z → A</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {filteredReports.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-striped align-middle rbr-table">
+                    <thead>
+                      <tr>
+                        <th style={{ minWidth: 260, textAlign: 'left' }}>Report</th>
+                        <th style={{ textAlign: 'center' }}>Version</th>
+                        <th style={{ textAlign: 'center' }}>Purchased on</th>
+                        <th style={{ width: 120, textAlign: 'center' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredReports.map((r) => {
+                        const isRowLoading = loadingFileKey === r.file_key;
+                        const displayTitle =
+                          r._displayTitle ||
+                          r.report_title ||
+                          r.title ||
+                          beautifyFileName(r.file_key) ||
+                          'Report';
+
+                        return (
+                          <tr key={r.file_key || displayTitle}>
+                            <td>
+                              <div className="rbr-report-cell">
+                                <div className="rbr-report-thumb">📊</div>
+                                <div>
+                                  <div>{displayTitle}</div>
+                                  {r.report_id && (
+                                    <div
+                                      style={{
+                                        fontSize: '0.8rem',
+                                        color: '#6c757d',
+                                      }}
+                                    >
+                                      ID: {r.report_id}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              {r.report_version || 'N/A'}
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              {renderPurchasedOn(r)}
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <button
+                                className="btn btn-sm btn-primary"
+                                onClick={() => fetchPresignedUrl(r)}
+                                disabled={isRowLoading}
+                              >
+                                {isRowLoading ? 'Opening…' : 'View'}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-muted" style={{ marginTop: 8 }}>
+                  No reports match your search.
+                </p>
+              )}
+            </>
+          ) : (
+            // Sample view for accounts with 0 purchases
             <div className="table-responsive">
               <table className="table table-striped align-middle rbr-table">
                 <thead>
                   <tr>
-                    <th style={{ minWidth: 220 }}>Report</th>
-                    <th>Version</th>
-                    <th>Purchased on</th>
-                    <th style={{ width: 120, textAlign: 'right' }}>Action</th>
+                    <th style={{ minWidth: 260, textAlign: 'left' }}>Report</th>
+                    <th style={{ textAlign: 'center' }}>Version</th>
+                    <th style={{ textAlign: 'center' }}>Purchased on</th>
+                    <th style={{ width: 120, textAlign: 'center' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {displayReports.map((r) => {
-                    const fileName = r.title || r.file_key?.split('/').pop() || 'report.pdf';
+                  {sampleReports.map((r) => {
                     const isRowLoading = loadingFileKey === r.file_key;
                     return (
-                      <tr key={r.file_key || fileName}>
-                        <td>{fileName}</td>
-                        <td>{r.report_version || 'N/A'}</td>
-                        <td>{renderPurchasedOn(r)}</td>
-                        <td style={{ textAlign: 'right' }}>
+                      <tr key={r.file_key}>
+                        <td>
+                          <div className="rbr-report-cell">
+                            <div className="rbr-report-thumb">📄</div>
+                            <div>{r._displayTitle}</div>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          {r.report_version || 'N/A'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>—</td>
+                        <td style={{ textAlign: 'center' }}>
                           <button
                             className="btn btn-sm btn-primary"
-                            onClick={() => fetchPresignedUrl(r.file_key)}
+                            onClick={() => fetchPresignedUrl(r)}
                             disabled={isRowLoading}
                           >
                             {isRowLoading ? 'Opening…' : 'View'}
@@ -443,14 +779,42 @@ const ProfilePage = () => {
                   })}
                 </tbody>
               </table>
-              {purchasedReports.length === 0 && (
-                <p className="text-muted" style={{ marginTop: 8 }}>
-                  This is a sample preview added for new accounts. Your purchased reports will appear here automatically.
-                </p>
-              )}
+              <p className="text-muted" style={{ marginTop: 8 }}>
+                This is a sample preview added for new accounts. Your purchased
+                reports will appear here automatically after you buy them.
+              </p>
             </div>
+          )}
+        </div>
+
+        {/* Recently viewed reports */}
+        <div className="reports-section" style={{ marginTop: '24px' }}>
+          <h4 className="section-title">Recently viewed reports</h4>
+          {recentlyViewed && recentlyViewed.length > 0 ? (
+            <ul className="rbr-recent-list">
+              {recentlyViewed.map((r) => (
+                <li key={`${r.report_id}-${r.file_key}`} style={{ marginBottom: 4 }}>
+                  <button
+                    type="button"
+                    className="rbr-recent-item-button"
+                    onClick={() =>
+                      fetchPresignedUrl({
+                        report_id: r.report_id,
+                        file_key: r.file_key,
+                        title: r.title,
+                      })
+                    }
+                  >
+                    {r.title || beautifyFileName(r.file_key) || 'Report'}
+                  </button>
+                </li>
+              ))}
+            </ul>
           ) : (
-            <p className="no-reports">No purchased reports found.</p>
+            <p className="text-muted">
+              You haven’t opened any reports yet. When you view a report, it
+              will appear here for quick access.
+            </p>
           )}
         </div>
 
@@ -462,21 +826,31 @@ const ProfilePage = () => {
           size="xl"
           contentClassName="rbr-viewer-content"
         >
-          <ModalHeader toggle={() => setSelectedUrl(null)}>Report Viewer</ModalHeader>
+          <ModalHeader toggle={() => setSelectedUrl(null)}>
+            Report Viewer
+          </ModalHeader>
           <ModalBody className="rbr-viewer-body">
             {selectedUrl ? (
-              <div className="rbr-viewer-scroll" onContextMenu={(e) => e.preventDefault()}>
+              <div
+                className="rbr-viewer-scroll"
+                onContextMenu={(e) => e.preventDefault()}
+              >
                 <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
                   <Viewer
                     fileUrl={selectedUrl}
                     renderTextLayer={false}
                     renderAnnotationLayer={false}
-                    onDocumentLoadFailed={(e) => console.error('PDF load failed:', e)}
+                    onDocumentLoadFailed={(e) =>
+                      console.error('PDF load failed:', e)
+                    }
                   />
                 </Worker>
               </div>
             ) : (
-              <div className="d-flex align-items-center justify-content-center" style={{ height: '100%' }}>
+              <div
+                className="d-flex align-items-center justify-content-center"
+                style={{ height: '100%' }}
+              >
                 Loading…
               </div>
             )}
@@ -484,8 +858,14 @@ const ProfilePage = () => {
         </Modal>
 
         {/* Edit Profile Modal */}
-        <Modal isOpen={showEditModal} toggle={() => setShowEditModal(false)} className="full-page-modal">
-          <ModalHeader toggle={() => setShowEditModal(false)}>Edit Profile</ModalHeader>
+        <Modal
+          isOpen={showEditModal}
+          toggle={() => setShowEditModal(false)}
+          className="full-page-modal"
+        >
+          <ModalHeader toggle={() => setShowEditModal(false)}>
+            Edit Profile
+          </ModalHeader>
           <ModalBody>
             <div className="edit-form">
               <div className="form-group">
@@ -521,17 +901,32 @@ const ProfilePage = () => {
                   disabled={photoUploading}
                 />
                 {photoUploading && <p>Uploading...</p>}
-                {!photoUrl && !photoUploading && <p>No photo uploaded. Upload to set a profile picture.</p>}
+                {!photoUrl && !photoUploading && (
+                  <p>No photo uploaded. Upload to set a profile picture.</p>
+                )}
                 {photoUrl && (
-                  <button className="btn btn-danger" onClick={handleRemovePhoto} disabled={isSaving}>
+                  <button
+                    className="btn btn-danger"
+                    onClick={handleRemovePhoto}
+                    disabled={isSaving}
+                  >
                     {isSaving ? 'Removing...' : 'Remove Photo'}
                   </button>
                 )}
               </div>
-              <button className="btn btn-primary" onClick={saveProfile} disabled={isSaving}>
+              <button
+                className="btn btn-primary"
+                onClick={saveProfile}
+                disabled={isSaving}
+              >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
-              <button className="btn btn-secondary" onClick={() => setShowEditModal(false)} disabled={isSaving}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowEditModal(false)}
+                disabled={isSaving}
+                style={{ marginLeft: '8px' }}
+              >
                 Cancel
               </button>
             </div>
