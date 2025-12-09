@@ -10,6 +10,7 @@ import ProfilePage from './components/ProfilePage';
 import ProfilePageMobile from './components/ProfilePageMobile';
 import ReportsDisplay from './components/ReportsDisplay';
 import Payment from './components/Payment';
+import PaymentMobile from './components/PaymentMobile';
 import Footer from './components/Footer';
 import CommingSoon from './components/CommingSoon';
 import Careers from './components/Career';
@@ -57,7 +58,7 @@ function AppContent() {
         <Route path="/team/report-requests" element={<ReportRequestsDashboard />} />
         <Route path='/payment' element={
           <ProtectedRoute>
-            <Payment />
+            {isMobile ? <PaymentMobile /> : <Payment />}
           </ProtectedRoute>
         } />
         <Route
