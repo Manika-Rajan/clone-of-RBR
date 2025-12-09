@@ -7,6 +7,7 @@ import Reports from './components/Reports';
 import ReportsMobile from './components/ReportsMobile';
 import { isMobile } from 'react-device-detect';
 import ProfilePage from './components/ProfilePage';
+import ProfilePageMobile from './components/ProfilePageMobile';
 import ReportsDisplay from './components/ReportsDisplay';
 import Payment from './components/Payment';
 import Footer from './components/Footer';
@@ -71,7 +72,7 @@ function AppContent() {
         <Route path='/not-found' element={<Invalid />} />
         <Route path="/profile" element={
           <ProtectedRoute>
-            <ProfilePage />
+            {isMobile ? <ProfilePageMobile /> : <ProfilePage />}
           </ProtectedRoute>
         } />
         <Route path="/terms" element={<TermsAndConditions />} />
