@@ -732,25 +732,19 @@ const ReportsMobile = () => {
               Pre-book this report
             </div>
             <p className="text-gray-700 text-sm leading-relaxed mb-3">
-              We don’t yet have a ready-made report for:&nbsp;
-              <strong>{prebookQuery}</strong>
+              We don&apos;t yet have a ready report for{" "}
+              <strong>{prebookQuery}</strong>.
               <br />
               <br />
-              You can{" "}
-              <strong>pre-book a detailed, data-backed report</strong> on this
-              exact topic for{" "}
+              Pre-book a detailed report on this topic for{" "}
               <span className="font-semibold text-green-700">₹499</span>{" "}
               <span className="text-xs text-gray-500">
-                (full report price{" "}
+                (full price{" "}
                 <span className="line-through text-gray-400">₹2,999</span>)
               </span>
-              .
-              <br />
-              <br />
-              Our analyst team will research your requirement and prepare a
-              practical, entrepreneur-focused report within{" "}
-              <strong>2 working days</strong>. Once it’s ready, it will be
-              added to your RBR profile and we’ll also update you on WhatsApp.
+              . Our team will research it for you and add the report to your
+              RBR profile within <strong>2 working days</strong> and update you
+              on WhatsApp.
             </p>
 
             <form onSubmit={handlePrebookSubmit} className="space-y-3">
