@@ -1,7 +1,7 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
 // Mobile landing — logs searches; navigates only if a known report's preview exists.
 // If no exact match, calls /suggest (POST) and shows a classic “Did you mean…?” popup (ice-blue).
-// Tapping a suggestion now navigates directly to the report (no re-search loop).
+// If still nothing, offers a Pre-Book flow using Razorpay + Prebooking API.
 
 import React, {
   useMemo,
@@ -37,9 +37,9 @@ const SUGGESTIONS = [
 
 // Router of known reports — navigate only if query clearly matches one of these.
 const ROUTER = [
-  { slug: "ev_charging",    keywords: ["ev charging", "charging station"] },
-  { slug: "fmcg",           keywords: ["fmcg"] },
-  { slug: "pharma",         keywords: ["pharma", "pharmaceutical"] },
+  { slug: "ev_charging", keywords: ["ev charging", "charging station"] },
+  { slug: "fmcg", keywords: ["fmcg"] },
+  { slug: "pharma", keywords: ["pharma", "pharmaceutical"] },
   // No plain "paper" (so "paper clip" doesn’t auto-resolve)
   { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing"] },
 ];
@@ -52,9 +52,31 @@ const PRESIGN_URL =
 const SUGGEST_URL =
   "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/suggest";
 
-// 🔴 NEW: when no report exists, we queue a creation request (72-hour promise)
+// 🔴 When no report exists, we can still log a “create this report” request
 const REQUEST_REPORT_URL =
   "https://sicgpldzo8.execute-api.ap-south-1.amazonaws.com/report-request";
+
+// ⭐ NEW: Pre-booking API base
+const PREBOOK_API_BASE =
+  process.env.REACT_APP_PREBOOK_API_BASE ||
+  "https://jp1bupouyl.execute-api.ap-south-1.amazonaws.com/prod";
+
+// ⭐ NEW: Razorpay loader
+const RAZORPAY_SCRIPT_ID = "razorpay-checkout-js";
+
+const loadRazorpay = () =>
+  new Promise((resolve, reject) => {
+    if (document.getElementById(RAZORPAY_SCRIPT_ID)) {
+      return resolve(true);
+    }
+    const script = document.createElement("script");
+    script.id = RAZORPAY_SCRIPT_ID;
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () =>
+      reject(new Error("Razorpay SDK failed to load. Please refresh and try again."));
+    document.body.appendChild(script);
+  });
 
 // Loader
 const LoaderRing = () => (
@@ -149,7 +171,7 @@ const ReportsMobile = () => {
     }
   };
 
-  // 🔴 NEW: when no matching report exists, queue a “create this report” request
+  // 🔴 When no matching report exists, queue a “create this report” request
   const requestNewReport = async (query) => {
     if (!REQUEST_REPORT_URL) return; // in case you haven't wired backend yet
     try {
@@ -173,6 +195,142 @@ const ReportsMobile = () => {
       }
     } catch (e) {
       console.error("requestNewReport error:", e);
+    }
+  };
+
+  // ⭐ NEW: Pre-booking flow
+  const startPrebookFlow = async (query) => {
+    const trimmed = query.trim();
+    const userPhone =
+      state?.userInfo?.phone || state?.userInfo?.userId || "";
+
+    const userName = state?.userInfo?.name || "RBR User";
+
+    if (!userPhone) {
+      setModalMsg(
+        "To pre-book this report, please login or verify your phone number in RBR and then search again."
+      );
+      setOpenModal(true);
+      return;
+    }
+
+    try {
+      // 1) Hit backend to create prebooking + Razorpay order
+      const resp = await fetch(`${PREBOOK_API_BASE}/prebook/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userPhone,
+          userName,
+          reportTitle: trimmed,
+          searchQuery: trimmed,
+          notes: "",
+        }),
+      });
+
+      if (!resp.ok) {
+        const text = await resp.text();
+        console.error("prebook create-order failed", resp.status, text);
+        setModalMsg(
+          "⚠️ Could not start the pre-booking right now. Please try again in a few minutes."
+        );
+        setOpenModal(true);
+        return;
+      }
+
+      const data = await resp.json();
+      const {
+        prebookId,
+        razorpayOrderId,
+        amount,
+        currency,
+        razorpayKeyId,
+      } = data || {};
+
+      if (!prebookId || !razorpayOrderId || !razorpayKeyId) {
+        console.error("Invalid prebook response:", data);
+        setModalMsg(
+          "⚠️ Something went wrong while preparing the payment. Please try again."
+        );
+        setOpenModal(true);
+        return;
+      }
+
+      // 2) Load Razorpay
+      await loadRazorpay();
+      if (!window.Razorpay) {
+        setModalMsg(
+          "⚠️ Payment SDK did not load properly. Please refresh the page and try again."
+        );
+        setOpenModal(true);
+        return;
+      }
+
+      // 3) Open Razorpay Checkout
+      const options = {
+        key: razorpayKeyId,
+        amount,
+        currency,
+        name: "Rajan Business Reports",
+        description: `Pre-book: ${trimmed}`,
+        order_id: razorpayOrderId,
+        prefill: {
+          name: userName,
+          contact: userPhone,
+        },
+        notes: {
+          type: "prebook",
+          prebookId,
+          reportTitle: trimmed,
+          searchQuery: trimmed,
+        },
+        handler: async function (response) {
+          try {
+            const confirmResp = await fetch(
+              `${PREBOOK_API_BASE}/prebook/confirm`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userPhone,
+                  prebookId,
+                  razorpayOrderId,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                }),
+              }
+            );
+
+            if (!confirmResp.ok) {
+              const txt = await confirmResp.text();
+              console.error("prebook confirm failed:", confirmResp.status, txt);
+            }
+
+            setModalMsg(
+              "✅ Thank you! Your report has been pre-booked. We will prepare it within 24 hours and add it to your profile."
+            );
+            setOpenModal(true);
+          } catch (e) {
+            console.error("Error in prebook confirm handler:", e);
+            setModalMsg(
+              "✅ Payment received. We will still prepare your report and add it to your profile, even if the confirmation took longer."
+            );
+            setOpenModal(true);
+          }
+        },
+        theme: {
+          color: "#0263c7",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (e) {
+      console.error("startPrebookFlow error:", e);
+      setModalMsg(
+        "⚠️ Something went wrong while starting the pre-booking. Please try again later."
+      );
+      setOpenModal(true);
     }
   };
 
@@ -214,8 +372,7 @@ const ReportsMobile = () => {
           method: "GET",
           headers: { Range: "bytes=0-1" },
         });
-        const ct = (probe.headers.get("content-type") || "")
-          .toLowerCase();
+        const ct = (probe.headers.get("content-type") || "").toLowerCase();
         if (
           !probe.ok ||
           !(probe.status === 200 || probe.status === 206) ||
@@ -243,7 +400,7 @@ const ReportsMobile = () => {
     }
   };
 
-  // log → (resolve) → navigate OR suggest → (if nothing) queue a new report request
+  // log → (resolve) → navigate OR suggest → (if nothing) queue a new report & pre-book
   const handleSearch = async (query) => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -277,9 +434,7 @@ const ReportsMobile = () => {
       });
       if (!logResp.ok) {
         const t = await logResp.text();
-        throw new Error(
-          `Failed search-log ${logResp.status}, body: ${t}`
-        );
+        throw new Error(`Failed search-log ${logResp.status}, body: ${t}`);
       }
       await logResp.json();
 
@@ -299,13 +454,10 @@ const ReportsMobile = () => {
           return;
         }
 
-        // 1b) Nothing to suggest → tell user we'll create it, and queue a request
-        await requestNewReport(trimmed);
-
-        setModalMsg(
-          "📢 We don’t have this exact report yet. We’ve queued your request and will add it within 72 hours. Please check back here using the same search."
-        );
-        setOpenModal(true);
+        // 1b) Nothing to suggest → tell user & start pre-booking
+        await requestNewReport(trimmed); // still queue for your internal pipeline
+        // Immediately try pre-book flow
+        await startPrebookFlow(trimmed);
         return;
       }
 
@@ -485,7 +637,7 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* Error / Coming soon modal */}
+      {/* Error / Info / Success modal */}
       {openModal && (
         <div
           role="dialog"
@@ -499,7 +651,7 @@ const ReportsMobile = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-lg font-semibold mb-2">
-              📊 This data is coming soon
+              📊 Rajan Business Reports
             </div>
             <p className="text-gray-700 text-sm leading-relaxed mb-4">
               {modalMsg ||
