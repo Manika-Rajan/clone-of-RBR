@@ -74,7 +74,9 @@ const loadRazorpay = () =>
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => resolve(true);
     script.onerror = () =>
-      reject(new Error("Razorpay SDK failed to load. Please refresh and try again."));
+      reject(
+        new Error("Razorpay SDK failed to load. Please refresh and try again.")
+      );
     document.body.appendChild(script);
   });
 
@@ -311,7 +313,7 @@ const ReportsMobile = () => {
             }
 
             setModalMsg(
-              "✅ Thank you! Your report has been pre-booked. We will prepare it within 24 hours and add it to your profile."
+              "✅ Thank you! Your report has been pre-booked. Our team will research this topic in depth and add a detailed report to your profile within 2 working days."
             );
             setOpenModal(true);
           } catch (e) {
@@ -671,7 +673,7 @@ const ReportsMobile = () => {
 
       {/* Loader overlay */}
       {searchLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify:center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="relative z-10 bg-white rounded-2xl p-6 shadow-xl w-[90%] max-w-xs text-center">
             <div className="flex items-center justify-center mb-3">
@@ -730,10 +732,25 @@ const ReportsMobile = () => {
               Pre-book this report
             </div>
             <p className="text-gray-700 text-sm leading-relaxed mb-3">
-              You searched for: <strong>{prebookQuery}</strong>
+              We don’t yet have a ready-made report for:&nbsp;
+              <strong>{prebookQuery}</strong>
               <br />
-              Enter your details to pre-book this report. We will prepare it
-              within 24 hours and add it to your profile.
+              <br />
+              You can{" "}
+              <strong>pre-book a detailed, data-backed report</strong> on this
+              exact topic for{" "}
+              <span className="font-semibold text-green-700">₹499</span>{" "}
+              <span className="text-xs text-gray-500">
+                (full report price{" "}
+                <span className="line-through text-gray-400">₹2,999</span>)
+              </span>
+              .
+              <br />
+              <br />
+              Our analyst team will research your requirement and prepare a
+              practical, entrepreneur-focused report within{" "}
+              <strong>2 working days</strong>. Once it’s ready, it will be
+              added to your RBR profile and we’ll also update you on WhatsApp.
             </p>
 
             <form onSubmit={handlePrebookSubmit} className="space-y-3">
@@ -771,7 +788,7 @@ const ReportsMobile = () => {
                 type="submit"
                 className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
               >
-                Proceed to pay &amp; pre-book
+                Pay ₹499 &amp; pre-book
               </button>
 
               <button
@@ -808,7 +825,7 @@ const ReportsMobile = () => {
               </h3>
               <button
                 onClick={() => setSuggestOpen(false)}
-                className="h-8 w-8 rounded-full bg.white/70 hover:bg.white text-blue-700 flex items-center justify-center"
+                className="h-8 w-8 rounded-full bg-white/70 hover:bg-white text-blue-700 flex items-center justify-center"
                 aria-label="Close suggestions"
               >
                 ×
