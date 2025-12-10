@@ -220,6 +220,16 @@ const ReportsMobile = () => {
       return;
     }
 
+    // 🔹 Graceful fail if API base is not configured
+    if (!PREBOOK_API_BASE) {
+      console.error("PREBOOK_API_BASE is not configured");
+      setModalMsg(
+        "⚠️ Pre-booking is temporarily unavailable. Please contact us on WhatsApp or try again in a few minutes."
+      );
+      setOpenModal(true);
+      return;
+    }
+
     try {
       // 1) Hit backend to create prebooking + Razorpay order
       const resp = await fetch(`${PREBOOK_API_BASE}/prebook/create-order`, {
@@ -334,7 +344,7 @@ const ReportsMobile = () => {
     } catch (e) {
       console.error("startPrebookFlow error:", e);
       setModalMsg(
-        "⚠️ Something went wrong while starting the pre-booking. Please try again later."
+        "⚠️ Pre-booking is currently facing an issue. Please try again in a few minutes or contact us on WhatsApp."
       );
       setOpenModal(true);
     }
