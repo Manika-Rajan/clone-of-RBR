@@ -52,16 +52,16 @@ const PRESIGN_URL =
 const SUGGEST_URL =
   "https://vtwyu7hv50.execute-api.ap-south-1.amazonaws.com/default/suggest";
 
-// 🔴 When no report exists, we can still log a “create this report” request
+// When no report exists, we can still log a “create this report” request
 const REQUEST_REPORT_URL =
   "https://sicgpldzo8.execute-api.ap-south-1.amazonaws.com/report-request";
 
-// ⭐ NEW: Pre-booking API base
+// ⭐ Pre-booking API base
 const PREBOOK_API_BASE =
   process.env.REACT_APP_PREBOOK_API_BASE ||
   "https://jp1bupouyl.execute-api.ap-south-1.amazonaws.com/prod";
 
-// ⭐ NEW: Razorpay loader
+// ⭐ Razorpay loader
 const RAZORPAY_SCRIPT_ID = "razorpay-checkout-js";
 
 const loadRazorpay = () =>
@@ -123,6 +123,13 @@ const ReportsMobile = () => {
   const dropdownRef = useRef(null);
   const modalBtnRef = useRef(null);
 
+  // ⭐ NEW: Pre-book prompt modal state
+  const [prebookPromptOpen, setPrebookPromptOpen] = useState(false);
+  const [prebookQuery, setPrebookQuery] = useState("");
+  const [prebookName, setPrebookName] = useState("");
+  const [prebookPhone, setPrebookPhone] = useState("");
+  const [prebookError, setPrebookError] = useState("");
+
   // Autocomplete (static) chips under the input
   const matches = useMemo(() => {
     const v = q.trim().toLowerCase();
@@ -171,9 +178,9 @@ const ReportsMobile = () => {
     }
   };
 
-  // 🔴 When no matching report exists, queue a “create this report” request
+  // When no matching report exists, queue a “create this report” request
   const requestNewReport = async (query) => {
-    if (!REQUEST_REPORT_URL) return; // in case you haven't wired backend yet
+    if (!REQUEST_REPORT_URL) return;
     try {
       const payload = {
         search_query: query,
@@ -198,17 +205,14 @@ const ReportsMobile = () => {
     }
   };
 
-  // ⭐ NEW: Pre-booking flow
-  const startPrebookFlow = async (query) => {
+  // ⭐ Pre-booking flow – now receives name + phone explicitly
+  const startPrebookFlow = async (query, userName, userPhoneRaw) => {
     const trimmed = query.trim();
-    const userPhone =
-      state?.userInfo?.phone || state?.userInfo?.userId || "";
+    const userPhone = (userPhoneRaw || "").trim();
 
-    const userName = state?.userInfo?.name || "RBR User";
-
-    if (!userPhone) {
+    if (!trimmed || !userPhone) {
       setModalMsg(
-        "To pre-book this report, please login or verify your phone number in RBR and then search again."
+        "⚠️ Missing details for pre-booking. Please enter a valid name and phone."
       );
       setOpenModal(true);
       return;
@@ -221,7 +225,7 @@ const ReportsMobile = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userPhone,
-          userName,
+          userName: userName || "RBR User",
           reportTitle: trimmed,
           searchQuery: trimmed,
           notes: "",
@@ -275,7 +279,7 @@ const ReportsMobile = () => {
         description: `Pre-book: ${trimmed}`,
         order_id: razorpayOrderId,
         prefill: {
-          name: userName,
+          name: userName || "RBR User",
           contact: userPhone,
         },
         notes: {
@@ -334,7 +338,28 @@ const ReportsMobile = () => {
     }
   };
 
-  // 🔗 Given a slug, verify preview existence and navigate
+  // ⭐ Decide: use existing user or show pre-book prompt
+  const triggerPrebook = async (query) => {
+    const trimmed = query.trim();
+    const savedPhone =
+      state?.userInfo?.phone || state?.userInfo?.userId || "";
+    const savedName = state?.userInfo?.name || "";
+
+    if (savedPhone) {
+      // User is "known" – go straight to Razorpay
+      await startPrebookFlow(trimmed, savedName || "RBR User", savedPhone);
+      return;
+    }
+
+    // Ask for details in a small form
+    setPrebookQuery(trimmed);
+    setPrebookName(savedName);
+    setPrebookPhone("");
+    setPrebookError("");
+    setPrebookPromptOpen(true);
+  };
+
+  // Given a slug, verify preview existence and navigate
   const goToReportBySlug = async (reportSlug) => {
     if (!reportSlug) return;
     setSearchLoading(true);
@@ -456,8 +481,7 @@ const ReportsMobile = () => {
 
         // 1b) Nothing to suggest → tell user & start pre-booking
         await requestNewReport(trimmed); // still queue for your internal pipeline
-        // Immediately try pre-book flow
-        await startPrebookFlow(trimmed);
+        await triggerPrebook(trimmed);
         return;
       }
 
@@ -520,17 +544,38 @@ const ReportsMobile = () => {
     };
   }, [computeDropdownPos]);
 
-  // ESC to close modal/sheet
+  // ESC to close modals
   useEffect(() => {
     const onKey = (ev) => {
       if (ev.key === "Escape") {
         if (suggestOpen) setSuggestOpen(false);
         if (openModal) setOpenModal(false);
+        if (prebookPromptOpen) setPrebookPromptOpen(false);
       }
     };
-    if (openModal || suggestOpen) document.addEventListener("keydown", onKey);
+    if (openModal || suggestOpen || prebookPromptOpen) {
+      document.addEventListener("keydown", onKey);
+    }
     return () => document.removeEventListener("keydown", onKey);
-  }, [openModal, suggestOpen]);
+  }, [openModal, suggestOpen, prebookPromptOpen]);
+
+  // simple phone "validation": at least 10 digits
+  const handlePrebookSubmit = async (e) => {
+    e.preventDefault();
+    const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
+    if (phoneDigits.length < 10) {
+      setPrebookError("Please enter a valid phone number (at least 10 digits).");
+      return;
+    }
+    setPrebookError("");
+    setPrebookPromptOpen(false);
+
+    await startPrebookFlow(
+      prebookQuery,
+      prebookName || "RBR User",
+      phoneDigits
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-24 pb-10">
@@ -626,7 +671,7 @@ const ReportsMobile = () => {
 
       {/* Loader overlay */}
       {searchLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify:center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="relative z-10 bg-white rounded-2xl p-6 shadow-xl w-[90%] max-w-xs text-center">
             <div className="flex items-center justify-center mb-3">
@@ -637,7 +682,7 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* Error / Info / Success modal */}
+      {/* Generic info / success modal */}
       {openModal && (
         <div
           role="dialog"
@@ -668,6 +713,79 @@ const ReportsMobile = () => {
         </div>
       )}
 
+      {/* ⭐ Pre-book prompt modal (name + phone) */}
+      {prebookPromptOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          onClick={() => setPrebookPromptOpen(false)}
+        >
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div
+            className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-lg font-semibold mb-2">
+              Pre-book this report
+            </div>
+            <p className="text-gray-700 text-sm leading-relaxed mb-3">
+              You searched for: <strong>{prebookQuery}</strong>
+              <br />
+              Enter your details to pre-book this report. We will prepare it
+              within 24 hours and add it to your profile.
+            </p>
+
+            <form onSubmit={handlePrebookSubmit} className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Your name
+                </label>
+                <input
+                  type="text"
+                  value={prebookName}
+                  onChange={(e) => setPrebookName(e.target.value)}
+                  placeholder="Your name"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Phone number (WhatsApp)
+                </label>
+                <input
+                  type="tel"
+                  value={prebookPhone}
+                  onChange={(e) => setPrebookPhone(e.target.value)}
+                  placeholder="e.g. 919XXXXXXXXX"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {prebookError && (
+                <p className="text-xs text-red-600">{prebookError}</p>
+              )}
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
+              >
+                Proceed to pay &amp; pre-book
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPrebookPromptOpen(false)}
+                className="w-full mt-2 border border-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl active:scale-[0.98]"
+              >
+                Cancel
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Did you mean modal (classic, max 3 suggestions) */}
       {suggestOpen && (
         <div
@@ -690,7 +808,7 @@ const ReportsMobile = () => {
               </h3>
               <button
                 onClick={() => setSuggestOpen(false)}
-                className="h-8 w-8 rounded-full bg-white/70 hover:bg-white text-blue-700 flex items-center justify-center"
+                className="h-8 w-8 rounded-full bg.white/70 hover:bg.white text-blue-700 flex items-center justify-center"
                 aria-label="Close suggestions"
               >
                 ×
