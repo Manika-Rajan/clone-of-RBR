@@ -13,12 +13,14 @@ const Navbar = () => {
   const [login, setLogin] = useState(true);
   const [otp, sendOtp] = useState(false);
   const [verify, setVerify] = useState(false);
+
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const userInfo = state?.userInfo || {};
   const { name = "", isLogin = false } = userInfo;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false); // ⭐ burger state
+  const [mobileOpen, setMobileOpen] = useState(false); // ⭐ our burger state
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -68,33 +70,31 @@ const Navbar = () => {
                 className="me-2"
               />
               <div className="d-flex flex-column">
-                <span className="fw-semibold">Rajan Business Report Services</span>
+                <span className="fw-semibold">
+                  Rajan Business Report Services
+                </span>
                 <small className="text-muted d-none d-lg-block">
                   A product by Rajan Business Ideas
                 </small>
               </div>
             </Link>
 
-            {/* Toggler – wired to BOTH Bootstrap & React */}
+            {/* Toggler – now purely React-controlled */}
             <button
               className="navbar-toggler"
               type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarSupportedContent"
-              aria-controls="navbarSupportedContent"
-              aria-expanded={mobileOpen ? "true" : "false"}
               aria-label="Toggle navigation"
+              aria-expanded={mobileOpen ? "true" : "false"}
               onClick={() => setMobileOpen((prev) => !prev)}
             >
               <span className="navbar-toggler-icon" />
             </button>
 
-            {/* Collapsible content */}
+            {/* Our own responsive links container */}
             <div
               className={
-                "collapse navbar-collapse" + (mobileOpen ? " show" : "")
+                "rbr-nav-links" + (mobileOpen ? " rbr-nav-links-open" : "")
               }
-              id="navbarSupportedContent"
             >
               <ul className="navbar-nav ms-auto align-items-md-center mt-3 mt-md-0">
                 <li className="nav-item me-md-4">
