@@ -61,6 +61,11 @@ const PREBOOK_API_BASE =
   process.env.REACT_APP_PREBOOK_API_BASE ||
   "https://jp1bupouyl.execute-api.ap-south-1.amazonaws.com/prod";
 
+// ⭐ Single Pre-booking API URL (same path for create + confirm)
+// This matches your working curl:
+//   POST .../prod/prebook/create-order
+const PREBOOK_API_URL = `${PREBOOK_API_BASE}/prebook/create-order`;
+
 // ⭐ Razorpay loader
 const RAZORPAY_SCRIPT_ID = "razorpay-checkout-js";
 
@@ -208,6 +213,7 @@ const ReportsMobile = () => {
   };
 
   // ⭐ Pre-booking flow – now receives name + phone explicitly
+  // Uses a single backend URL (PREBOOK_API_URL) for both create + confirm.
   const startPrebookFlow = async (query, userName, userPhoneRaw) => {
     const trimmed = query.trim();
     const userPhone = (userPhoneRaw || "").trim();
@@ -220,9 +226,9 @@ const ReportsMobile = () => {
       return;
     }
 
-    // 🔹 Graceful fail if API base is not configured
-    if (!PREBOOK_API_BASE) {
-      console.error("PREBOOK_API_BASE is not configured");
+    // 🔹 Graceful fail if API URL is not configured
+    if (!PREBOOK_API_URL) {
+      console.error("PREBOOK_API_URL is not configured");
       setModalMsg(
         "⚠️ Pre-booking is temporarily unavailable. Please contact us on WhatsApp or try again in a few minutes."
       );
@@ -232,7 +238,7 @@ const ReportsMobile = () => {
 
     try {
       // 1) Hit backend to create prebooking + Razorpay order
-      const resp = await fetch(`${PREBOOK_API_BASE}/prebook/create-order`, {
+      const resp = await fetch(PREBOOK_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -302,20 +308,18 @@ const ReportsMobile = () => {
         },
         handler: async function (response) {
           try {
-            const confirmResp = await fetch(
-              `${PREBOOK_API_BASE}/prebook/confirm`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  userPhone,
-                  prebookId,
-                  razorpayOrderId,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature,
-                }),
-              }
-            );
+            // 🔁 Confirm using the same PREBOOK_API_URL (Lambda decides based on body fields)
+            const confirmResp = await fetch(PREBOOK_API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userPhone,
+                prebookId,
+                razorpayOrderId,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
 
             if (!confirmResp.ok) {
               const txt = await confirmResp.text();
@@ -329,7 +333,7 @@ const ReportsMobile = () => {
           } catch (e) {
             console.error("Error in prebook confirm handler:", e);
             setModalMsg(
-              "✅ Payment received. We will still prepare your report and add it to your profile, even if the confirmation took longer."
+              "✅ Payment received. We will still prepare your report and add it to your profile, even if the confirmation took a little longer."
             );
             setOpenModal(true);
           }
@@ -344,7 +348,7 @@ const ReportsMobile = () => {
     } catch (e) {
       console.error("startPrebookFlow error:", e);
       setModalMsg(
-        "⚠️ Pre-booking is currently facing an issue. Please try again in a few minutes or contact us on WhatsApp."
+        "⚠️ Something went wrong while starting the pre-booking. If any amount was deducted, our team will verify it from our side and contact you. Please try again later."
       );
       setOpenModal(true);
     }
@@ -590,7 +594,7 @@ const ReportsMobile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-24 pb-10">
+    <div className="min-h-screen bg-white flex flex-col items_center px-4 pt-24 pb-10">
       {/* (Header removed – global Navbar provides brand + menu) */}
 
       {/* Hero */}
@@ -829,7 +833,7 @@ const ReportsMobile = () => {
               </h3>
               <button
                 onClick={() => setSuggestOpen(false)}
-                className="h-8 w-8 rounded-full bg-white/70 hover:bg-white text-blue-700 flex items-center justify-center"
+                className="h-8 w-8 rounded-full bg-white/70 hover:bg-white text-blue-700 flex items-center justify_center"
                 aria-label="Close suggestions"
               >
                 ×
