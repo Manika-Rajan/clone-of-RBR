@@ -43,6 +43,17 @@
   flex-wrap: nowrap; /* keeps logo + title + burger in one row */
 }
 
+/* ===== BRAND AREA (LOGO + TEXT) ===== */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  min-width: 0;         /* allow text to shrink */
+}
+
+.navbar-brand .d-flex.flex-column {
+  min-width: 0;         /* allows ellipsis to work */
+}
+
 /* ===== LEFT: LOGO + TEXT ===== */
 .nav-left {
   display: flex;
@@ -61,12 +72,17 @@
   margin-left: 2px;
 }
 
-.nav-title {
+.nav-title,
+.navbar-brand .fw-semibold {
   font-size: 18px;
   font-weight: 700;
   margin: 0;
   color: var(--ink-900);
   letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;     /* desktop max width */
 }
 
 .text-desc {
@@ -182,7 +198,7 @@ button.btn.btn-primary {
   text-overflow: ellipsis;
 }
 
-/* ===== DROPDOWN MENU ===== */
+/* ===== DROPDOWN MENU (FORCE LIGHT) ===== */
 @keyframes fadeSlide {
   from { opacity: 0; transform: translateY(6px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
@@ -198,7 +214,8 @@ button.btn.btn-primary {
   pointer-events: none;
   transform: translateY(6px) scale(0.98);
   transform-origin: top right;
-  background: var(--surface);
+  background: #ffffff !important;          /* ✅ always light */
+  color: var(--ink-900);
   border: 1px solid rgba(2, 6, 23, 0.06);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
@@ -233,6 +250,7 @@ button.btn.btn-primary {
   border-radius: 12px;
   border-color: rgba(2,6,23,0.12) !important;
   padding: 6px 9px;
+  flex-shrink: 0; /* never shrink burger */
 }
 
 .navbar-toggler:focus {
@@ -266,13 +284,20 @@ button.btn.btn-primary {
     padding-right: 16px !important;
   }
 
+  /* Shorter title on small screens */
+  .navbar-brand .fw-semibold {
+    max-width: 180px; /* tighter so burger fits on the same row */
+    font-size: 16px;
+  }
+
   /* Panel that opens under the fixed navbar on mobile */
   .rbr-nav-links {
     position: absolute;
     top: 60px; /* approx navbar height; tweak if needed */
     left: 0;
     right: 0;
-    background: var(--surface);
+    background: #ffffff !important;      /* ✅ always white */
+    color: var(--ink-900);
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
     padding: 8px 0 10px;
     z-index: 1040;
@@ -312,31 +337,10 @@ button.btn.btn-primary {
   /* Keep brand + burger on the same row */
   .navbar-brand {
     max-width: calc(100% - 56px); /* leave room for burger */
-    display: flex;
-    align-items: center;
   }
 }
 
-/* ===== DARK MODE (system) ===== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --glass: rgba(17, 24, 39, 0.55);
-    --surface: #0b1220;
-    --ink-900: #e5e7eb;
-    --ink-700: #cbd5e1;
-    --ink-500: #94a3b8;
-    --ring: rgba(59,130,246,0.35);
-  }
-  .navbar {
-    border-bottom-color: rgba(148,163,184,0.12);
-  }
-  .logo img {
-    box-shadow: 0 2px 10px rgba(0,0,0,0.45);
-  }
-  .dropdown-item:hover {
-    background: rgba(255,255,255,0.06);
-  }
-}
+/* 🚫 Removed dark-mode override so we don't turn menus black */
 
 /* ===== MOTION PREFERENCES ===== */
 @media (prefers-reduced-motion: reduce) {
