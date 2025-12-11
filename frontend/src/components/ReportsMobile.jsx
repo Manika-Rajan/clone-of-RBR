@@ -113,6 +113,9 @@ const ReportsMobile = () => {
   const [modalMsg, setModalMsg] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
 
+  // ⭐ new: loading for pre-booking/payment flow
+  const [prebookLoading, setPrebookLoading] = useState(false);
+
   // Suggestion modal (classic)
   const [suggestOpen, setSuggestOpen] = useState(false);
   // items: [{title, slug}]
@@ -237,6 +240,7 @@ const ReportsMobile = () => {
       return;
     }
 
+    setPrebookLoading(true);
     try {
       // 1) Hit backend to create prebooking + Razorpay order
       const resp = await fetch(PREBOOK_API_URL, {
@@ -255,6 +259,7 @@ const ReportsMobile = () => {
       if (!resp.ok) {
         const text = await resp.text();
         console.error("prebook create-order failed", resp.status, text);
+        setPrebookLoading(false);
         setModalMsg(
           "⚠️ Could not start the pre-booking right now. Please try again in a few minutes."
         );
@@ -273,6 +278,7 @@ const ReportsMobile = () => {
 
       if (!prebookId || !razorpayOrderId || !razorpayKeyId) {
         console.error("Invalid prebook response:", data);
+        setPrebookLoading(false);
         setModalMsg(
           "⚠️ Something went wrong while preparing the payment. Please try again."
         );
@@ -283,6 +289,7 @@ const ReportsMobile = () => {
       // 2) Load Razorpay
       await loadRazorpay();
       if (!window.Razorpay) {
+        setPrebookLoading(false);
         setModalMsg(
           "⚠️ Payment SDK did not load properly. Please refresh the page and try again."
         );
@@ -308,7 +315,9 @@ const ReportsMobile = () => {
           reportTitle: trimmed,
           searchQuery: trimmed,
         },
-        handler: async function (response) {
+        handler: async (response) => {
+          // 🔄 Now Razorpay has returned; show loader while confirming.
+          setPrebookLoading(true);
           try {
             // 🔁 Confirm using the same PREBOOK_API_URL (Lambda decides based on body fields)
             const confirmResp = await fetch(PREBOOK_API_URL, {
@@ -338,6 +347,8 @@ const ReportsMobile = () => {
               "✅ Payment received. We will still prepare your report and add it to your profile, even if the confirmation took a little longer."
             );
             setOpenModal(true);
+          } finally {
+            setPrebookLoading(false);
           }
         },
         theme: {
@@ -347,8 +358,12 @@ const ReportsMobile = () => {
 
       const rzp = new window.Razorpay(options);
       rzp.open();
+
+      // Once Razorpay is open, we don't need our own loader.
+      setPrebookLoading(false);
     } catch (e) {
       console.error("startPrebookFlow error:", e);
+      setPrebookLoading(false);
       setModalMsg(
         "⚠️ Something went wrong while starting the pre-booking. If any amount was deducted, our team will verify it from our side and contact you. Please try again later."
       );
@@ -705,7 +720,7 @@ const ReportsMobile = () => {
           document.body
         )}
 
-      {/* Loader overlay */}
+      {/* Loader overlay for search */}
       {searchLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -714,6 +729,21 @@ const ReportsMobile = () => {
               <LoaderRing />
             </div>
             <div className="text-gray-800 text-sm">Fetching your request…</div>
+          </div>
+        </div>
+      )}
+
+      {/* Loader overlay for pre-booking / payment confirm */}
+      {prebookLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="relative z-10 bg-white rounded-2xl p-6 shadow-xl w-[90%] max-w-xs text-center">
+            <div className="flex items-center justify-center mb-3">
+              <LoaderRing />
+            </div>
+            <div className="text-gray-800 text-sm">
+              Processing your payment and confirming your pre-booking…
+            </div>
           </div>
         </div>
       )}
