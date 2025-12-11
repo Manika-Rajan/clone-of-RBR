@@ -22,7 +22,9 @@
   padding: 10px 20px;
   box-shadow: var(--shadow-md);
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  transition: background var(--speed) ease, box-shadow var(--speed) ease, transform var(--speed) ease;
+  transition: background var(--speed) ease,
+              box-shadow var(--speed) ease,
+              transform var(--speed) ease;
 }
 
 /* optional: add/remove .scrolled via JS if desired */
@@ -31,14 +33,22 @@
   box-shadow: var(--shadow-lg);
 }
 
-/* Container spacing */
-.container-fluid {
+/* Container spacing + flex alignment (only for navbar) */
+.navbar .container-fluid {
   padding-left: 32px !important;
   padding-right: 32px !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap; /* keeps logo + title + burger in one row */
 }
 
 /* ===== LEFT: LOGO + TEXT ===== */
-.nav-left { display: flex; align-items: center; gap: 12px; }
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
 .logo img {
   width: 52px;
@@ -47,7 +57,9 @@
   box-shadow: 0 2px 10px rgba(2,6,23,0.08);
 }
 
-.text { margin-left: 2px; }
+.text {
+  margin-left: 2px;
+}
 
 .nav-title {
   font-size: 18px;
@@ -70,7 +82,9 @@
   gap: 28px;
 }
 
-.nav-item { margin-right: 0; }
+.nav-item {
+  margin-right: 0;
+}
 
 .nav-link {
   position: relative;
@@ -114,17 +128,25 @@ button.btn.btn-primary {
   border: none;
   background: linear-gradient(90deg, var(--brand-500), var(--brand-600));
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
-  transition: transform var(--speed) ease, box-shadow var(--speed) ease, filter var(--speed) ease;
+  transition: transform var(--speed) ease,
+              box-shadow var(--speed) ease,
+              filter var(--speed) ease;
 }
+
 .btn.btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 26px rgba(37, 99, 235, 0.35);
   filter: saturate(1.05);
 }
-.btn.btn-primary:active { transform: translateY(0); }
+
+.btn.btn-primary:active {
+  transform: translateY(0);
+}
 
 /* ===== USER PROFILE (DESKTOP DROPDOWN) ===== */
-.nav-item.dropdown { position: relative; }
+.nav-item.dropdown {
+  position: relative;
+}
 
 .dropdown-toggle.user-menu {
   display: flex;
@@ -135,6 +157,7 @@ button.btn.btn-primary {
   border-radius: 12px;
   transition: background var(--speed) ease, box-shadow var(--speed) ease;
 }
+
 .dropdown-toggle.user-menu:hover {
   background: rgba(2, 6, 23, 0.03);
   box-shadow: 0 2px 12px rgba(2, 6, 23, 0.06) inset;
@@ -164,6 +187,7 @@ button.btn.btn-primary {
   from { opacity: 0; transform: translateY(6px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
+
 .navbar-nav .nav-item.dropdown .dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -183,6 +207,7 @@ button.btn.btn-primary {
   z-index: 1000;
   transition: opacity var(--speed) ease, transform var(--speed) ease;
 }
+
 .navbar-nav .nav-item.dropdown .dropdown-menu.show {
   opacity: 1;
   pointer-events: auto;
@@ -196,6 +221,7 @@ button.btn.btn-primary {
   font-weight: 600;
   transition: background var(--speed) ease, color var(--speed) ease;
 }
+
 .dropdown-item:hover,
 .dropdown-item:focus-visible {
   background: rgba(2, 6, 23, 0.04);
@@ -208,6 +234,7 @@ button.btn.btn-primary {
   border-color: rgba(2,6,23,0.12) !important;
   padding: 6px 9px;
 }
+
 .navbar-toggler:focus {
   box-shadow: 0 0 0 6px var(--ring) !important;
 }
@@ -216,10 +243,12 @@ button.btn.btn-primary {
 .navbar .navbar-nav { 
   flex-wrap: nowrap;
 }
+
 .navbar .nav-item {
   display: flex;
   align-items: center;
 }
+
 .navbar .nav-link {
   display: inline-flex;
   align-items: center;
@@ -230,32 +259,31 @@ button.btn.btn-primary {
   padding: 10px 14px;
 }
 
-/* ===== MOBILE: FIX COLLAPSE PANEL (THIS WAS THE PROBLEM AREA) ===== */
+/* ===== MOBILE: CUSTOM SLIDE-DOWN NAV (NO BOOTSTRAP COLLAPSE) ===== */
 @media (max-width: 991.98px) {
-  .container-fluid {
+  .navbar .container-fluid {
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
 
-  /* Make collapse an absolute panel below fixed navbar so it doesn't hide behind anything */
-  .navbar .navbar-collapse {
+  /* Panel that opens under the fixed navbar on mobile */
+  .rbr-nav-links {
     position: absolute;
-    top: 60px;                 /* approx navbar height; tweak to 56/64px if needed */
+    top: 60px; /* approx navbar height; tweak if needed */
     left: 0;
     right: 0;
     background: var(--surface);
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
     padding: 8px 0 10px;
-    z-index: 1040;             /* above main content */
+    z-index: 1040;
+    display: none; /* hidden by default */
   }
 
-  /* Rely on Bootstrap collapse classes; hide when not .show */
-  .navbar .navbar-collapse.collapse:not(.show) {
-    display: none !important;
+  .rbr-nav-links.rbr-nav-links-open {
+    display: block; /* show when burger state is true */
   }
 
-  /* Stack items vertically, full width */
-  .navbar .navbar-collapse .navbar-nav {
+  .rbr-nav-links .navbar-nav {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
@@ -263,12 +291,12 @@ button.btn.btn-primary {
     width: 100%;
   }
 
-  .navbar .navbar-collapse .nav-item {
+  .rbr-nav-links .nav-item {
     width: 100%;
     display: block;
   }
 
-  .navbar .navbar-collapse .nav-link {
+  .rbr-nav-links .nav-link {
     width: 100%;
     justify-content: flex-start;
     padding: 10px 16px;
@@ -276,9 +304,16 @@ button.btn.btn-primary {
     text-align: left;
   }
 
-  .navbar .navbar-collapse .nav-link.active {
+  .rbr-nav-links .nav-link.active {
     background: rgba(59,130,246,0.06);
     border-radius: 10px;
+  }
+
+  /* Keep brand + burger on the same row */
+  .navbar-brand {
+    max-width: calc(100% - 56px); /* leave room for burger */
+    display: flex;
+    align-items: center;
   }
 }
 
@@ -292,9 +327,15 @@ button.btn.btn-primary {
     --ink-500: #94a3b8;
     --ring: rgba(59,130,246,0.35);
   }
-  .navbar { border-bottom-color: rgba(148,163,184,0.12); }
-  .logo img { box-shadow: 0 2px 10px rgba(0,0,0,0.45); }
-  .dropdown-item:hover { background: rgba(255,255,255,0.06); }
+  .navbar {
+    border-bottom-color: rgba(148,163,184,0.12);
+  }
+  .logo img {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+  }
+  .dropdown-item:hover {
+    background: rgba(255,255,255,0.06);
+  }
 }
 
 /* ===== MOTION PREFERENCES ===== */
