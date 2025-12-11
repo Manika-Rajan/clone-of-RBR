@@ -130,12 +130,13 @@ const ReportsMobile = () => {
   const dropdownRef = useRef(null);
   const modalBtnRef = useRef(null);
 
-  // ⭐ NEW: Pre-book prompt modal state
+  // ⭐ Pre-book prompt modal state
   const [prebookPromptOpen, setPrebookPromptOpen] = useState(false);
   const [prebookQuery, setPrebookQuery] = useState("");
   const [prebookName, setPrebookName] = useState("");
   const [prebookPhone, setPrebookPhone] = useState("");
   const [prebookError, setPrebookError] = useState("");
+  const [prebookHasKnownUser, setPrebookHasKnownUser] = useState(false); // 🔹 logged-in vs guest
 
   // Autocomplete (static) chips under the input
   const matches = useMemo(() => {
@@ -247,6 +248,7 @@ const ReportsMobile = () => {
           reportTitle: trimmed,
           searchQuery: trimmed,
           notes: "",
+          // amountOptional: 100, // 🔧 for ₹1 test (100 paise). Comment out in prod.
         }),
       });
 
@@ -354,23 +356,19 @@ const ReportsMobile = () => {
     }
   };
 
-  // ⭐ Decide: use existing user or show pre-book prompt
+  // ⭐ Decide: always show pre-book modal.
+  // If we have a saved phone → show confirmation-only modal (no fields).
+  // If not → show form asking for name + phone.
   const triggerPrebook = async (query) => {
     const trimmed = query.trim();
     const savedPhone =
       state?.userInfo?.phone || state?.userInfo?.userId || "";
     const savedName = state?.userInfo?.name || "";
 
-    if (savedPhone) {
-      // User is "known" – go straight to Razorpay
-      await startPrebookFlow(trimmed, savedName || "RBR User", savedPhone);
-      return;
-    }
-
-    // Ask for details in a small form
     setPrebookQuery(trimmed);
     setPrebookName(savedName);
-    setPrebookPhone("");
+    setPrebookPhone(savedPhone); // if logged-in, we keep this hidden but use it
+    setPrebookHasKnownUser(!!savedPhone);
     setPrebookError("");
     setPrebookPromptOpen(true);
   };
@@ -578,6 +576,28 @@ const ReportsMobile = () => {
   // simple phone "validation": at least 10 digits
   const handlePrebookSubmit = async (e) => {
     e.preventDefault();
+
+    if (prebookHasKnownUser) {
+      // 🔹 Logged-in user flow: no inputs, just confirmation.
+      const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
+      if (phoneDigits.length < 10) {
+        setPrebookError(
+          "Your saved phone number seems invalid. Please update your profile or contact us."
+        );
+        return;
+      }
+      setPrebookError("");
+      setPrebookPromptOpen(false);
+
+      await startPrebookFlow(
+        prebookQuery,
+        prebookName || "RBR User",
+        phoneDigits
+      );
+      return;
+    }
+
+    // 🔹 Guest flow: validate phone entered in form.
     const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
     if (phoneDigits.length < 10) {
       setPrebookError("Please enter a valid phone number (at least 10 digits).");
@@ -594,7 +614,7 @@ const ReportsMobile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items_center px-4 pt-24 pb-10">
+    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-24 pb-10">
       {/* (Header removed – global Navbar provides brand + menu) */}
 
       {/* Hero */}
@@ -729,7 +749,7 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* ⭐ Pre-book prompt modal (name + phone) */}
+      {/* ⭐ Pre-book prompt modal (name + phone or just confirm for logged-in) */}
       {prebookPromptOpen && (
         <div
           role="dialog"
@@ -750,43 +770,50 @@ const ReportsMobile = () => {
               <strong>{prebookQuery}</strong>.
               <br />
               <br />
-              Pre-book a detailed report on this topic for{" "}
+              You can{" "}
+              <strong>pre-book a detailed, data-backed report</strong> on this
+              exact topic for{" "}
               <span className="font-semibold text-green-700">₹499</span>{" "}
               <span className="text-xs text-gray-500">
                 (full price{" "}
                 <span className="line-through text-gray-400">₹2,999</span>)
               </span>
-              . Our team will research it for you and add the report to your
-              RBR profile within <strong>2 working days</strong> and update you
-              on WhatsApp.
+              . Our team will research it specifically for your requirement and
+              add the report to your RBR profile within{" "}
+              <strong>2 working days</strong> and update you on WhatsApp.
             </p>
 
             <form onSubmit={handlePrebookSubmit} className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Your name
-                </label>
-                <input
-                  type="text"
-                  value={prebookName}
-                  onChange={(e) => setPrebookName(e.target.value)}
-                  placeholder="Your name"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              {/* 🔹 Only show inputs if we DON'T already know the user's phone */}
+              {!prebookHasKnownUser && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Your name
+                    </label>
+                    <input
+                      type="text"
+                      value={prebookName}
+                      onChange={(e) => setPrebookName(e.target.value)}
+                      placeholder="Your name"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Phone number (WhatsApp)
-                </label>
-                <input
-                  type="tel"
-                  value={prebookPhone}
-                  onChange={(e) => setPrebookPhone(e.target.value)}
-                  placeholder="e.g. 919XXXXXXXXX"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Phone number (WhatsApp)
+                    </label>
+                    <input
+                      type="tel"
+                      value={prebookPhone}
+                      onChange={(e) => setPrebookPhone(e.target.value)}
+                      placeholder="e.g. 919XXXXXXXXX"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </>
+              )}
 
               {prebookError && (
                 <p className="text-xs text-red-600">{prebookError}</p>
@@ -833,7 +860,7 @@ const ReportsMobile = () => {
               </h3>
               <button
                 onClick={() => setSuggestOpen(false)}
-                className="h-8 w-8 rounded-full bg-white/70 hover:bg-white text-blue-700 flex items-center justify_center"
+                className="h-8 w-8 rounded-full bg-white/70 hover:bg-white text-blue-700 flex items-center justify-center"
                 aria-label="Close suggestions"
               >
                 ×
