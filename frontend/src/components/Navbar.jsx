@@ -18,7 +18,7 @@ const Navbar = () => {
   const { name = "", isLogin = false } = userInfo;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false); // ⭐ controls burger menu
+  const [mobileOpen, setMobileOpen] = useState(false); // ⭐ burger state
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,7 +26,7 @@ const Navbar = () => {
     console.log("Navbar rerendered - isLogin:", isLogin, "name:", name);
   }, [isLogin, name]);
 
-  // Close mobile menu whenever route changes
+  // Close mobile menu when route changes
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
@@ -38,7 +38,7 @@ const Navbar = () => {
   const handleLogout = () => {
     cxtDispatch?.({ type: "LOGOUT" });
     setDropdownOpen(false);
-    setMobileOpen(false); // close burger menu on logout (mobile)
+    setMobileOpen(false);
     navigate("/");
   };
 
@@ -75,14 +75,16 @@ const Navbar = () => {
               </div>
             </Link>
 
-            {/* Toggler (handled by React, not Bootstrap JS) */}
+            {/* Toggler – wired to BOTH Bootstrap & React */}
             <button
               className="navbar-toggler"
               type="button"
-              onClick={() => setMobileOpen((prev) => !prev)}
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarSupportedContent"
               aria-controls="navbarSupportedContent"
               aria-expanded={mobileOpen ? "true" : "false"}
               aria-label="Toggle navigation"
+              onClick={() => setMobileOpen((prev) => !prev)}
             >
               <span className="navbar-toggler-icon" />
             </button>
