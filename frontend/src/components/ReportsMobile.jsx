@@ -1,5 +1,4 @@
 // RBR/frontend/src/components/ReportsMobile.jsx
-import "./ReportsMobileNavbar.css";
 // Mobile landing — logs searches; navigates only if a known report's preview exists.
 // If no exact match, calls /suggest (POST) and shows a classic “Did you mean…?” popup (ice-blue).
 // If still nothing, offers a Pre-Book flow using Razorpay + Prebooking API.
