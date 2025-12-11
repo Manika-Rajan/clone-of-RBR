@@ -1,0 +1,154 @@
+/* RBR/frontend/src/components/ReportsMobileNavbar.css
+   Scoped styles ONLY for the mobile navbar + dropdown.
+   All class names prefixed with rbrm- to avoid conflicts. */
+
+/* Top navbar bar (mobile & desktop) */
+.rbrm-navbar {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+  z-index: 40;
+  box-sizing: border-box;
+}
+
+.rbrm-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rbrm-navbar-logo {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+
+.rbrm-navbar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827; /* gray-900 */
+  white-space: nowrap;
+}
+
+/* Desktop links container */
+.rbrm-navbar-links-desktop {
+  display: none;
+  align-items: center;
+  gap: 20px;
+  font-size: 14px;
+}
+
+/* Burger button (mobile only) */
+.rbrm-burger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.rbrm-burger-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background-color: #111827; /* gray-900 */
+}
+
+.rbrm-burger-line + .rbrm-burger-line {
+  margin-top: 4px;
+}
+
+/* Active link highlight */
+.rbrm-link {
+  color: #374151; /* gray-700 */
+  text-decoration: none;
+}
+
+.rbrm-link-active {
+  color: #1d4ed8; /* blue-700 */
+  font-weight: 600;
+}
+
+/* ===== Mobile dropdown ===== */
+
+/* Full-screen overlay behind the menu */
+.rbrm-mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 30;
+}
+
+/* Dropdown panel itself */
+.rbrm-mobile-menu {
+  position: absolute;
+  top: 56px; /* just under navbar height */
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18); /* slate-ish */
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 41;
+  animation: rbrm-slide-down 0.16s ease-out;
+}
+
+.rbrm-mobile-menu-inner {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px 14px;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.rbrm-mobile-item {
+  padding: 8px 4px;
+}
+
+/* Simple slide-down animation */
+@keyframes rbrm-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Responsive breakpoints ===== */
+
+/* Desktop: show desktop links, hide burger & mobile menu */
+@media (min-width: 768px) {
+  .rbrm-navbar {
+    height: 64px;
+    padding-inline: 24px;
+  }
+
+  .rbrm-navbar-links-desktop {
+    display: flex;
+  }
+
+  .rbrm-burger-btn {
+    display: none;
+  }
+
+  .rbrm-mobile-overlay,
+  .rbrm-mobile-menu {
+    display: none !important;
+  }
+}
