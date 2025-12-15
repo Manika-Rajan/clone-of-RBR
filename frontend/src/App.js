@@ -26,6 +26,7 @@ import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import ReportsDisplayMobile from './components/ReportsDisplayMobile';
 import PurchaseSuccess from './components/PurchaseSuccess';
 import ReportRequestsDashboard from "./components/ReportRequestsDashboard";
+import PrebookSuccess from './components/PrebookSuccess';
 
 
 
@@ -68,7 +69,8 @@ function AppContent() {
               <PurchaseSuccess />
             </ProtectedRoute>
           }
-        />  
+        />
+        <Route path="/prebook-success" element={<PrebookSuccess />} />
         <Route path='/commingSoon' element={<CommingSoon />} />
         <Route path='/not-found' element={<Invalid />} />
         <Route path="/profile" element={
