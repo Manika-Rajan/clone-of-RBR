@@ -742,40 +742,64 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* ✅ NEW: Retry payment modal */}
+      {/* ✅ Retry payment modal (centered + different theme) */}
       {retryOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={() => setRetryOpen(false)}
         >
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      
           <div
-            className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
+            className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-2xl border border-amber-200 bg-[#FFF7ED] p-5"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-lg font-semibold mb-2">Payment cancelled</div>
-            <p className="text-gray-700 text-sm leading-relaxed mb-4">
-              No worries — you can retry the payment now with the same details.
+            {/* Header */}
+            <div className="flex items-start gap-3 mb-3">
+              <div className="shrink-0 h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                <span style={{ fontSize: 20 }}>⚠️</span>
+              </div>
+              <div className="min-w-0">
+                <div className="text-base font-semibold text-amber-900">
+                  Payment cancelled
+                </div>
+                <div className="text-xs text-amber-900/70 mt-0.5">
+                  No money was taken (in most cases). You can retry immediately.
+                </div>
+              </div>
+              <button
+                onClick={() => setRetryOpen(false)}
+                className="ml-auto h-8 w-8 rounded-full bg-white/70 hover:bg-white text-amber-800 flex items-center justify-center"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+      
+            <p className="text-sm text-amber-900/80 mb-4 leading-relaxed">
+              Your details are saved. Tap <strong>Retry payment</strong> to open the
+              payment window again.
             </p>
-
+      
             <button
               onClick={retryPrebookPayment}
-              className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
             >
               Retry payment
             </button>
-
+      
             <button
               onClick={() => setRetryOpen(false)}
-              className="w-full mt-2 border border-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl active:scale-[0.98]"
+              className="w-full mt-2 border border-amber-200 hover:border-amber-300 bg-white text-amber-900 font-semibold py-2.5 rounded-xl active:scale-[0.98]"
             >
               Close
             </button>
           </div>
         </div>
       )}
+
 
       {/* Generic info / success modal */}
       {openModal && (
