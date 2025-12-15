@@ -64,9 +64,9 @@ const PREBOOK_API_BASE =
 // ⭐ Single Pre-booking API URL (same path for create + confirm)
 const PREBOOK_API_URL = `${PREBOOK_API_BASE}/prebook/create-order`;
 
-// ✅ Google Ads conversion for PREBOOK (₹499) — stored in .env
-const PREBOOK_CONV_SEND_TO =
-  process.env.REACT_APP_ADS_PREBOOK_SEND_TO || ""; // e.g. AW-824378442/X8klCKyRw9EbEMqIjIkD
+// ✅ Google Ads conversion for PREBOOK (₹499) — hardcoded
+const PREBOOK_CONV_SEND_TO = "AW-824378442/X8klCKyRw9EbEMqIjIkD";
+
 
 // Fire Google Ads conversion safely (once per paymentId)
 function fireGoogleAdsPrebookConversion({ paymentId, valueINR }) {
