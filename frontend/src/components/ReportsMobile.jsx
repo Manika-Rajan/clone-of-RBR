@@ -83,6 +83,61 @@ const loadRazorpay = () =>
     document.body.appendChild(script);
   });
 
+/** ✅ NEW: Google Ads Prebook conversion label (we’ll set real value later in .env) */
+const ADS_PREBOOK_SEND_TO =
+  process.env.REACT_APP_ADS_PREBOOK_SEND_TO || ""; // e.g. "AW-123456789/AbCdEfGhIjK"
+
+/** ✅ NEW: fire GA4 + Ads conversions for prebook payment (deduped by paymentId) */
+const firePrebookConversions = ({
+  paymentId,
+  amountPaise,
+  currency,
+  prebookId,
+  query,
+}) => {
+  try {
+    if (!paymentId) return;
+
+    const guardKey = `rbr_prebook_conv_${paymentId}`;
+    if (sessionStorage.getItem(guardKey)) return;
+
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      const valueINR = Number(amountPaise || 0) / 100 || 499;
+
+      // GA4 event (custom)
+      window.gtag("event", "prebook_purchase", {
+        value: valueINR,
+        currency: currency || "INR",
+        transaction_id: paymentId,
+        prebook_id: prebookId || "",
+        search_term: query || "",
+      });
+
+      // Google Ads conversion (only if you set a valid send_to)
+      if (ADS_PREBOOK_SEND_TO) {
+        window.gtag("event", "conversion", {
+          send_to: ADS_PREBOOK_SEND_TO,
+          value: valueINR,
+          currency: currency || "INR",
+          transaction_id: paymentId,
+        });
+      } else {
+        console.warn(
+          "[Ads] REACT_APP_ADS_PREBOOK_SEND_TO not set yet; skipping Ads conversion."
+        );
+      }
+
+      sessionStorage.setItem(guardKey, "1");
+      console.log("[Tracking] Prebook conversions fired:", {
+        paymentId,
+        valueINR,
+      });
+    }
+  } catch (e) {
+    console.error("[Tracking] firePrebookConversions error:", e);
+  }
+};
+
 // Loader
 const LoaderRing = () => (
   <svg viewBox="0 0 100 100" className="w-14 h-14 animate-spin-slow">
@@ -114,14 +169,9 @@ const ReportsMobile = () => {
   // ⭐ new: loading for pre-booking/payment flow
   const [prebookLoading, setPrebookLoading] = useState(false);
 
-  // ✅ NEW: Retry modal state + context (same details used for retry)
+  // ✅ Retry modal state + context (same details used for retry)
   const [retryOpen, setRetryOpen] = useState(false);
   const [retryCtx, setRetryCtx] = useState(null);
-  // retryCtx shape:
-  // {
-  //   prebookId, razorpayOrderId, amount, currency, razorpayKeyId,
-  //   trimmed, userName, userPhone
-  // }
 
   // Suggestion modal (classic)
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -212,7 +262,7 @@ const ReportsMobile = () => {
     }
   };
 
-  // ✅ NEW: open Razorpay with an existing order (used for both first attempt and retry)
+  // ✅ open Razorpay with an existing order (used for both first attempt and retry)
   const openRazorpayForPrebook = async ({
     prebookId,
     razorpayOrderId,
@@ -271,6 +321,16 @@ const ReportsMobile = () => {
           } catch (e) {
             console.error("Error in prebook confirm handler:", e);
           } finally {
+            // ✅ NEW: fire conversions ON SUCCESS (Razorpay success => payment succeeded)
+            // (Even if confirm API fails due to network, payment is still successful)
+            firePrebookConversions({
+              paymentId: response?.razorpay_payment_id,
+              amountPaise: amount,
+              currency,
+              prebookId,
+              query: trimmed,
+            });
+
             setPrebookLoading(false);
           }
 
@@ -289,7 +349,7 @@ const ReportsMobile = () => {
           });
         },
 
-        // ✅ MODIFIED: on dismiss -> show Retry modal with stored context
+        // on dismiss -> show Retry modal with stored context
         modal: {
           ondismiss: () => {
             setPrebookLoading(false);
@@ -314,18 +374,15 @@ const ReportsMobile = () => {
       rzp.open();
     } catch (e) {
       console.error("openRazorpayForPrebook error:", e);
-      setModalMsg(
-        "⚠️ Could not open payment right now. Please try again in a few minutes."
-      );
+      setModalMsg("⚠️ Could not open payment right now. Please try again in a few minutes.");
       setOpenModal(true);
     }
   };
 
-  // ✅ NEW: retry button handler (reopen Razorpay with same details)
+  // ✅ retry button handler
   const retryPrebookPayment = async () => {
     if (!retryCtx) return;
     setRetryOpen(false);
-    // optional: show loader briefly
     setPrebookLoading(true);
     try {
       await openRazorpayForPrebook(retryCtx);
@@ -386,7 +443,6 @@ const ReportsMobile = () => {
         return;
       }
 
-      // ✅ Store retry context immediately (so even if dismiss happens, we have it)
       setRetryCtx({
         prebookId,
         razorpayOrderId,
@@ -398,7 +454,6 @@ const ReportsMobile = () => {
         userPhone,
       });
 
-      // ✅ Open Razorpay using shared helper (supports retry modal too)
       setPrebookLoading(false);
       await openRazorpayForPrebook({
         prebookId,
@@ -751,12 +806,11 @@ const ReportsMobile = () => {
           onClick={() => setRetryOpen(false)}
         >
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      
+
           <div
             className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-2xl border border-amber-200 bg-[#FFF7ED] p-5"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="flex items-start gap-3 mb-3">
               <div className="shrink-0 h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
                 <span style={{ fontSize: 20 }}>⚠️</span>
@@ -777,19 +831,19 @@ const ReportsMobile = () => {
                 ×
               </button>
             </div>
-      
+
             <p className="text-sm text-amber-900/80 mb-4 leading-relaxed">
               Your details are saved. Tap <strong>Retry payment</strong> to open the
               payment window again.
             </p>
-      
+
             <button
               onClick={retryPrebookPayment}
               className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
             >
               Retry payment
             </button>
-      
+
             <button
               onClick={() => setRetryOpen(false)}
               className="w-full mt-2 border border-amber-200 hover:border-amber-300 bg-white text-amber-900 font-semibold py-2.5 rounded-xl active:scale-[0.98]"
@@ -799,7 +853,6 @@ const ReportsMobile = () => {
           </div>
         </div>
       )}
-
 
       {/* Generic info / success modal */}
       {openModal && (
