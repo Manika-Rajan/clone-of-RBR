@@ -62,8 +62,6 @@ const PREBOOK_API_BASE =
   "https://jp1bupouyl.execute-api.ap-south-1.amazonaws.com/prod";
 
 // ⭐ Single Pre-booking API URL (same path for create + confirm)
-// This matches your working curl:
-//   POST .../prod/prebook/create-order
 const PREBOOK_API_URL = `${PREBOOK_API_BASE}/prebook/create-order`;
 
 // ⭐ Razorpay loader
@@ -230,7 +228,6 @@ const ReportsMobile = () => {
       return;
     }
 
-    // 🔹 Graceful fail if API URL is not configured
     if (!PREBOOK_API_URL) {
       console.error("PREBOOK_API_URL is not configured");
       setModalMsg(
@@ -315,11 +312,13 @@ const ReportsMobile = () => {
           reportTitle: trimmed,
           searchQuery: trimmed,
         },
+
+        // ✅ MODIFIED: redirect to /prebook-success (Option A)
         handler: async (response) => {
-          // 🔄 Now Razorpay has returned; show loader while confirming.
           setPrebookLoading(true);
+          let confirmOk = false;
+
           try {
-            // 🔁 Confirm using the same PREBOOK_API_URL (Lambda decides based on body fields)
             const confirmResp = await fetch(PREBOOK_API_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -332,25 +331,43 @@ const ReportsMobile = () => {
               }),
             });
 
+            confirmOk = confirmResp.ok;
+
             if (!confirmResp.ok) {
               const txt = await confirmResp.text();
               console.error("prebook confirm failed:", confirmResp.status, txt);
             }
-
-            setModalMsg(
-              "✅ Thank you! Your report has been pre-booked. Our team will research this topic in depth and add a detailed report to your profile within 2 working days."
-            );
-            setOpenModal(true);
           } catch (e) {
             console.error("Error in prebook confirm handler:", e);
-            setModalMsg(
-              "✅ Payment received. We will still prepare your report and add it to your profile, even if the confirmation took a little longer."
-            );
-            setOpenModal(true);
           } finally {
             setPrebookLoading(false);
           }
+
+          // ✅ Navigate to success page (works for logged-in + guest)
+          navigate("/prebook-success", {
+            replace: true,
+            state: {
+              prebookId,
+              reportTitle: trimmed,
+              userPhone,
+              userName: userName || "RBR User",
+              amount,
+              currency,
+              confirmOk,
+              razorpayPaymentId: response.razorpay_payment_id,
+            },
+          });
         },
+
+        // ✅ MODIFIED: handle user closing Razorpay
+        modal: {
+          ondismiss: () => {
+            setPrebookLoading(false);
+            setModalMsg("Payment cancelled. You can try again anytime.");
+            setOpenModal(true);
+          },
+        },
+
         theme: {
           color: "#0263c7",
         },
@@ -372,8 +389,6 @@ const ReportsMobile = () => {
   };
 
   // ⭐ Decide: always show pre-book modal.
-  // If we have a saved phone → show confirmation-only modal (no fields).
-  // If not → show form asking for name + phone.
   const triggerPrebook = async (query) => {
     const trimmed = query.trim();
     const savedPhone =
@@ -382,7 +397,7 @@ const ReportsMobile = () => {
 
     setPrebookQuery(trimmed);
     setPrebookName(savedName);
-    setPrebookPhone(savedPhone); // if logged-in, we keep this hidden but use it
+    setPrebookPhone(savedPhone);
     setPrebookHasKnownUser(!!savedPhone);
     setPrebookError("");
     setPrebookPromptOpen(true);
@@ -420,7 +435,6 @@ const ReportsMobile = () => {
         return;
       }
 
-      // Small probe (be lenient; navigate even if probe fails network-wise)
       try {
         const probe = await fetch(url, {
           method: "GET",
@@ -439,7 +453,7 @@ const ReportsMobile = () => {
           return;
         }
       } catch {
-        // ignore transient probe errors; still navigate
+        // ignore transient probe errors
       }
 
       navigate("/report-display", { state: { reportSlug, reportId } });
@@ -471,7 +485,6 @@ const ReportsMobile = () => {
         search_term: trimmed,
       });
 
-      // log to your search-log Lambda
       const payload = {
         search_query: trimmed,
         user: {
@@ -492,29 +505,24 @@ const ReportsMobile = () => {
       }
       await logResp.json();
 
-      // 1) Try strict router first (no fallback)
       const reportSlug = resolveSlug(trimmed);
       if (!reportSlug) {
-        // 1a) Ask suggest API (this should search rbrfinalfiles in S3)
         const { items } = await fetchSuggestions(trimmed);
         if (items && items.length > 0) {
-          // Map API -> modal items with slug (so clicks can jump straight to report)
           const mapped = items.map((it) => ({
             title: it.title || it.slug,
-            slug: it.slug, // crucial
+            slug: it.slug,
           }));
           setSuggestItems(mapped.slice(0, 3));
           setSuggestOpen(true);
           return;
         }
 
-        // 1b) Nothing to suggest → tell user & start pre-booking
-        await requestNewReport(trimmed); // still queue for your internal pipeline
+        await requestNewReport(trimmed);
         await triggerPrebook(trimmed);
         return;
       }
 
-      // 2) We have a slug → go open the report
       await goToReportBySlug(reportSlug);
     } catch (e) {
       console.error("Error during search flow:", e);
@@ -546,7 +554,6 @@ const ReportsMobile = () => {
     setShowSuggestions(true);
   };
 
-  // close suggestions when clicking out
   useEffect(() => {
     const handleClick = (e) => {
       const insideDropdown = dropdownRef.current?.contains(e.target);
@@ -561,7 +568,6 @@ const ReportsMobile = () => {
     };
   }, []);
 
-  // reposition on resize; close on scroll
   useEffect(() => {
     const onResize = () => computeDropdownPos();
     const onScroll = () => setShowSuggestions(false);
@@ -573,7 +579,6 @@ const ReportsMobile = () => {
     };
   }, [computeDropdownPos]);
 
-  // ESC to close modals
   useEffect(() => {
     const onKey = (ev) => {
       if (ev.key === "Escape") {
@@ -588,12 +593,10 @@ const ReportsMobile = () => {
     return () => document.removeEventListener("keydown", onKey);
   }, [openModal, suggestOpen, prebookPromptOpen]);
 
-  // simple phone "validation": at least 10 digits
   const handlePrebookSubmit = async (e) => {
     e.preventDefault();
 
     if (prebookHasKnownUser) {
-      // 🔹 Logged-in user flow: no inputs, just confirmation.
       const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
       if (phoneDigits.length < 10) {
         setPrebookError(
@@ -612,7 +615,6 @@ const ReportsMobile = () => {
       return;
     }
 
-    // 🔹 Guest flow: validate phone entered in form.
     const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
     if (phoneDigits.length < 10) {
       setPrebookError("Please enter a valid phone number (at least 10 digits).");
@@ -792,9 +794,7 @@ const ReportsMobile = () => {
             className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-lg font-semibold mb-2">
-              Pre-book this report
-            </div>
+            <div className="text-lg font-semibold mb-2">Pre-book this report</div>
             <p className="text-gray-700 text-sm leading-relaxed mb-3">
               We don&apos;t yet have a ready report for{" "}
               <strong>{prebookQuery}</strong>.
@@ -814,7 +814,6 @@ const ReportsMobile = () => {
             </p>
 
             <form onSubmit={handlePrebookSubmit} className="space-y-3">
-              {/* 🔹 Only show inputs if we DON'T already know the user's phone */}
               {!prebookHasKnownUser && (
                 <>
                   <div>
@@ -845,9 +844,7 @@ const ReportsMobile = () => {
                 </>
               )}
 
-              {prebookError && (
-                <p className="text-xs text-red-600">{prebookError}</p>
-              )}
+              {prebookError && <p className="text-xs text-red-600">{prebookError}</p>}
 
               <button
                 type="submit"
@@ -868,7 +865,7 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* Did you mean modal (classic, max 3 suggestions) */}
+      {/* Did you mean modal */}
       {suggestOpen && (
         <div
           role="dialog"
@@ -876,18 +873,13 @@ const ReportsMobile = () => {
           className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={() => setSuggestOpen(false)}
         >
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-
-          {/* Centered modal */}
           <div
             className="relative z-10 w-[92%] max-w-sm rounded-2xl shadow-2xl border border-blue-100 bg-[#EAF6FF] p-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-2">
-              <h3 className="text-base font-semibold text-blue-900">
-                Did you mean…
-              </h3>
+              <h3 className="text-base font-semibold text-blue-900">Did you mean…</h3>
               <button
                 onClick={() => setSuggestOpen(false)}
                 className="h-8 w-8 rounded-full bg-white/70 hover:bg-white text-blue-700 flex items-center justify-center"
@@ -909,7 +901,6 @@ const ReportsMobile = () => {
                   className="w-full text-left rounded-xl border border-blue-100 bg-white/80 hover:bg-white hover:border-blue-200 hover:shadow-md active:scale-[0.99] transition-all p-3 flex items-center gap-3"
                   onClick={() => {
                     setSuggestOpen(false);
-                    // Navigate directly using the slug
                     goToReportBySlug(s.slug || resolveSlug(s.title || ""));
                   }}
                 >
