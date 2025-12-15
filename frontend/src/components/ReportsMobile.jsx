@@ -64,6 +64,42 @@ const PREBOOK_API_BASE =
 // ⭐ Single Pre-booking API URL (same path for create + confirm)
 const PREBOOK_API_URL = `${PREBOOK_API_BASE}/prebook/create-order`;
 
+// ✅ Google Ads conversion for PREBOOK (₹499) — stored in .env
+const PREBOOK_CONV_SEND_TO =
+  process.env.REACT_APP_ADS_PREBOOK_SEND_TO || ""; // e.g. AW-824378442/X8klCKyRw9EbEMqIjIkD
+
+// Fire Google Ads conversion safely (once per paymentId)
+function fireGoogleAdsPrebookConversion({ paymentId, valueINR }) {
+  try {
+    if (!PREBOOK_CONV_SEND_TO) {
+      console.warn("[Ads] Prebook send_to missing; skip fire.");
+      return;
+    }
+    if (!paymentId) return;
+
+    const guardKey = `ads_prebook_conv_fired_${paymentId}`;
+    if (sessionStorage.getItem(guardKey)) {
+      console.log("[Ads] Prebook conversion already fired for", paymentId);
+      return;
+    }
+
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      window.gtag("event", "conversion", {
+        send_to: PREBOOK_CONV_SEND_TO,
+        value: Number(valueINR) || 499.0,
+        currency: "INR",
+        transaction_id: paymentId, // use Razorpay payment_id as transaction id
+      });
+      sessionStorage.setItem(guardKey, "1");
+      console.log("[Ads] Prebook conversion fired:", { paymentId, valueINR });
+    } else {
+      console.warn("[Ads] gtag not available; skip prebook conversion fire.");
+    }
+  } catch (e) {
+    console.error("[Ads] Prebook conversion fire error:", e);
+  }
+}
+
 // ⭐ Razorpay loader
 const RAZORPAY_SCRIPT_ID = "razorpay-checkout-js";
 
@@ -82,61 +118,6 @@ const loadRazorpay = () =>
       );
     document.body.appendChild(script);
   });
-
-/** ✅ NEW: Google Ads Prebook conversion label (we’ll set real value later in .env) */
-const ADS_PREBOOK_SEND_TO =
-  process.env.REACT_APP_ADS_PREBOOK_SEND_TO || ""; // e.g. "AW-123456789/AbCdEfGhIjK"
-
-/** ✅ NEW: fire GA4 + Ads conversions for prebook payment (deduped by paymentId) */
-const firePrebookConversions = ({
-  paymentId,
-  amountPaise,
-  currency,
-  prebookId,
-  query,
-}) => {
-  try {
-    if (!paymentId) return;
-
-    const guardKey = `rbr_prebook_conv_${paymentId}`;
-    if (sessionStorage.getItem(guardKey)) return;
-
-    if (typeof window !== "undefined" && typeof window.gtag === "function") {
-      const valueINR = Number(amountPaise || 0) / 100 || 499;
-
-      // GA4 event (custom)
-      window.gtag("event", "prebook_purchase", {
-        value: valueINR,
-        currency: currency || "INR",
-        transaction_id: paymentId,
-        prebook_id: prebookId || "",
-        search_term: query || "",
-      });
-
-      // Google Ads conversion (only if you set a valid send_to)
-      if (ADS_PREBOOK_SEND_TO) {
-        window.gtag("event", "conversion", {
-          send_to: ADS_PREBOOK_SEND_TO,
-          value: valueINR,
-          currency: currency || "INR",
-          transaction_id: paymentId,
-        });
-      } else {
-        console.warn(
-          "[Ads] REACT_APP_ADS_PREBOOK_SEND_TO not set yet; skipping Ads conversion."
-        );
-      }
-
-      sessionStorage.setItem(guardKey, "1");
-      console.log("[Tracking] Prebook conversions fired:", {
-        paymentId,
-        valueINR,
-      });
-    }
-  } catch (e) {
-    console.error("[Tracking] firePrebookConversions error:", e);
-  }
-};
 
 // Loader
 const LoaderRing = () => (
@@ -172,6 +153,11 @@ const ReportsMobile = () => {
   // ✅ Retry modal state + context (same details used for retry)
   const [retryOpen, setRetryOpen] = useState(false);
   const [retryCtx, setRetryCtx] = useState(null);
+  // retryCtx shape:
+  // {
+  //   prebookId, razorpayOrderId, amount, currency, razorpayKeyId,
+  //   trimmed, userName, userPhone
+  // }
 
   // Suggestion modal (classic)
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -300,6 +286,13 @@ const ReportsMobile = () => {
           setPrebookLoading(true);
           let confirmOk = false;
 
+          // ✅ Fire Ads conversion immediately on success callback (once per payment id)
+          // (This ensures it still fires even if confirm API is slow.)
+          fireGoogleAdsPrebookConversion({
+            paymentId: response?.razorpay_payment_id,
+            valueINR: 499,
+          });
+
           try {
             const confirmResp = await fetch(PREBOOK_API_URL, {
               method: "POST",
@@ -321,16 +314,6 @@ const ReportsMobile = () => {
           } catch (e) {
             console.error("Error in prebook confirm handler:", e);
           } finally {
-            // ✅ NEW: fire conversions ON SUCCESS (Razorpay success => payment succeeded)
-            // (Even if confirm API fails due to network, payment is still successful)
-            firePrebookConversions({
-              paymentId: response?.razorpay_payment_id,
-              amountPaise: amount,
-              currency,
-              prebookId,
-              query: trimmed,
-            });
-
             setPrebookLoading(false);
           }
 
@@ -349,7 +332,6 @@ const ReportsMobile = () => {
           });
         },
 
-        // on dismiss -> show Retry modal with stored context
         modal: {
           ondismiss: () => {
             setPrebookLoading(false);
@@ -379,7 +361,6 @@ const ReportsMobile = () => {
     }
   };
 
-  // ✅ retry button handler
   const retryPrebookPayment = async () => {
     if (!retryCtx) return;
     setRetryOpen(false);
@@ -860,7 +841,7 @@ const ReportsMobile = () => {
           role="dialog"
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-          onClick={closeModal}
+          onClick={() => setOpenModal(false)}
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div
@@ -873,7 +854,7 @@ const ReportsMobile = () => {
             </p>
             <button
               ref={modalBtnRef}
-              onClick={closeModal}
+              onClick={() => setOpenModal(false)}
               className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
             >
               Okay
