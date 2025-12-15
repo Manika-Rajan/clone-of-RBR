@@ -71,10 +71,7 @@ const PREBOOK_CONV_SEND_TO = "AW-824378442/X8klCKyRw9EbEMqIjIkD";
 // Fire Google Ads conversion safely (once per paymentId)
 function fireGoogleAdsPrebookConversion({ paymentId, valueINR }) {
   try {
-    if (!PREBOOK_CONV_SEND_TO) {
-      console.warn("[Ads] Prebook send_to missing; skip fire.");
-      return;
-    }
+
     if (!paymentId) return;
 
     const guardKey = `ads_prebook_conv_fired_${paymentId}`;
