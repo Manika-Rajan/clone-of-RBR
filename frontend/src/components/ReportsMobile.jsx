@@ -133,13 +133,26 @@ const LoaderRing = () => (
   </svg>
 );
 
+// ✅ helper: bold known quoted parts in the generic-search hint
+const renderGenericHint = (query) => (
+  <span>
+    Your search <strong>“{query}”</strong> is too generic and matches thousands of
+    reports. Please try searching specific reports like{" "}
+    <strong>“Paper industry”</strong> or <strong>“Restaurant industry”</strong>.
+  </span>
+);
+
 const ReportsMobile = () => {
   const { state } = useContext(Store);
   const navigate = useNavigate();
 
   const [q, setQ] = useState("");
+
+  // ✅ modal now supports rich JSX content
   const [openModal, setOpenModal] = useState(false);
-  const [modalMsg, setModalMsg] = useState("");
+  const [modalTitle, setModalTitle] = useState("📊 Rajan Business Reports");
+  const [modalMsgNode, setModalMsgNode] = useState(null);
+
   const [searchLoading, setSearchLoading] = useState(false);
 
   // ⭐ new: loading for pre-booking/payment flow
@@ -148,11 +161,6 @@ const ReportsMobile = () => {
   // ✅ Retry modal state + context (same details used for retry)
   const [retryOpen, setRetryOpen] = useState(false);
   const [retryCtx, setRetryCtx] = useState(null);
-  // retryCtx shape:
-  // {
-  //   prebookId, razorpayOrderId, amount, currency, razorpayKeyId,
-  //   trimmed, userName, userPhone
-  // }
 
   // Suggestion modal (classic)
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -170,7 +178,6 @@ const ReportsMobile = () => {
   const [prebookPromptOpen, setPrebookPromptOpen] = useState(false);
   const [prebookQuery, setPrebookQuery] = useState("");
   const [prebookName, setPrebookName] = useState("");
-  const [prebookEmail, setPrebookEmail] = useState(""); // ✅ NEW (optional)
   const [prebookPhone, setPrebookPhone] = useState("");
   const [prebookError, setPrebookError] = useState("");
   const [prebookHasKnownUser, setPrebookHasKnownUser] = useState(false);
@@ -207,14 +214,15 @@ const ReportsMobile = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ q: query, limit: 3 }),
       });
-      if (!resp.ok) return { items: [], exact_match: false };
+      if (!resp.ok) return { items: [], exact_match: false, hint: "" };
       const data = await resp.json();
       const body = typeof data.body === "string" ? JSON.parse(data.body) : data;
       const items = (body.items || []).slice(0, 3);
-      return { items, exact_match: !!body.exact_match };
+      const hint = body.hint || "";
+      return { items, exact_match: !!body.exact_match, hint };
     } catch (e) {
       console.error("suggest error:", e);
-      return { items: [], exact_match: false };
+      return { items: [], exact_match: false, hint: "" };
     }
   };
 
@@ -258,7 +266,10 @@ const ReportsMobile = () => {
     try {
       await loadRazorpay();
       if (!window.Razorpay) {
-        setModalMsg("⚠️ Payment SDK did not load properly. Please refresh and try again.");
+        setModalTitle("Payment error");
+        setModalMsgNode(
+          <span>⚠️ Payment SDK did not load properly. Please refresh and try again.</span>
+        );
         setOpenModal(true);
         return;
       }
@@ -282,7 +293,6 @@ const ReportsMobile = () => {
           setPrebookLoading(true);
           let confirmOk = false;
 
-          // ✅ Fire Ads conversion immediately on success callback (once per payment id)
           fireGoogleAdsPrebookConversion({
             paymentId: response?.razorpay_payment_id,
             valueINR: 499,
@@ -351,7 +361,10 @@ const ReportsMobile = () => {
       rzp.open();
     } catch (e) {
       console.error("openRazorpayForPrebook error:", e);
-      setModalMsg("⚠️ Could not open payment right now. Please try again in a few minutes.");
+      setModalTitle("Payment error");
+      setModalMsgNode(
+        <span>⚠️ Could not open payment right now. Please try again in a few minutes.</span>
+      );
       setOpenModal(true);
     }
   };
@@ -372,14 +385,22 @@ const ReportsMobile = () => {
     const userPhone = (userPhoneRaw || "").trim();
 
     if (!trimmed || !userPhone) {
-      setModalMsg("⚠️ Missing details for pre-booking. Please enter a valid phone.");
+      setModalTitle("Missing details");
+      setModalMsgNode(
+        <span>⚠️ Missing details for pre-booking. Please enter a valid name and phone.</span>
+      );
       setOpenModal(true);
       return;
     }
 
     if (!PREBOOK_API_URL) {
       console.error("PREBOOK_API_URL is not configured");
-      setModalMsg("⚠️ Pre-booking is temporarily unavailable. Please contact us on WhatsApp or try again in a few minutes.");
+      setModalTitle("Pre-booking unavailable");
+      setModalMsgNode(
+        <span>
+          ⚠️ Pre-booking is temporarily unavailable. Please contact us on WhatsApp or try again in a few minutes.
+        </span>
+      );
       setOpenModal(true);
       return;
     }
@@ -395,9 +416,6 @@ const ReportsMobile = () => {
           reportTitle: trimmed,
           searchQuery: trimmed,
           notes: "",
-          // NOTE: We are collecting prebookEmail in UI, but not sending it yet
-          // to avoid any backend rejection if the Lambda doesn't expect it.
-          // If you confirm backend accepts it, we can add: userEmail: prebookEmail.trim()
         }),
       });
 
@@ -405,7 +423,10 @@ const ReportsMobile = () => {
         const text = await resp.text();
         console.error("prebook create-order failed", resp.status, text);
         setPrebookLoading(false);
-        setModalMsg("⚠️ Could not start the pre-booking right now. Please try again in a few minutes.");
+        setModalTitle("Pre-booking error");
+        setModalMsgNode(
+          <span>⚠️ Could not start the pre-booking right now. Please try again in a few minutes.</span>
+        );
         setOpenModal(true);
         return;
       }
@@ -416,7 +437,10 @@ const ReportsMobile = () => {
       if (!prebookId || !razorpayOrderId || !razorpayKeyId) {
         console.error("Invalid prebook response:", data);
         setPrebookLoading(false);
-        setModalMsg("⚠️ Something went wrong while preparing the payment. Please try again.");
+        setModalTitle("Pre-booking error");
+        setModalMsgNode(
+          <span>⚠️ Something went wrong while preparing the payment. Please try again.</span>
+        );
         setOpenModal(true);
         return;
       }
@@ -446,8 +470,11 @@ const ReportsMobile = () => {
     } catch (e) {
       console.error("startPrebookFlow error:", e);
       setPrebookLoading(false);
-      setModalMsg(
-        "⚠️ Something went wrong while starting the pre-booking. If any amount was deducted, our team will verify it from our side and contact you. Please try again later."
+      setModalTitle("Pre-booking error");
+      setModalMsgNode(
+        <span>
+          ⚠️ Something went wrong while starting the pre-booking. If any amount was deducted, our team will verify it from our side and contact you. Please try again later.
+        </span>
       );
       setOpenModal(true);
     }
@@ -457,11 +484,9 @@ const ReportsMobile = () => {
     const trimmed = query.trim();
     const savedPhone = state?.userInfo?.phone || state?.userInfo?.userId || "";
     const savedName = state?.userInfo?.name || "";
-    const savedEmail = state?.userInfo?.email || "";
 
     setPrebookQuery(trimmed);
     setPrebookName(savedName);
-    setPrebookEmail(savedEmail); // ✅ NEW
     setPrebookPhone(savedPhone);
     setPrebookHasKnownUser(!!savedPhone);
     setPrebookError("");
@@ -482,7 +507,10 @@ const ReportsMobile = () => {
       });
 
       if (!presignResp.ok) {
-        setModalMsg("📢 This report preview isn’t ready yet. Our team is adding it shortly.");
+        setModalTitle("Preview not ready");
+        setModalMsgNode(
+          <span>📢 This report preview isn’t ready yet. Our team is adding it shortly.</span>
+        );
         setOpenModal(true);
         return;
       }
@@ -490,7 +518,8 @@ const ReportsMobile = () => {
       const presignData = await presignResp.json();
       const url = presignData?.presigned_url;
       if (!url) {
-        setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+        setModalTitle("Preview not ready");
+        setModalMsgNode(<span>📢 This report preview isn’t ready yet. Please check back soon.</span>);
         setOpenModal(true);
         return;
       }
@@ -499,7 +528,8 @@ const ReportsMobile = () => {
         const probe = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1" } });
         const ct = (probe.headers.get("content-type") || "").toLowerCase();
         if (!probe.ok || !(probe.status === 200 || probe.status === 206) || !ct.includes("pdf")) {
-          setModalMsg("📢 This report preview isn’t ready yet. Please check back soon.");
+          setModalTitle("Preview not ready");
+          setModalMsgNode(<span>📢 This report preview isn’t ready yet. Please check back soon.</span>);
           setOpenModal(true);
           return;
         }
@@ -508,7 +538,8 @@ const ReportsMobile = () => {
       navigate("/report-display", { state: { reportSlug, reportId } });
     } catch (e) {
       console.error("goToReportBySlug error:", e);
-      setModalMsg("⚠️ Something went wrong while opening the report. Please try again.");
+      setModalTitle("Error");
+      setModalMsgNode(<span>⚠️ Something went wrong while opening the report. Please try again.</span>);
       setOpenModal(true);
     } finally {
       setSearchLoading(false);
@@ -521,8 +552,9 @@ const ReportsMobile = () => {
 
     setLastQuery(trimmed);
     setSearchLoading(true);
-    setModalMsg("");
+    setModalMsgNode(null);
     setSuggestOpen(false);
+
     try {
       window.gtag?.("event", "report_search", {
         event_category: "engagement",
@@ -540,11 +572,13 @@ const ReportsMobile = () => {
           userId: state?.userInfo?.userId || state?.userInfo?.phone || "",
         },
       };
+
       const logResp = await fetch(SEARCH_LOG_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       if (!logResp.ok) {
         const t = await logResp.text();
         throw new Error(`Failed search-log ${logResp.status}, body: ${t}`);
@@ -553,11 +587,20 @@ const ReportsMobile = () => {
 
       const reportSlug = resolveSlug(trimmed);
       if (!reportSlug) {
-        const { items } = await fetchSuggestions(trimmed);
+        const { items, hint } = await fetchSuggestions(trimmed);
+
         if (items && items.length > 0) {
           const mapped = items.map((it) => ({ title: it.title || it.slug, slug: it.slug }));
           setSuggestItems(mapped.slice(0, 3));
           setSuggestOpen(true);
+          return;
+        }
+
+        // ✅ if lambda returns hint for generic searches, show our bold-friendly message
+        if (hint) {
+          setModalTitle("Search too generic");
+          setModalMsgNode(renderGenericHint(trimmed));
+          setOpenModal(true);
           return;
         }
 
@@ -569,7 +612,8 @@ const ReportsMobile = () => {
       await goToReportBySlug(reportSlug);
     } catch (e) {
       console.error("Error during search flow:", e);
-      setModalMsg("⚠️ Something went wrong while processing your request. Please try again later.");
+      setModalTitle("Error");
+      setModalMsgNode(<span>⚠️ Something went wrong while processing your request. Please try again later.</span>);
       setOpenModal(true);
     } finally {
       setSearchLoading(false);
@@ -583,6 +627,11 @@ const ReportsMobile = () => {
     if (!query) return;
     setShowSuggestions(false);
     handleSearch(query);
+  };
+
+  const closeModal = () => {
+    setOpenModal(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleFocus = () => {
@@ -630,22 +679,6 @@ const ReportsMobile = () => {
     return () => document.removeEventListener("keydown", onKey);
   }, [openModal, suggestOpen, prebookPromptOpen, retryOpen]);
 
-  // ✅ helper to proceed (supports “Skip & continue”)
-  const proceedPrebook = async ({ skipDetails = false } = {}) => {
-    const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
-    if (phoneDigits.length < 10) {
-      setPrebookError("Please enter a valid phone number (at least 10 digits).");
-      return;
-    }
-
-    setPrebookError("");
-    setPrebookPromptOpen(false);
-
-    const finalName = (skipDetails ? "" : prebookName)?.trim() || "RBR User";
-
-    await startPrebookFlow(prebookQuery, finalName, phoneDigits);
-  };
-
   const handlePrebookSubmit = async (e) => {
     e.preventDefault();
 
@@ -662,7 +695,15 @@ const ReportsMobile = () => {
       return;
     }
 
-    await proceedPrebook({ skipDetails: false });
+    const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
+    if (phoneDigits.length < 10) {
+      setPrebookError("Please enter a valid phone number (at least 10 digits).");
+      return;
+    }
+    setPrebookError("");
+    setPrebookPromptOpen(false);
+
+    await startPrebookFlow(prebookQuery, prebookName || "RBR User", phoneDigits);
   };
 
   return (
@@ -837,26 +878,28 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* Generic info / success modal */}
+      {/* Generic info / success modal (CENTERED + CUSTOM TITLE + BOLD MESSAGE) */}
       {openModal && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-          onClick={() => setOpenModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={closeModal}
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div
-            className="relative z-10 w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-5 shadow-lg"
+            className="relative z-10 w-[92%] sm:w-[420px] bg-white rounded-2xl p-5 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-lg font-semibold mb-2">📊 Rajan Business Reports</div>
+            <div className="text-lg font-semibold mb-2">
+              {modalTitle || "Search too generic"}
+            </div>
             <p className="text-gray-700 text-sm leading-relaxed mb-4">
-              {modalMsg || "We’re adding this report to our catalog. Please check back soon!"}
+              {modalMsgNode || <span>Please try a more specific search.</span>}
             </p>
             <button
               ref={modalBtnRef}
-              onClick={() => setOpenModal(false)}
+              onClick={closeModal}
               className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
             >
               Okay
@@ -871,8 +914,7 @@ const ReportsMobile = () => {
           role="dialog"
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-          // ✅ IMPORTANT: don't close on outside click (prevents Hotjar-style drop-offs)
-          onClick={(e) => e.stopPropagation()}
+          onClick={() => setPrebookPromptOpen(false)}
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div
@@ -896,33 +938,20 @@ const ReportsMobile = () => {
                 <>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Your name <span className="text-gray-400">(optional)</span>
+                      Your name
                     </label>
                     <input
                       type="text"
                       value={prebookName}
                       onChange={(e) => setPrebookName(e.target.value)}
-                      placeholder="e.g., Rajan"
+                      placeholder="Your name"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Email <span className="text-gray-400">(optional)</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={prebookEmail}
-                      onChange={(e) => setPrebookEmail(e.target.value)}
-                      placeholder="Optional — for invoice & updates"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Phone number (WhatsApp) <span className="text-red-500">*</span>
+                      Phone number (WhatsApp)
                     </label>
                     <input
                       type="tel"
@@ -943,17 +972,6 @@ const ReportsMobile = () => {
               >
                 Pay ₹499 &amp; pre-book
               </button>
-
-              {/* ✅ NEW: Skip option */}
-              {!prebookHasKnownUser && (
-                <button
-                  type="button"
-                  onClick={() => proceedPrebook({ skipDetails: true })}
-                  className="w-full border border-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl active:scale-[0.98]"
-                >
-                  Skip &amp; continue
-                </button>
-              )}
 
               <button
                 type="button"
