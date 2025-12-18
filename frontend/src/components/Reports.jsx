@@ -20,6 +20,9 @@ const placeholderExamples = [
   "Demand for LED lights in Bangalore and Mumbai"
 ];
 
+// ✅ limit to prevent huge pastes/typing
+const MAX_QUERY_CHARS = 50;
+
 const LoaderRing = () => (
   <svg className="loader-ring" viewBox="0 0 100 100">
     <circle
@@ -56,6 +59,8 @@ const Reports = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchMessage, setSearchMessage] = useState("");
 
+  // ✅ NEW: make hero search controlled so we can hard-cap typing/paste
+  const [searchQ, setSearchQ] = useState("");
 
   const [generate, setGenerate] = useState(false);
   const [select_industry, setSelect_industry] = useState([]);
@@ -301,6 +306,12 @@ const Reports = () => {
         return;
       }
 
+      // ✅ enforce 50-char limit
+      if (trimmed.length > MAX_QUERY_CHARS) {
+        alert(`Search word too long. Please keep it within ${MAX_QUERY_CHARS} characters.`);
+        return;
+      }
+
       setSearchLoading(true);
       setSearchMessage(""); // reset before new search
   
@@ -367,12 +378,30 @@ const Reports = () => {
             <div className="search-hero-bar">
               <input
                 type="text"
+                value={searchQ}
+                maxLength={MAX_QUERY_CHARS}
                 placeholder={placeholder}
+                onChange={(e) => {
+                  const v = e.target.value || "";
+                  setSearchQ(v.length <= MAX_QUERY_CHARS ? v : v.slice(0, MAX_QUERY_CHARS));
+                }}
+                onPaste={(e) => {
+                  // ✅ prevent huge paste
+                  e.preventDefault();
+                  const paste = (e.clipboardData || window.clipboardData).getData("text") || "";
+                  const cur = searchQ || "";
+                  const combined = (cur + paste).slice(0, MAX_QUERY_CHARS);
+                  setSearchQ(combined);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    const query = e.target.value.trim().toLowerCase();
+                    const query = (searchQ || '').trim().toLowerCase();
                     if (!query) {
                       alert("Please enter text to search");
+                      return;
+                    }
+                    if (query.length > MAX_QUERY_CHARS) {
+                      alert(`Search word too long. Please keep it within ${MAX_QUERY_CHARS} characters.`);
                       return;
                     }
                     handleSearch(query);
@@ -381,9 +410,13 @@ const Reports = () => {
               />
               <button
                 onClick={() => {
-                  const query = document.querySelector('.search-hero-bar input').value.trim().toLowerCase();
+                  const query = (searchQ || '').trim().toLowerCase();
                   if (!query) {
                     alert("Please enter text to search");
+                    return;
+                  }
+                  if (query.length > MAX_QUERY_CHARS) {
+                    alert(`Search word too long. Please keep it within ${MAX_QUERY_CHARS} characters.`);
                     return;
                   }
                   handleSearch(query);
