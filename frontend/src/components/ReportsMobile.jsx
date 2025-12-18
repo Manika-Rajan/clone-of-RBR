@@ -67,6 +67,9 @@ const PREBOOK_API_URL = `${PREBOOK_API_BASE}/prebook/create-order`;
 // ✅ Google Ads conversion for PREBOOK (₹499) — hardcoded
 const PREBOOK_CONV_SEND_TO = "AW-824378442/X8klCKyRw9EbEMqIjIkD";
 
+// ✅ Search input max length
+const MAX_QUERY_CHARS = 50;
+
 // Fire Google Ads conversion safely (once per paymentId)
 function fireGoogleAdsPrebookConversion({ paymentId, valueINR }) {
   try {
@@ -181,6 +184,18 @@ const ReportsMobile = () => {
   const [prebookPhone, setPrebookPhone] = useState("");
   const [prebookError, setPrebookError] = useState("");
   const [prebookHasKnownUser, setPrebookHasKnownUser] = useState(false);
+
+  // ✅ show error if query too long
+  const showTooLongError = () => {
+    setModalTitle("Search word too long");
+    setModalMsgNode(
+      <span>
+        Your search is too long. Please keep it within{" "}
+        <strong>{MAX_QUERY_CHARS}</strong> characters.
+      </span>
+    );
+    setOpenModal(true);
+  };
 
   const matches = useMemo(() => {
     const v = q.trim().toLowerCase();
@@ -550,6 +565,12 @@ const ReportsMobile = () => {
     const trimmed = query.trim();
     if (!trimmed) return;
 
+    // ✅ hard stop if query exceeds max chars
+    if (trimmed.length > MAX_QUERY_CHARS) {
+      showTooLongError();
+      return;
+    }
+
     setLastQuery(trimmed);
     setSearchLoading(true);
     setModalMsgNode(null);
@@ -623,8 +644,17 @@ const ReportsMobile = () => {
   const onSubmit = (e) => {
     e.preventDefault();
     if (searchLoading) return;
+
     const query = q.trim();
     if (!query) return;
+
+    // ✅ hard stop if query exceeds max chars
+    if (query.length > MAX_QUERY_CHARS) {
+      setShowSuggestions(false);
+      showTooLongError();
+      return;
+    }
+
     setShowSuggestions(false);
     handleSearch(query);
   };
@@ -725,7 +755,12 @@ const ReportsMobile = () => {
             id="mobile-search"
             type="text"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            maxLength={MAX_QUERY_CHARS}
+            onChange={(e) => {
+              const v = e.target.value || "";
+              if (v.length <= MAX_QUERY_CHARS) setQ(v);
+              else setQ(v.slice(0, MAX_QUERY_CHARS));
+            }}
             onFocus={handleFocus}
             placeholder="e.g., paper industry, FMCG, pharma…"
             inputMode="search"
@@ -749,7 +784,7 @@ const ReportsMobile = () => {
             key={t}
             type="button"
             onClick={() => {
-              setQ(t);
+              setQ(t.slice(0, MAX_QUERY_CHARS));
               setShowSuggestions(false);
               inputRef.current?.focus();
             }}
@@ -780,7 +815,7 @@ const ReportsMobile = () => {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
-                  setQ(m);
+                  setQ(m.slice(0, MAX_QUERY_CHARS));
                   setShowSuggestions(false);
                   setTimeout(() => inputRef.current?.focus(), 0);
                 }}
