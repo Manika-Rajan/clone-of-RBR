@@ -80,7 +80,9 @@ const ReportsDisplayMobile = () => {
 
   // Whether to lock pages beyond the free sample
   const shouldLock =
-    !isPurchased && typeof currentPage === "number" && currentPage > UNLOCKED_MAX_PAGE;
+    !isPurchased &&
+    typeof currentPage === "number" &&
+    currentPage > UNLOCKED_MAX_PAGE;
 
   // ====== Fetch presigned URL ======
   useEffect(() => {
@@ -149,8 +151,19 @@ const ReportsDisplayMobile = () => {
       payload: { fileKey: `${reportSlug}.pdf`, reportId, reportSlug },
     });
 
+    // ✅ Surgical: persist amount for Payment page fallback / refresh safety
+    localStorage.setItem("amount", String(FINAL));
+
     if (isLoggedIn) {
-      navigate("/payment", { state: { fromReport: true } });
+      navigate("/payment", {
+        state: {
+          fromReport: true,
+          amount: FINAL, // ✅ pass discounted amount
+          reportId, // ✅ keeps context
+          fileKey: `${reportSlug}.pdf`, // ✅ keeps context
+          reportSlug,
+        },
+      });
     } else {
       setOpenModel(true);
     }
@@ -320,9 +333,7 @@ const ReportsDisplayMobile = () => {
             </Link>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-[15px] font-semibold truncate">
-                  {title}
-                </h1>
+                <h1 className="text-[15px] font-semibold truncate">{title}</h1>
                 {!isPurchased && (
                   <span className="inline-flex items-center rounded-full bg-amber-400/90 text-slate-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
                     {PROMO_PCT}% off
@@ -380,9 +391,7 @@ const ReportsDisplayMobile = () => {
                     strokeDashoffset="70"
                   />
                 </svg>
-                <p className="mt-3 text-sm font-medium">
-                  Preparing your preview…
-                </p>
+                <p className="mt-3 text-sm font-medium">Preparing your preview…</p>
                 <p className="mt-1 text-[11px] text-slate-300">
                   Loading the latest version of this report.
                 </p>
@@ -483,8 +492,7 @@ const ReportsDisplayMobile = () => {
                           onClick={goToPayment}
                           className="w-full rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-300 text-slate-900 text-sm py-2.5 font-semibold active:scale-[0.98]"
                         >
-                          Pay & unlock full report — ₹
-                          {FINAL.toLocaleString("en-IN")}
+                          Pay & unlock full report — ₹{FINAL.toLocaleString("en-IN")}
                         </button>
 
                         <div className="text-center text-[10px] text-slate-300 uppercase tracking-[0.18em]">
@@ -495,10 +503,7 @@ const ReportsDisplayMobile = () => {
                           onClick={openLead}
                           className="w-full rounded-xl border border-slate-500 bg-slate-900/80 text-[13px] font-medium text-slate-50 py-2.5 active:scale-[0.98]"
                         >
-                          Get a{" "}
-                          <span className="font-semibold">
-                            free 2-page preview
-                          </span>{" "}
+                          Get a <span className="font-semibold">free 2-page preview</span>{" "}
                           first
                         </button>
                       </div>
@@ -520,12 +525,8 @@ const ReportsDisplayMobile = () => {
         <div className="sticky bottom-0 z-30 border-t border-slate-800 bg-slate-950/95 backdrop-blur">
           <div className="px-4 py-3 flex items-center gap-3 text-white">
             <div className="min-w-0">
-              <p className="text-[11px] text-slate-400 leading-none">
-                Report ID
-              </p>
-              <p className="text-sm font-medium truncate">
-                {reportId || "—"}
-              </p>
+              <p className="text-[11px] text-slate-400 leading-none">Report ID</p>
+              <p className="text-sm font-medium truncate">{reportId || "—"}</p>
             </div>
 
             {isPurchased ? (
@@ -541,9 +542,7 @@ const ReportsDisplayMobile = () => {
                   <div className="text-base font-semibold text-amber-300 leading-tight">
                     ₹{FINAL.toLocaleString("en-IN")}
                   </div>
-                  <div className="text-[11px] text-emerald-300">
-                    RBideas25 applied
-                  </div>
+                  <div className="text-[11px] text-emerald-300">RBideas25 applied</div>
                 </div>
                 <button
                   onClick={goToPayment}
@@ -568,9 +567,7 @@ const ReportsDisplayMobile = () => {
           <Login onClose={() => setOpenModel(false)} returnTo="/payment" />
           {status && (
             <div style={{ textAlign: "center" }}>
-              <p className="success-head">
-                The report has been successfully sent to
-              </p>
+              <p className="success-head">The report has been successfully sent to</p>
               <p className="success-email">{email}</p>
               <button className="btn btn-primary" onClick={changeStatus}>
                 Ok
@@ -594,9 +591,7 @@ const ReportsDisplayMobile = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
-              <h3 className="text-base font-semibold">
-                Get a 2-page preview PDF
-              </h3>
+              <h3 className="text-base font-semibold">Get a 2-page preview PDF</h3>
               <button
                 onClick={() => setLeadOpen(false)}
                 className="h-8 w-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center"
@@ -665,9 +660,7 @@ const ReportsDisplayMobile = () => {
                 </div>
 
                 {leadMsg && (
-                  <div className="mt-2 text-[11px] text-amber-200">
-                    {leadMsg}
-                  </div>
+                  <div className="mt-2 text-[11px] text-amber-200">{leadMsg}</div>
                 )}
                 <div className="mt-4 flex gap-2">
                   <button
@@ -702,9 +695,7 @@ const ReportsDisplayMobile = () => {
                   />
                 </div>
                 {leadMsg && (
-                  <div className="mt-2 text-[11px] text-amber-200">
-                    {leadMsg}
-                  </div>
+                  <div className="mt-2 text-[11px] text-amber-200">{leadMsg}</div>
                 )}
                 <div className="mt-4 flex gap-2">
                   <button
@@ -734,9 +725,7 @@ const ReportsDisplayMobile = () => {
             {leadStep === "wa_wait" && leadChannel === "whatsapp" && (
               <>
                 <div className="mt-4 space-y-2 text-sm text-slate-100">
-                  <div className="text-lg font-semibold">
-                    📲 Check WhatsApp to confirm
-                  </div>
+                  <div className="text-lg font-semibold">📲 Check WhatsApp to confirm</div>
                   <p className="text-[11px] text-slate-300">
                     We’ve sent you a message on WhatsApp from{" "}
                     <strong>Rajan Business Ideas – Prod</strong>.
@@ -744,8 +733,7 @@ const ReportsDisplayMobile = () => {
                   <ul className="mt-2 list-disc list-inside text-[11px] text-slate-200 space-y-1">
                     <li>Open WhatsApp on your phone.</li>
                     <li>
-                      Find the message about “
-                      {reportSlug.replace(/_/g, " ")} in India”.
+                      Find the message about “{reportSlug.replace(/_/g, " ")} in India”.
                     </li>
                     <li>
                       Tap <strong>“Yes, I requested”</strong>.
@@ -754,9 +742,7 @@ const ReportsDisplayMobile = () => {
                   </ul>
                 </div>
                 {leadMsg && (
-                  <div className="mt-3 text-[11px] text-amber-200">
-                    {leadMsg}
-                  </div>
+                  <div className="mt-3 text-[11px] text-amber-200">{leadMsg}</div>
                 )}
                 <div className="mt-4 flex gap-2">
                   <button
