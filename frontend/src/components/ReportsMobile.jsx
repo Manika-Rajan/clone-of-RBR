@@ -67,11 +67,9 @@ const PREBOOK_API_URL = `${PREBOOK_API_BASE}/prebook/create-order`;
 // ✅ Google Ads conversion for PREBOOK (₹499) — hardcoded
 const PREBOOK_CONV_SEND_TO = "AW-824378442/X8klCKyRw9EbEMqIjIkD";
 
-
 // Fire Google Ads conversion safely (once per paymentId)
 function fireGoogleAdsPrebookConversion({ paymentId, valueINR }) {
   try {
-
     if (!paymentId) return;
 
     const guardKey = `ads_prebook_conv_fired_${paymentId}`;
@@ -172,6 +170,7 @@ const ReportsMobile = () => {
   const [prebookPromptOpen, setPrebookPromptOpen] = useState(false);
   const [prebookQuery, setPrebookQuery] = useState("");
   const [prebookName, setPrebookName] = useState("");
+  const [prebookEmail, setPrebookEmail] = useState(""); // ✅ NEW (optional)
   const [prebookPhone, setPrebookPhone] = useState("");
   const [prebookError, setPrebookError] = useState("");
   const [prebookHasKnownUser, setPrebookHasKnownUser] = useState(false);
@@ -284,7 +283,6 @@ const ReportsMobile = () => {
           let confirmOk = false;
 
           // ✅ Fire Ads conversion immediately on success callback (once per payment id)
-          // (This ensures it still fires even if confirm API is slow.)
           fireGoogleAdsPrebookConversion({
             paymentId: response?.razorpay_payment_id,
             valueINR: 499,
@@ -374,7 +372,7 @@ const ReportsMobile = () => {
     const userPhone = (userPhoneRaw || "").trim();
 
     if (!trimmed || !userPhone) {
-      setModalMsg("⚠️ Missing details for pre-booking. Please enter a valid name and phone.");
+      setModalMsg("⚠️ Missing details for pre-booking. Please enter a valid phone.");
       setOpenModal(true);
       return;
     }
@@ -397,7 +395,9 @@ const ReportsMobile = () => {
           reportTitle: trimmed,
           searchQuery: trimmed,
           notes: "",
-          // amountOptional: 100, // for ₹1 test (paise)
+          // NOTE: We are collecting prebookEmail in UI, but not sending it yet
+          // to avoid any backend rejection if the Lambda doesn't expect it.
+          // If you confirm backend accepts it, we can add: userEmail: prebookEmail.trim()
         }),
       });
 
@@ -457,9 +457,11 @@ const ReportsMobile = () => {
     const trimmed = query.trim();
     const savedPhone = state?.userInfo?.phone || state?.userInfo?.userId || "";
     const savedName = state?.userInfo?.name || "";
+    const savedEmail = state?.userInfo?.email || "";
 
     setPrebookQuery(trimmed);
     setPrebookName(savedName);
+    setPrebookEmail(savedEmail); // ✅ NEW
     setPrebookPhone(savedPhone);
     setPrebookHasKnownUser(!!savedPhone);
     setPrebookError("");
@@ -583,11 +585,6 @@ const ReportsMobile = () => {
     handleSearch(query);
   };
 
-  const closeModal = () => {
-    setOpenModal(false);
-    setTimeout(() => inputRef.current?.focus(), 0);
-  };
-
   const handleFocus = () => {
     computeDropdownPos();
     setShowSuggestions(true);
@@ -633,6 +630,22 @@ const ReportsMobile = () => {
     return () => document.removeEventListener("keydown", onKey);
   }, [openModal, suggestOpen, prebookPromptOpen, retryOpen]);
 
+  // ✅ helper to proceed (supports “Skip & continue”)
+  const proceedPrebook = async ({ skipDetails = false } = {}) => {
+    const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
+    if (phoneDigits.length < 10) {
+      setPrebookError("Please enter a valid phone number (at least 10 digits).");
+      return;
+    }
+
+    setPrebookError("");
+    setPrebookPromptOpen(false);
+
+    const finalName = (skipDetails ? "" : prebookName)?.trim() || "RBR User";
+
+    await startPrebookFlow(prebookQuery, finalName, phoneDigits);
+  };
+
   const handlePrebookSubmit = async (e) => {
     e.preventDefault();
 
@@ -649,15 +662,7 @@ const ReportsMobile = () => {
       return;
     }
 
-    const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
-    if (phoneDigits.length < 10) {
-      setPrebookError("Please enter a valid phone number (at least 10 digits).");
-      return;
-    }
-    setPrebookError("");
-    setPrebookPromptOpen(false);
-
-    await startPrebookFlow(prebookQuery, prebookName || "RBR User", phoneDigits);
+    await proceedPrebook({ skipDetails: false });
   };
 
   return (
@@ -866,7 +871,8 @@ const ReportsMobile = () => {
           role="dialog"
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-          onClick={() => setPrebookPromptOpen(false)}
+          // ✅ IMPORTANT: don't close on outside click (prevents Hotjar-style drop-offs)
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div
@@ -890,20 +896,36 @@ const ReportsMobile = () => {
                 <>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Your name
+                      Your name <span className="text-gray-400">(optional)</span>
                     </label>
                     <input
                       type="text"
                       value={prebookName}
                       onChange={(e) => setPrebookName(e.target.value)}
-                      placeholder="Your name"
+                      placeholder="e.g., Rajan"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Phone number (WhatsApp)
+                      Email <span className="text-gray-400">(optional)</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={prebookEmail}
+                      onChange={(e) => setPrebookEmail(e.target.value)}
+                      placeholder="Optional — for invoice & updates"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      We’ll send updates on WhatsApp. Email helps for invoice (optional).
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Phone number (WhatsApp) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
@@ -924,6 +946,17 @@ const ReportsMobile = () => {
               >
                 Pay ₹499 &amp; pre-book
               </button>
+
+              {/* ✅ NEW: Skip option */}
+              {!prebookHasKnownUser && (
+                <button
+                  type="button"
+                  onClick={() => proceedPrebook({ skipDetails: true })}
+                  className="w-full border border-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl active:scale-[0.98]"
+                >
+                  Skip &amp; continue
+                </button>
+              )}
 
               <button
                 type="button"
