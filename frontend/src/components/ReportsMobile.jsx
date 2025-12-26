@@ -294,7 +294,8 @@ const ReportsMobile = () => {
         amount,
         currency,
         name: "Rajan Business Reports",
-        description: `Pre-book: ${trimmed}`,
+        // ✅ stronger reassurance inside Razorpay popup
+        description: `Pre-book ₹499 (Adjusted): ${trimmed} | Analyst + WhatsApp Confirmation`,
         order_id: razorpayOrderId,
         prefill: { name: userName || "RBR User", contact: userPhone },
         notes: {
@@ -891,10 +892,21 @@ const ReportsMobile = () => {
               </button>
             </div>
 
-            <p className="text-sm text-amber-900/80 mb-4 leading-relaxed">
-              Your details are saved. Tap <strong>Retry payment</strong> to open the
-              payment window again.
+            {/* ✅ Reassurance content added here */}
+            <p className="text-sm text-amber-900/80 mb-3 leading-relaxed">
+              Your details are saved. Tap <strong>Retry payment</strong> to open the payment window again.
             </p>
+
+            <div className="mb-4 rounded-xl border border-amber-200 bg-white/70 p-3">
+              <div className="text-xs font-semibold text-amber-900 mb-1">
+                After successful pre-booking
+              </div>
+              <ul className="text-[11px] text-amber-900/80 space-y-1 ml-4 list-disc">
+                <li>Analyst confirms scope on WhatsApp</li>
+                <li>Delivery within <strong>72 hours</strong></li>
+                <li>₹499 is adjusted in final price</li>
+              </ul>
+            </div>
 
             <button
               onClick={retryPrebookPayment}
@@ -957,16 +969,36 @@ const ReportsMobile = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-lg font-semibold mb-2">Pre-book this report</div>
+
+            {/* ✅ Updated copy + added reassurance box */}
             <p className="text-gray-700 text-sm leading-relaxed mb-3">
               We don&apos;t yet have a ready report for <strong>{prebookQuery}</strong>.
               <br /><br />
-              You can <strong>pre-book a detailed, data-backed report</strong> for{" "}
+              You can <strong>pre-book an analyst-driven, data-backed report</strong> for{" "}
               <span className="font-semibold text-green-700">₹499</span>{" "}
               <span className="text-xs text-gray-500">
-                (full price <span className="line-through text-gray-400">₹2,999</span>)
+                (final price <span className="line-through text-gray-400">₹2,999</span> — ₹499 is adjusted)
               </span>.
-              We will add it to your profile within <strong>2 working days</strong>.
             </p>
+
+            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
+              <div className="text-sm font-semibold text-blue-900 mb-1">
+                What happens after you pre-book
+              </div>
+              <ul className="text-xs text-blue-900/80 space-y-1 ml-4 list-disc">
+                <li>Our analyst reviews your requirement and confirms the scope.</li>
+                <li>We contact you on WhatsApp to finalize deliverables.</li>
+                <li>
+                  Delivery timeline: <strong>within 72 hours</strong> (or we update you with a clear ETA).
+                </li>
+                <li>
+                  Pre-book amount: <strong>₹499</strong> (adjusted in final price).
+                </li>
+              </ul>
+              <div className="mt-2 text-[11px] text-blue-900/70">
+                Need help? After payment, you can reply on WhatsApp and we’ll assist you.
+              </div>
+            </div>
 
             <form onSubmit={handlePrebookSubmit} className="space-y-3">
               {!prebookHasKnownUser && (
@@ -1007,6 +1039,11 @@ const ReportsMobile = () => {
               >
                 Pay ₹499 &amp; pre-book
               </button>
+
+              {/* ✅ Micro trust line under pay button */}
+              <div className="text-[11px] text-gray-500 text-center -mt-1">
+                Secure payment via Razorpay • WhatsApp confirmation after payment
+              </div>
 
               <button
                 type="button"
