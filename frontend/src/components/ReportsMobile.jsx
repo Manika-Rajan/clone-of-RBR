@@ -1074,10 +1074,10 @@ const ReportsMobile = () => {
             {/* ✅ Option 1: Instant 10-page */}
             <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-3 mb-3">
               <div className="text-sm font-semibold text-gray-900">
-                Instant 10-Page (₹199)
+                Instant Report (₹199)
               </div>
               <div className="text-xs text-gray-700 mt-0.5">
-                Quick insights, instant access
+                Quick insights in 10-pages, instant access
               </div>
             
               <button
