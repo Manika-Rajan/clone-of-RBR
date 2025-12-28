@@ -1054,7 +1054,7 @@ const ReportsMobile = () => {
           >
            <div className="flex items-center justify-between border-b pb-3 mb-3">
               <h2 className="text-lg font-semibold text-gray-900">
-                Choose how you want this report
+                Not available yet
               </h2>
               <button
                 onClick={() => setPrebookPromptOpen(false)}
