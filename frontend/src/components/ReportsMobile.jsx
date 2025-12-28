@@ -1048,7 +1048,7 @@ const ReportsMobile = () => {
 
 
             {/* ✅ Short + glanceable copy */}
-            <p className="text-gray-700 text-sm leading-snug mb-2">
+            <p className="text-gray-700 text-sm leading-snug mb-4">
               We don&apos;t yet have a ready report for{" "}
               <strong>{prebookQuery}</strong>.
               <br />
@@ -1058,7 +1058,7 @@ const ReportsMobile = () => {
             </p>
 
             {/* ✅ Optional details (doesn't make modal long unless opened) */}
-            <details className="mb-2 rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
+            <details className="mb-2 rounded-lg border border-gray-200 bg-gray-50/60 px-4 py-3">
               <summary className="cursor-pointer select-none text-sm font-semibold text-gray-800">
                 What happens after you pre-book
               </summary>
