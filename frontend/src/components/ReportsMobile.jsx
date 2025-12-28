@@ -1052,7 +1052,7 @@ const ReportsMobile = () => {
               We don&apos;t yet have a ready report for{" "}
               <strong>{prebookQuery}</strong>.
               <br />
-              Pre-book an <strong>analyst-made report</strong> for{" "}
+              Pre-book an <strong>custom-made report</strong> for{" "}
               <span className="font-semibold text-green-700">₹499</span>{" "}
               <span className="text-xs text-gray-500">(adjusted in final price)</span>.
             </p>
