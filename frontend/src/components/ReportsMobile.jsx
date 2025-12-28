@@ -308,7 +308,7 @@ const ReportsMobile = () => {
         currency,
         name: "Rajan Business Reports",
         // ✅ stronger reassurance inside Razorpay popup
-        description: `Pre-book ₹499 (Adjusted): ${trimmed} | Analyst + WhatsApp Confirmation`,
+        description: `Pre-book ₹499 (Adjusted): ${trimmed} | Access in My Profile`,
         order_id: razorpayOrderId,
         prefill: { name: userName || "RBR User", contact: userPhone },
         notes: {
@@ -535,6 +535,22 @@ const ReportsMobile = () => {
     setPrebookHasKnownUser(!!savedPhone);
     setPrebookError("");
     setPrebookPromptOpen(true);
+  };
+
+  // ✅ Instant report (₹199) — placeholder until backend is wired
+  const triggerInstant = async (query) => {
+    const trimmed = (query || "").trim();
+    // (Later you’ll replace this with create-order + Razorpay flow for instant report)
+    setPrebookPromptOpen(false);
+    setModalTitle("Instant report coming soon");
+    setModalMsgNode(
+      <span>
+        We’re enabling <strong>Instant 10-page reports</strong> for{" "}
+        <strong>“{trimmed}”</strong>. <br />
+        Please use <strong>Pre-book Full Report (₹499)</strong> for now.
+      </span>
+    );
+    setOpenModal(true);
   };
 
   const goToReportBySlug = async (reportSlug) => {
@@ -964,7 +980,10 @@ const ReportsMobile = () => {
                 After successful pre-booking
               </div>
               <ul className="text-[11px] text-amber-900/80 space-y-1 ml-4 list-disc">
-                <li>Analyst confirms scope on WhatsApp</li>
+                <li>OTP login to your account</li>
+                <li>
+                  Report is unlocked in <strong>My Profile</strong> when ready
+                </li>
                 <li>
                   Delivery within <strong>72 hours</strong>
                 </li>
@@ -1035,7 +1054,7 @@ const ReportsMobile = () => {
           >
            <div className="flex items-center justify-between border-b pb-3 mb-3">
               <h2 className="text-lg font-semibold text-gray-900">
-                Pre-book this report
+                Choose how you want this report
               </h2>
               <button
                 onClick={() => setPrebookPromptOpen(false)}
@@ -1048,14 +1067,46 @@ const ReportsMobile = () => {
 
 
             {/* ✅ Short + glanceable copy */}
-            <p className="text-gray-700 text-sm leading-snug mb-4">
-              We don&apos;t yet have a ready report for{" "}
-              <strong>{prebookQuery}</strong>.
-              <br />
-              Pre-book an <strong>custom-made report</strong> for{" "}
-              <span className="font-semibold text-green-700">₹499</span>{" "}
-              <span className="text-xs text-gray-500">(adjusted in final price)</span>.
+            <p className="text-gray-700 text-sm leading-snug mb-3">
+              No exact ready report for <strong>“{prebookQuery}”</strong> yet — choose an option:
             </p>
+            
+            {/* ✅ Option 1: Instant 10-page */}
+            <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-3 mb-3">
+              <div className="text-sm font-semibold text-gray-900">
+                Instant 10-Page (₹199)
+              </div>
+              <div className="text-xs text-gray-700 mt-0.5">
+                Quick insights, instant access
+              </div>
+            
+              <button
+                type="button"
+                onClick={() => triggerInstant(prebookQuery)}
+                className="mt-3 w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
+              >
+                Get Instant Report (₹199)
+              </button>
+            
+              <div className="text-[11px] text-gray-500 text-center mt-1">
+                OTP login • View in <strong>My Profile</strong>
+              </div>
+            </div>
+            
+            {/* ✅ Option 2: Pre-book full */}
+            <div className="rounded-xl border border-gray-200 bg-white p-3 mb-3">
+              <div className="text-sm font-semibold text-gray-900">
+                Full Report Pre-Book (₹499)
+              </div>
+              <div className="text-xs text-gray-700 mt-0.5">
+                Detailed report in 72 hours
+              </div>
+            
+              <div className="text-[11px] text-gray-500 mt-2">
+                We’ll unlock it in <strong>My Profile</strong> when ready • ₹499 adjusted in final price
+              </div>
+            </div>
+
 
             {/* ✅ Optional details (doesn't make modal long unless opened) */}
             <details className="mb-2 rounded-lg border border-gray-200 bg-gray-50/60 px-4 py-3">
@@ -1064,7 +1115,10 @@ const ReportsMobile = () => {
               </summary>
               <div className="mt-2 text-xs text-gray-700 leading-relaxed">
                 <ul className="ml-4 list-disc space-y-1">
-                  <li>We confirm scope on WhatsApp.</li>
+                  <li>OTP login to your account.</li>
+                  <li>
+                    Report is unlocked in <strong>My Profile</strong> when ready.
+                  </li>
                   <li>
                     Delivery: <strong>within 72 hours</strong> (or clear ETA).
                   </li>
@@ -1073,7 +1127,7 @@ const ReportsMobile = () => {
                   </li>
                 </ul>
                 <div className="mt-2 text-[11px] text-gray-500">
-                  Need help? Reply on WhatsApp after payment and we’ll assist.
+                  Need help? Use the support option on the website after login.
                 </div>
               </div>
             </details>
@@ -1120,9 +1174,8 @@ const ReportsMobile = () => {
 
               {/* ✅ Micro trust line under pay button */}
               <div className="text-[11px] text-gray-500 text-center -mt-1">
-                Secure payment via Razorpay • WhatsApp confirmation after payment
+                Secure payment via Razorpay • OTP login • Access in <strong>My Profile</strong>
               </div>
-
             </form>
           </div>
         </div>
