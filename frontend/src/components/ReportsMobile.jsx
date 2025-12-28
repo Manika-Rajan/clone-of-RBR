@@ -1033,19 +1033,19 @@ const ReportsMobile = () => {
             style={{ WebkitOverflowScrolling: "touch" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="text-lg font-bold text-gray-900 leading-tight">
+           <div className="flex items-center justify-between border-b pb-3 mb-3">
+              <h2 className="text-lg font-semibold text-gray-900">
                 Pre-book this report
-              </div>
+              </h2>
               <button
-                type="button"
                 onClick={() => setPrebookPromptOpen(false)}
-                className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center"
+                className="h-8 w-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
                 aria-label="Close"
               >
-                ×
+                ✕
               </button>
             </div>
+
 
             {/* <div className="text-lg font-semibold mb-2">Pre-book this report</div> */}
             <div className="h-px bg-gray-200 mb-3" />
@@ -1126,13 +1126,6 @@ const ReportsMobile = () => {
                 Secure payment via Razorpay • WhatsApp confirmation after payment
               </div>
 
-              <button
-                type="button"
-                onClick={() => setPrebookPromptOpen(false)}
-                className="w-full mt-2 border border-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl active:scale-[0.98]"
-              >
-                Cancel
-              </button>
             </form>
           </div>
         </div>
