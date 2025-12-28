@@ -1029,14 +1029,14 @@ const ReportsMobile = () => {
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div
-            className="relative z-10 w-full sm:w-[420px] bg-white rounded-2xl p-5 shadow-lg max-h-[85vh] overflow-y-auto"
+            className="relative z-10 w-full sm:w-[420px] bg-white rounded-2xl p-4 shadow-lg max-h-[65vh] overflow-y-auto"
             style={{ WebkitOverflowScrolling: "touch" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-lg font-semibold mb-2">Pre-book this report</div>
+            <div className="text-base font-semibold mb-1">Pre-book this report</div>
 
             {/* ✅ Short + glanceable copy */}
-            <p className="text-gray-700 text-sm leading-relaxed mb-3">
+            <p className="text-gray-700 text-sm leading-snug mb-2">
               We don&apos;t yet have a ready report for{" "}
               <strong>{prebookQuery}</strong>.
               <br />
@@ -1046,7 +1046,7 @@ const ReportsMobile = () => {
             </p>
 
             {/* ✅ Optional details (doesn't make modal long unless opened) */}
-            <details className="mb-3 rounded-xl border border-gray-200 bg-gray-50/60 px-3 py-2">
+            <details className="mb-2 rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
               <summary className="cursor-pointer select-none text-sm font-semibold text-gray-800">
                 What happens after you pre-book
               </summary>
