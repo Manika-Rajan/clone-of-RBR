@@ -1033,7 +1033,21 @@ const ReportsMobile = () => {
             style={{ WebkitOverflowScrolling: "touch" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-lg font-semibold mb-2">Pre-book this report</div>
+            <div className="flex items-start justify-between mb-3">
+              <div className="text-lg font-bold text-gray-900 leading-tight">
+                Pre-book this report
+              </div>
+              <button
+                type="button"
+                onClick={() => setPrebookPromptOpen(false)}
+                className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* <div className="text-lg font-semibold mb-2">Pre-book this report</div> */}
             <div className="h-px bg-gray-200 mb-3" />
 
             {/* ✅ Short + glanceable copy */}
