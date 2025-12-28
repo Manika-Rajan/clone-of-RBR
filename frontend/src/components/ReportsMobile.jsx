@@ -1047,9 +1047,6 @@ const ReportsMobile = () => {
             </div>
 
 
-            {/* <div className="text-lg font-semibold mb-2">Pre-book this report</div> */}
-            <div className="h-px bg-gray-200 mb-3" />
-
             {/* ✅ Short + glanceable copy */}
             <p className="text-gray-700 text-sm leading-snug mb-2">
               We don&apos;t yet have a ready report for{" "}
