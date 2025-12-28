@@ -1068,24 +1068,27 @@ const ReportsMobile = () => {
 
             {/* ✅ Short + glanceable copy */}
             <p className="text-gray-700 text-sm leading-snug mb-3">
-              No exact ready report for <strong>“{prebookQuery}”</strong> yet — choose an option:
+              We don’t have a ready report for <strong>“{prebookQuery}”</strong> yet — but we can generate one now:
             </p>
             
             {/* ✅ Option 1: Instant 10-page */}
             <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-3 mb-3">
               <div className="text-sm font-semibold text-gray-900">
-                Instant Report (₹199)
+                Instant 10-Page (₹199)
               </div>
               <div className="text-xs text-gray-700 mt-0.5">
-                Quick insights in 10-pages, instant access
+                Auto-generated for “{prebookQuery}” using our existing data
               </div>
-            
+              <div className="text-[11px] text-gray-600 mt-1">
+                Best for quick evaluation • Not a custom deep-dive
+              </div>
+
               <button
                 type="button"
                 onClick={() => triggerInstant(prebookQuery)}
                 className="mt-3 w-full bg-blue-600 text-white font-semibold py-2.5 rounded-xl active:scale-[0.98]"
               >
-                Get Instant Report (₹199)
+                Generate Instant Report (₹199)
               </button>
             
               <div className="text-[11px] text-gray-500 text-center mt-1">
