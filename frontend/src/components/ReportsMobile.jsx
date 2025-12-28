@@ -1033,7 +1033,8 @@ const ReportsMobile = () => {
             style={{ WebkitOverflowScrolling: "touch" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-base font-semibold mb-1">Pre-book this report</div>
+            <div className="text-lg font-semibold mb-2">Pre-book this report</div>
+            <div className="h-px bg-gray-200 mb-3" />
 
             {/* ✅ Short + glanceable copy */}
             <p className="text-gray-700 text-sm leading-snug mb-2">
