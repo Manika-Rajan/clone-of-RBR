@@ -1029,7 +1029,7 @@ const ReportsMobile = () => {
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div
-            className="relative z-10 w-full sm:w-[420px] bg-white rounded-2xl px-5 pt-3 pb-4 shadow-lg max-h-[65vh] overflow-y-auto"
+            className="relative z-10 w-full sm:w-[420px] bg-white rounded-2xl px-5 pt-1 pb-4 shadow-lg max-h-[65vh] overflow-y-auto"
             style={{ WebkitOverflowScrolling: "touch" }}
             onClick={(e) => e.stopPropagation()}
           >
