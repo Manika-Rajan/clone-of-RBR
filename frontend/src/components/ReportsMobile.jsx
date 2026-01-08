@@ -20,7 +20,7 @@ const EXAMPLES = [
   "Paper industry in India",
   "FMCG market report",
   "IT industry analysis India",
-  "EV charging stations India",
+  "EV charging business india",
   "Competitor analysis pharma",
 ];
 
