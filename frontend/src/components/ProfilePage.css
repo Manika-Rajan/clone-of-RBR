@@ -391,3 +391,53 @@
     margin: 0.75rem auto;
   }
 }
+
+/* ===============================
+   PDF Viewer Modal (ProfilePage)
+   Make it behave like ReportsDisplay.js
+   =============================== */
+
+.full-page-modal.rbr-pdf-modal .modal-dialog {
+  width: 98vw;
+  max-width: 98vw;
+  margin: 8px auto;              /* remove big margins */
+  height: calc(100vh - 16px);    /* full viewport height */
+}
+
+.full-page-modal.rbr-pdf-modal .modal-content {
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;              /* prevent double scrollbars */
+}
+
+.full-page-modal.rbr-pdf-modal .modal-header {
+  flex: 0 0 auto;
+}
+
+.full-page-modal.rbr-pdf-modal .modal-body {
+  padding: 0 !important;         /* IMPORTANT: remove your global modal-body padding */
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Make react-pdf-viewer fill the modal body */
+.full-page-modal.rbr-pdf-modal .rpv-core__viewer {
+  height: 100% !important;
+}
+
+.full-page-modal.rbr-pdf-modal .rpv-default-layout__container {
+  height: 100% !important;
+}
+
+/* Optional: tighten on small screens */
+@media (max-width: 600px) {
+  .full-page-modal.rbr-pdf-modal .modal-dialog {
+    width: 100vw;
+    max-width: 100vw;
+    margin: 0;
+    height: 100vh;
+  }
+  .full-page-modal.rbr-pdf-modal .modal-content {
+    border-radius: 0;
+  }
+}
