@@ -4,9 +4,13 @@ import { Store } from '../Store';
 import { useNavigate } from 'react-router-dom';
 import { Modal, ModalBody, ModalHeader } from 'reactstrap';
 
-// Use the same PDF viewer stack you already use in ReportsDisplay
+// ✅ Same PDF viewer stack as ReportsDisplay.js
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import '@react-pdf-viewer/core/lib/styles/index.css';
+
+// ✅ Add the same default layout plugin used in ReportsDisplay.js
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 const DEFAULT_PROFILE_ICON = '/default-avatar.png';
 
@@ -52,6 +56,9 @@ const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
   const navigate = useNavigate();
+
+  // ✅ Same plugin instance pattern as ReportsDisplay.js
+  const defaultLayoutPluginInstance = useMemo(() => defaultLayoutPlugin(), []);
 
   const [purchasedReports, setPurchasedReports] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
@@ -133,7 +140,6 @@ const ProfilePage = () => {
         if (!isActive) return;
 
         if (response.ok) {
-          // reports may already be an array of objects
           const reportsArray = Array.isArray(data.reports) ? data.reports : [];
           setPurchasedReports(reportsArray);
 
@@ -142,7 +148,6 @@ const ProfilePage = () => {
           const fetchedPhotoUrl = data.photo_url || null;
           setPhotoUrl(fetchedPhotoUrl);
 
-          // only dispatch if values actually changed
           const current = userInfo || {};
           const next = {
             isLogin: true,
@@ -184,10 +189,8 @@ const ProfilePage = () => {
       }
     };
 
-    // initial load
     loadProfile();
 
-    // auto-refresh when window regains focus (e.g. after payment flow)
     const handleFocus = () => {
       loadProfile();
     };
@@ -236,16 +239,11 @@ const ProfilePage = () => {
             'Report',
         };
 
-        // Deduplicate by report_id + file_key
         const filtered = cleanPrev.filter(
-          (r) =>
-            !(r.report_id === base.report_id && r.file_key === base.file_key)
+          (r) => !(r.report_id === base.report_id && r.file_key === base.file_key)
         );
 
-        const next = [
-          { ...base, viewed_at: new Date().toISOString() },
-          ...filtered,
-        ].slice(0, 5); // keep latest 5
+        const next = [{ ...base, viewed_at: new Date().toISOString() }, ...filtered].slice(0, 5);
 
         localStorage.setItem(key, JSON.stringify(next));
         return next;
@@ -278,9 +276,7 @@ const ProfilePage = () => {
 
       if (!resp.ok) {
         const t = await resp.text().catch(() => '');
-        throw new Error(
-          `Failed to get presigned URL. HTTP ${resp.status}. Body: ${t}`
-        );
+        throw new Error(`Failed to get presigned URL. HTTP ${resp.status}. Body: ${t}`);
       }
 
       const data = await resp.json().catch(() => ({}));
@@ -290,16 +286,12 @@ const ProfilePage = () => {
         throw new Error('No presigned_url returned by Lambda');
       }
 
-      // Track "recently viewed" only after we know the file is openable
       trackRecentlyViewed(report);
-
       setSelectedUrl(data.presigned_url);
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
       alert(
-        `Failed to open the report. ${
-          error?.message || ''
-        }\n\nTip: Check Network tab -> the GET to the signed URL must be 200 with content-type application/pdf, and the URL must not be expired.`
+        `Failed to open the report. ${error?.message || ''}\n\nTip: Check Network tab -> the GET to the signed URL must be 200 with content-type application/pdf, and the URL must not be expired.`
       );
     } finally {
       setLoadingFileKey(null);
@@ -312,36 +304,22 @@ const ProfilePage = () => {
   const filteredReports = useMemo(() => {
     if (!hasPurchases) return [];
 
-    // Decorate with display title
     let arr = purchasedReports.map((r) => {
       const displayTitle =
-        r.report_title ||
-        r.title ||
-        beautifyFileName(r.file_key) ||
-        r.report_id ||
-        'Report';
-      return {
-        ...r,
-        _displayTitle: displayTitle,
-      };
+        r.report_title || r.title || beautifyFileName(r.file_key) || r.report_id || 'Report';
+      return { ...r, _displayTitle: displayTitle };
     });
 
-    // Search filter
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
       arr = arr.filter((r) => {
         const title = (r._displayTitle || '').toLowerCase();
         const rid = (r.report_id || r.reportId || '').toLowerCase();
         const fkey = (r.file_key || '').toLowerCase();
-        return (
-          title.includes(q) ||
-          rid.includes(q) ||
-          fkey.includes(q)
-        );
+        return title.includes(q) || rid.includes(q) || fkey.includes(q);
       });
     }
 
-    // Sort
     const sorted = [...arr].sort((a, b) => {
       const dateA = parseDateSafe(a);
       const dateB = parseDateSafe(b);
@@ -355,7 +333,7 @@ const ProfilePage = () => {
           return (b._displayTitle || '').localeCompare(a._displayTitle || '');
         case 'newest':
         default:
-          return dateB - dateA; // newest first
+          return dateB - dateA;
       }
     });
 
@@ -409,9 +387,7 @@ const ProfilePage = () => {
       );
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
-          `Failed to get presigned URL: ${response.status} - ${errorText}`
-        );
+        throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
       }
       const { presignedPutUrl, presignedGetUrl } = await response.json();
 
@@ -422,19 +398,13 @@ const ProfilePage = () => {
       });
       if (!uploadResponse.ok) {
         const uploadErrorText = await uploadResponse.text();
-        throw new Error(
-          `Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`
-        );
+        throw new Error(`Failed to upload to S3: ${uploadResponse.status} - ${uploadErrorText}`);
       }
 
       setPhotoUrl(presignedGetUrl);
       setNewPhoto(null);
       alert('Photo uploaded successfully!');
-      const updatedUserInfo = {
-        ...storedUserInfo,
-        user_id: uid,
-        photo_url: presignedGetUrl,
-      };
+      const updatedUserInfo = { ...storedUserInfo, user_id: uid, photo_url: presignedGetUrl };
       cxtDispatch({ type: 'USER_LOGIN', payload: updatedUserInfo });
       localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
     } catch (error) {
@@ -514,9 +484,7 @@ const ProfilePage = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${
-              localStorage.getItem('authToken') || ''
-            }`,
+            Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
           },
           body: JSON.stringify(profileData),
         }
@@ -547,12 +515,17 @@ const ProfilePage = () => {
   if (error) return <div className="error-message">{error}</div>;
 
   const renderPurchasedOn = (r) => {
-    const d =
-      r.purchased_on || r.granted_on || r.granted_at || r.created_at || null;
+    const d = r.purchased_on || r.granted_on || r.granted_at || r.created_at || null;
     if (!d) return '—';
     const dt = new Date(d);
     return isNaN(dt.getTime()) ? String(d) : dt.toLocaleString();
   };
+
+  const selectedTitle = (() => {
+    // Optional: show current report title in modal header (nice UX)
+    // If you don’t want it, you can keep the header as “Report Viewer”
+    return 'Report Viewer';
+  })();
 
   return (
     <div className="profile-page">
@@ -560,7 +533,7 @@ const ProfilePage = () => {
       <style>{`
         .rbr-viewer-content { height: 92vh; }
         .rbr-viewer-body { height: calc(92vh - 56px); padding: 0; overflow: hidden; }
-        .rbr-viewer-scroll { height: 100%; width: 100%; overflow: auto; }
+        .rbr-viewer-scroll { height: 100%; width: 100%; overflow: hidden; }
         .rbr-report-cell {
           display: flex;
           align-items: center;
@@ -590,6 +563,12 @@ const ProfilePage = () => {
           cursor: pointer;
           font-size: 0.95rem;
         }
+
+        /* ✅ Make sure the viewer fills the modal fully */
+        .rbr-pdf-wrapper {
+          height: 100%;
+          width: 100%;
+        }
       `}</style>
 
       <div className="profile-container">
@@ -613,8 +592,7 @@ const ProfilePage = () => {
                   className="profile-photo"
                   onError={(e) => {
                     console.error('Default image failed to load:', e);
-                    e.target.src =
-                      'https://via.placeholder.com/120?text=Default+Avatar';
+                    e.target.src = 'https://via.placeholder.com/120?text=Default+Avatar';
                   }}
                 />
               )}
@@ -627,10 +605,7 @@ const ProfilePage = () => {
               <p className="user-detail">
                 <strong>Email:</strong> {emailInput || 'Not Available'}
               </p>
-              <button
-                className="edit-profile-button"
-                onClick={() => setShowEditModal(true)}
-              >
+              <button className="edit-profile-button" onClick={() => setShowEditModal(true)}>
                 Edit Profile
               </button>
             </div>
@@ -643,7 +618,6 @@ const ProfilePage = () => {
 
           {hasPurchases ? (
             <>
-              {/* Search + Sort controls only if more than 8 reports */}
               {purchasedReports.length > 8 && (
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <div className="flex-grow-1 me-3">
@@ -699,12 +673,7 @@ const ProfilePage = () => {
                                 <div>
                                   <div>{displayTitle}</div>
                                   {r.report_id && (
-                                    <div
-                                      style={{
-                                        fontSize: '0.8rem',
-                                        color: '#6c757d',
-                                      }}
-                                    >
+                                    <div style={{ fontSize: '0.8rem', color: '#6c757d' }}>
                                       ID: {r.report_id}
                                     </div>
                                   )}
@@ -739,7 +708,6 @@ const ProfilePage = () => {
               )}
             </>
           ) : (
-            // Sample view for accounts with 0 purchases
             <div className="table-responsive">
               <table className="table table-striped align-middle rbr-table">
                 <thead>
@@ -780,8 +748,7 @@ const ProfilePage = () => {
                 </tbody>
               </table>
               <p className="text-muted" style={{ marginTop: 8 }}>
-                This is a sample preview added for new accounts. Your purchased
-                reports will appear here automatically after you buy them.
+                This is a sample preview added for new accounts. Your purchased reports will appear here automatically after you buy them.
               </p>
             </div>
           )}
@@ -812,60 +779,59 @@ const ProfilePage = () => {
             </ul>
           ) : (
             <p className="text-muted">
-              You haven’t opened any reports yet. When you view a report, it
-              will appear here for quick access.
+              You haven’t opened any reports yet. When you view a report, it will appear here for quick access.
             </p>
           )}
         </div>
 
-        {/* PDF viewer modal (80% viewport height, single inner scroll) */}
+        {/* ✅ PDF viewer modal (NOW matches ReportsDisplay.js layout/toolbar/sidebar) */}
         <Modal
-          isOpen={!!selectedUrl}
-          toggle={() => setSelectedUrl(null)}
+          isOpen={!!selectedUrl || !!loadingFileKey}
+          toggle={() => {
+            setSelectedUrl(null);
+            setLoadingFileKey(null);
+          }}
           className="full-page-modal"
           size="xl"
           contentClassName="rbr-viewer-content"
         >
-          <ModalHeader toggle={() => setSelectedUrl(null)}>
-            Report Viewer
+          <ModalHeader
+            toggle={() => {
+              setSelectedUrl(null);
+              setLoadingFileKey(null);
+            }}
+          >
+            {selectedTitle}
           </ModalHeader>
+
           <ModalBody className="rbr-viewer-body">
-            {selectedUrl ? (
-              <div
-                className="rbr-viewer-scroll"
-                onContextMenu={(e) => e.preventDefault()}
-              >
-                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-                  <Viewer
-                    fileUrl={selectedUrl}
-                    renderTextLayer={false}
-                    renderAnnotationLayer={false}
-                    onDocumentLoadFailed={(e) =>
-                      console.error('PDF load failed:', e)
-                    }
-                  />
-                </Worker>
-              </div>
-            ) : (
-              <div
-                className="d-flex align-items-center justify-content-center"
-                style={{ height: '100%' }}
-              >
-                Loading…
-              </div>
-            )}
+            <div className="rbr-viewer-scroll" onContextMenu={(e) => e.preventDefault()}>
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                {!selectedUrl ? (
+                  <div
+                    className="d-flex align-items-center justify-content-center"
+                    style={{ height: '100%', width: '100%' }}
+                  >
+                    <div className="spinner-border" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rbr-pdf-wrapper">
+                    <Viewer
+                      fileUrl={selectedUrl}
+                      plugins={[defaultLayoutPluginInstance]}
+                    />
+                  </div>
+                )}
+              </Worker>
+            </div>
           </ModalBody>
         </Modal>
 
         {/* Edit Profile Modal */}
-        <Modal
-          isOpen={showEditModal}
-          toggle={() => setShowEditModal(false)}
-          className="full-page-modal"
-        >
-          <ModalHeader toggle={() => setShowEditModal(false)}>
-            Edit Profile
-          </ModalHeader>
+        <Modal isOpen={showEditModal} toggle={() => setShowEditModal(false)} className="full-page-modal">
+          <ModalHeader toggle={() => setShowEditModal(false)}>Edit Profile</ModalHeader>
           <ModalBody>
             <div className="edit-form">
               <div className="form-group">
@@ -905,20 +871,13 @@ const ProfilePage = () => {
                   <p>No photo uploaded. Upload to set a profile picture.</p>
                 )}
                 {photoUrl && (
-                  <button
-                    className="btn btn-danger"
-                    onClick={handleRemovePhoto}
-                    disabled={isSaving}
-                  >
+                  <button className="btn btn-danger" onClick={handleRemovePhoto} disabled={isSaving}>
                     {isSaving ? 'Removing...' : 'Remove Photo'}
                   </button>
                 )}
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={saveProfile}
-                disabled={isSaving}
-              >
+
+              <button className="btn btn-primary" onClick={saveProfile} disabled={isSaving}>
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
               <button
