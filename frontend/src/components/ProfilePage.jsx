@@ -14,6 +14,9 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 const DEFAULT_PROFILE_ICON = '/default-avatar.png';
 
+// ✅ IMPORTANT: Create plugin instance ONCE outside component (no hooks)
+const defaultLayoutPluginInstance = defaultLayoutPlugin();
+
 // Sample fallback row
 const SAMPLE_FILE_KEY = 'samples/RBR_Welcome_Sample.pdf';
 const SAMPLE_VERSION = '1.0';
@@ -55,10 +58,7 @@ const getCurrentUserIdFromStorage = () => {
 const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
-  const navigate = useNavigate();
-
-  // ✅ Same plugin instance pattern as ReportsDisplay.js
-  const defaultLayoutPluginInstance = useMemo(() => defaultLayoutPlugin(), []);
+  const navigate = useNavigate(); // (kept as-is; harmless even if unused)
 
   const [purchasedReports, setPurchasedReports] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
@@ -522,8 +522,6 @@ const ProfilePage = () => {
   };
 
   const selectedTitle = (() => {
-    // Optional: show current report title in modal header (nice UX)
-    // If you don’t want it, you can keep the header as “Report Viewer”
     return 'Report Viewer';
   })();
 
@@ -564,7 +562,6 @@ const ProfilePage = () => {
           font-size: 0.95rem;
         }
 
-        /* ✅ Make sure the viewer fills the modal fully */
         .rbr-pdf-wrapper {
           height: 100%;
           width: 100%;
@@ -784,7 +781,7 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* ✅ PDF viewer modal (NOW matches ReportsDisplay.js layout/toolbar/sidebar) */}
+        {/* ✅ PDF viewer modal */}
         <Modal
           isOpen={!!selectedUrl || !!loadingFileKey}
           toggle={() => {
@@ -818,10 +815,7 @@ const ProfilePage = () => {
                   </div>
                 ) : (
                   <div className="rbr-pdf-wrapper">
-                    <Viewer
-                      fileUrl={selectedUrl}
-                      plugins={[defaultLayoutPluginInstance]}
-                    />
+                    <Viewer fileUrl={selectedUrl} plugins={[defaultLayoutPluginInstance]} />
                   </div>
                 )}
               </Worker>
