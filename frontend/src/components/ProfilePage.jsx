@@ -14,8 +14,7 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 const DEFAULT_PROFILE_ICON = '/default-avatar.png';
 
-// ✅ IMPORTANT: Create plugin instance ONCE outside component (no hooks)
-const defaultLayoutPluginInstance = defaultLayoutPlugin();
+
 
 // Sample fallback row
 const SAMPLE_FILE_KEY = 'samples/RBR_Welcome_Sample.pdf';
@@ -59,6 +58,8 @@ const ProfilePage = () => {
   const { state, dispatch: cxtDispatch } = useContext(Store);
   const { userInfo } = state;
   const navigate = useNavigate(); // (kept as-is; harmless even if unused)
+
+  const defaultLayoutPluginInstance = useMemo(() => defaultLayoutPlugin(), []);
 
   const [purchasedReports, setPurchasedReports] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
