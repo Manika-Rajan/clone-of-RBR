@@ -1092,7 +1092,7 @@ const ReportsMobile = () => {
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
           <div
-            className="relative z-10 w-full sm:w-[440px] rounded-2xl shadow-2xl overflow-hidden max-h-[80vh] flex flex-col bg-white"
+            className="relative z-10 w-full sm:w-[580px] rounded-2xl shadow-2xl overflow-hidden max-h-[80vh] flex flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header (fixed) */}
@@ -1148,7 +1148,7 @@ const ReportsMobile = () => {
 
             {/* Body (scrollable) */}
             <div
-              className="px-5 pt-4 pb-4 overflow-y-auto"
+              className="px-4 pt-4 pb-4 overflow-y-auto"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               <p className="text-gray-700 text-sm leading-snug mb-3">
