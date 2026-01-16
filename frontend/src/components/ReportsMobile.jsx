@@ -153,7 +153,8 @@ const renderGenericHint = (query) => (
 );
 
 const ReportsMobile = () => {
-  const { state } = useContext(Store);
+  const store = useContext(Store);
+  const state = store?.state;
   const navigate = useNavigate();
 
   const [q, setQ] = useState("");
