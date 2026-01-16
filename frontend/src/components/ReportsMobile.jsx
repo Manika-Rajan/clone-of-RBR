@@ -538,8 +538,40 @@ const ReportsMobile = () => {
   };
 
   // ✅ Instant report (₹199) — placeholder until backend is wired
+  // ✅ FORCE name/phone confirmation for NEW users: if no saved phone -> open modal and show fields, then proceed.
   const triggerInstant = async (query) => {
     const trimmed = (query || "").trim();
+
+    // If popup isn't open yet (rare path) ensure it opens with query filled
+    if (!prebookPromptOpen) {
+      const savedPhone = state?.userInfo?.phone || state?.userInfo?.userId || "";
+      const savedName = state?.userInfo?.name || "";
+      setPrebookQuery(trimmed);
+      setPrebookName(savedName);
+      setPrebookPhone(savedPhone);
+      setPrebookHasKnownUser(!!savedPhone);
+      setPrebookError("");
+      setPrebookPromptOpen(true);
+      return;
+    }
+
+    // If user is NOT known, validate required fields BEFORE proceeding
+    if (!prebookHasKnownUser) {
+      const nm = (prebookName || "").trim();
+      const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
+
+      if (!nm) {
+        setPrebookError("Please enter your name to continue.");
+        return;
+      }
+      if (phoneDigits.length < 10) {
+        setPrebookError("Please enter a valid phone number (at least 10 digits).");
+        return;
+      }
+      setPrebookError("");
+    }
+
+    // Proceed (still placeholder flow)
     setPrebookPromptOpen(false);
 
     setModalTitle("Instant report coming soon");
@@ -807,14 +839,20 @@ const ReportsMobile = () => {
     }
 
     const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
+    const nm = (prebookName || "").trim();
+    if (!nm) {
+      setPrebookError("Please enter your name.");
+      return;
+    }
     if (phoneDigits.length < 10) {
       setPrebookError("Please enter a valid phone number (at least 10 digits).");
       return;
     }
+
     setPrebookError("");
     setPrebookPromptOpen(false);
 
-    await startPrebookFlow(prebookQuery, prebookName || "RBR User", phoneDigits);
+    await startPrebookFlow(prebookQuery, nm || "RBR User", phoneDigits);
   };
 
   return (
@@ -1043,7 +1081,7 @@ const ReportsMobile = () => {
         </div>
       )}
 
-      {/* ✅ Choose between Instant vs Pre-Book — “feel like clicking & paying” design */}
+      {/* ✅ Choose between Instant vs Pre-Book — improved scroll + “single glance” */}
       {prebookPromptOpen && (
         <div
           role="dialog"
@@ -1054,10 +1092,10 @@ const ReportsMobile = () => {
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
           <div
-            className="relative z-10 w-full sm:w-[440px] rounded-2xl shadow-2xl overflow-hidden max-h-[80vh]"
+            className="relative z-10 w-full sm:w-[440px] rounded-2xl shadow-2xl overflow-hidden max-h-[80vh] flex flex-col bg-white"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
+            {/* Header (fixed) */}
             <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 px-5 pt-5 pb-4">
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
@@ -1108,176 +1146,146 @@ const ReportsMobile = () => {
               </div>
             </div>
 
-            {/* Body */}
+            {/* Body (scrollable) */}
             <div
-              className="bg-white px-5 pt-4 pb-4 overflow-y-auto"
+              className="px-5 pt-4 pb-4 overflow-y-auto"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
-              {/* PRIMARY card: Instant */}
-              <div className="relative rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4 shadow-sm">
-                <div className="absolute -top-3 right-3">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold px-2 py-1 shadow">
-                    ⭐ Recommended
-                  </span>
+              <p className="text-gray-700 text-sm leading-snug mb-3">
+                We don’t have a ready report for <strong>“{prebookQuery}”</strong>{" "}
+                yet — choose one option below.
+              </p>
+
+              {/* Single-glance chooser (two cards) */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* INSTANT */}
+                <div className="relative rounded-2xl border border-blue-200 bg-gradient-to-b from-blue-50 to-white p-3 flex flex-col">
+                  <div className="absolute -top-2 right-2">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold px-2 py-1 shadow">
+                      ⭐ Recommended
+                    </span>
+                  </div>
+
+                  <div className="text-[11px] font-semibold text-blue-700">
+                    FASTEST
+                  </div>
+                  <div className="text-sm font-extrabold text-gray-900 leading-tight mt-1">
+                    Instant 10-Page
+                  </div>
+                  <div className="text-xl font-extrabold text-blue-700 mt-1">
+                    ₹199
+                  </div>
+
+                  <div className="text-[11px] text-gray-700 mt-2 leading-snug">
+                    Quick evaluation: overview, trends, key players.
+                  </div>
+
+                  {/* FORCE confirmation for NEW users: show name/phone fields here too */}
+                  {!prebookHasKnownUser && (
+                    <div className="mt-2 space-y-2">
+                      <input
+                        type="text"
+                        value={prebookName}
+                        onChange={(e) => setPrebookName(e.target.value)}
+                        placeholder="Your name"
+                        className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <input
+                        type="tel"
+                        value={prebookPhone}
+                        onChange={(e) => setPrebookPhone(e.target.value)}
+                        placeholder="WhatsApp number"
+                        className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => triggerInstant(prebookQuery)}
+                    className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 rounded-xl active:scale-[0.98] shadow"
+                  >
+                    Generate
+                  </button>
+
+                  <div className="text-[10px] text-gray-500 text-center mt-1">
+                    Secure checkout • View in <strong>My Profile</strong>
+                  </div>
+
+                  <div className="mt-2 text-[10px] text-gray-500 text-center">
+                    Auto-generated (not a custom deep-dive)
+                  </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="shrink-0 h-11 w-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center">
-                    ⚡
+                {/* PREBOOK */}
+                <div className="rounded-2xl border border-gray-200 bg-white p-3 flex flex-col">
+                  <div className="text-[11px] font-semibold text-gray-700">
+                    DETAILED
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm font-extrabold text-gray-900">
-                        Instant 10-Page Report
-                      </div>
-                      <div className="text-sm font-extrabold text-blue-700">
-                        ₹199
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-700 mt-1 leading-snug">
-                      Best when you want a fast overview right now — market size,
-                      trends, key players, and opportunities.
-                    </div>
+                  <div className="text-sm font-extrabold text-gray-900 leading-tight mt-1">
+                    Full Report
+                  </div>
+                  <div className="text-xl font-extrabold text-gray-900 mt-1">
+                    ₹499
+                  </div>
 
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <div className="rounded-xl border border-blue-100 bg-white px-2 py-2">
-                        <div className="text-[11px] font-bold text-gray-900">
-                          Delivered
-                        </div>
-                        <div className="text-[11px] text-gray-600">
-                          in minutes (auto)
-                        </div>
-                      </div>
-                      <div className="rounded-xl border border-blue-100 bg-white px-2 py-2">
-                        <div className="text-[11px] font-bold text-gray-900">
-                          Good for
-                        </div>
-                        <div className="text-[11px] text-gray-600">
-                          quick decision
-                        </div>
-                      </div>
+                  <div className="text-[11px] text-gray-700 mt-2 leading-snug">
+                    Delivered within 72 hours. ₹499 adjusted in final price.
+                  </div>
+
+                  <details className="mt-2 rounded-xl border border-gray-200 bg-gray-50/60 px-3 py-2">
+                    <summary className="cursor-pointer select-none text-xs font-semibold text-gray-800">
+                      What happens after
+                    </summary>
+                    <div className="mt-2 text-[11px] text-gray-700 leading-relaxed">
+                      <ul className="ml-4 list-disc space-y-1">
+                        <li>OTP login to your account.</li>
+                        <li>
+                          Report unlocks in <strong>My Profile</strong>.
+                        </li>
+                        <li>
+                          Delivery: <strong>within 72 hours</strong>.
+                        </li>
+                      </ul>
                     </div>
+                  </details>
+
+                  {/* Form is ONLY required for new users; kept as-is for pre-book */}
+                  <form onSubmit={handlePrebookSubmit} className="space-y-2 mt-2">
+                    {!prebookHasKnownUser && (
+                      <>
+                        <input
+                          type="text"
+                          value={prebookName}
+                          onChange={(e) => setPrebookName(e.target.value)}
+                          placeholder="Your name"
+                          className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <input
+                          type="tel"
+                          value={prebookPhone}
+                          onChange={(e) => setPrebookPhone(e.target.value)}
+                          placeholder="WhatsApp number"
+                          className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </>
+                    )}
+
+                    {prebookError && (
+                      <p className="text-xs text-red-600">{prebookError}</p>
+                    )}
 
                     <button
-                      type="button"
-                      onClick={() => triggerInstant(prebookQuery)}
-                      className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3 rounded-xl active:scale-[0.98] shadow"
+                      type="submit"
+                      className="mt-1 w-full bg-gray-900 hover:bg-black text-white font-extrabold py-2.5 rounded-xl active:scale-[0.98]"
                     >
-                      Generate Instant Report (₹199)
+                      Pre-book
                     </button>
 
-                    <div className="text-[11px] text-gray-500 text-center mt-1.5">
-                      Secure checkout • Access in <strong>My Profile</strong>
+                    <div className="text-[10px] text-gray-500 text-center -mt-1">
+                      Razorpay • OTP login • Access in <strong>My Profile</strong>
                     </div>
-
-                    <div className="mt-2 text-[11px] text-gray-500 text-center">
-                      <span className="font-semibold text-gray-700">
-                        Note:
-                      </span>{" "}
-                      Instant is auto-generated (not a custom deep-dive).
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Secondary card: Pre-book */}
-              <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4">
-                <div className="flex items-start gap-3">
-                  <div className="shrink-0 h-11 w-11 rounded-2xl bg-gray-900 text-white flex items-center justify-center">
-                    📘
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm font-extrabold text-gray-900">
-                        Full Report (Pre-Book)
-                      </div>
-                      <div className="text-sm font-extrabold text-gray-900">
-                        ₹499
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-700 mt-1 leading-snug">
-                      Best when you need a detailed report (custom scope &amp;
-                      deeper research).
-                    </div>
-
-                    <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/60 px-3 py-2">
-                      <div className="text-[11px] text-gray-700 leading-snug">
-                        ✅ Delivery within <strong>72 hours</strong> • ✅ ₹499 is
-                        adjusted in final price • ✅ Unlocks in{" "}
-                        <strong>My Profile</strong>
-                      </div>
-                    </div>
-
-                    <details className="mt-3 rounded-xl border border-gray-200 bg-white px-3 py-2">
-                      <summary className="cursor-pointer select-none text-sm font-semibold text-gray-800">
-                        What happens after you pre-book
-                      </summary>
-                      <div className="mt-2 text-xs text-gray-700 leading-relaxed">
-                        <ul className="ml-4 list-disc space-y-1">
-                          <li>OTP login to your account.</li>
-                          <li>
-                            Report is unlocked in <strong>My Profile</strong>{" "}
-                            when ready.
-                          </li>
-                          <li>
-                            Delivery: <strong>within 72 hours</strong>.
-                          </li>
-                          <li>
-                            ₹499 is <strong>adjusted</strong> in final price.
-                          </li>
-                        </ul>
-                      </div>
-                    </details>
-
-                    {/* Form */}
-                    <form onSubmit={handlePrebookSubmit} className="space-y-3 mt-3">
-                      {!prebookHasKnownUser && (
-                        <>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Your name
-                            </label>
-                            <input
-                              type="text"
-                              value={prebookName}
-                              onChange={(e) => setPrebookName(e.target.value)}
-                              placeholder="Your name"
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Phone number (WhatsApp)
-                            </label>
-                            <input
-                              type="tel"
-                              value={prebookPhone}
-                              onChange={(e) => setPrebookPhone(e.target.value)}
-                              placeholder="e.g. 919XXXXXXXXX"
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </div>
-                        </>
-                      )}
-
-                      {prebookError && (
-                        <p className="text-xs text-red-600">{prebookError}</p>
-                      )}
-
-                      <button
-                        type="submit"
-                        className="w-full bg-gray-900 hover:bg-black text-white font-extrabold py-3 rounded-xl active:scale-[0.98]"
-                      >
-                        Pay ₹499 &amp; Pre-Book Full Report
-                      </button>
-
-                      <div className="text-[11px] text-gray-500 text-center -mt-1">
-                        Secure payment via Razorpay • OTP login • Access in{" "}
-                        <strong>My Profile</strong>
-                      </div>
-                    </form>
-                  </div>
+                  </form>
                 </div>
               </div>
 
