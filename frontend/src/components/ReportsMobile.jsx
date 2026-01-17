@@ -1150,7 +1150,7 @@ const ReportsMobile = () => {
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               <p className="text-gray-700 text-sm leading-snug mb-3">
-                But our database can generate a report for <strong>“{prebookQuery}”</strong>{" "} — choose one option below.
+                But our database can generate a report for <strong>“{prebookQuery}”</strong>{" "} — choose an option below.
               </p>
 
               {/* Single-glance chooser (two cards) */}
