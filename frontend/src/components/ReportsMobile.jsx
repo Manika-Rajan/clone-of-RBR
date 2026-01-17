@@ -1109,7 +1109,6 @@ const ReportsMobile = () => {
                     </span>
                   </h2>
                   <div className="mt-2 text-white/90 text-xs leading-snug">
-                    
                   </div>
                 </div>
 
@@ -1151,8 +1150,7 @@ const ReportsMobile = () => {
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               <p className="text-gray-700 text-sm leading-snug mb-3">
-                We don’t have a ready report for <strong>“{prebookQuery}”</strong>{" "}
-                yet — choose one option below.
+                But our database can generate a report for <strong>“{prebookQuery}”</strong>{" "} — choose one option below.
               </p>
 
               {/* Single-glance chooser (two cards) */}
