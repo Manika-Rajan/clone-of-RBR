@@ -1100,7 +1100,6 @@ const ReportsMobile = () => {
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
                   <div className="text-white/90 text-xs font-semibold tracking-wide">
-                    REPORT OPTIONS
                   </div>
                   <h2 className="text-white text-lg font-extrabold leading-tight mt-1">
                     Report not found for
