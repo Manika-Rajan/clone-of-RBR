@@ -1103,14 +1103,13 @@ const ReportsMobile = () => {
                     REPORT OPTIONS
                   </div>
                   <h2 className="text-white text-lg font-extrabold leading-tight mt-1">
-                    There is no matching report for
+                    Report not found for
                     <span className="block truncate mt-0.5">
                       “{prebookQuery}”
                     </span>
                   </h2>
                   <div className="mt-2 text-white/90 text-xs leading-snug">
-                    No ready preview exists yet — but you can still get output
-                    today.
+                    
                   </div>
                 </div>
 
