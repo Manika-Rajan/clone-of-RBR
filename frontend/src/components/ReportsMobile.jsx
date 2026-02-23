@@ -15,13 +15,16 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Store } from "../Store";
 
-const EXAMPLES = [
-  "Restaurant Business in india",
-  "Paper industry in India",
-  "FMCG market report",
-  "IT industry analysis India",
-  "EV charging business india",
-  "Competitor analysis pharma",
+const POPULAR_REPORTS = [
+  "Restaurant Business in India",
+  "Paper Industry in India",
+  "FMCG Market Report",
+  "IT Industry Analysis India",
+];
+
+const TRENDING_INDUSTRIES = [
+  "EV Charging Business India",
+  "Competitor Analysis Pharma",
 ];
 
 const SUGGESTIONS = [
@@ -64,8 +67,62 @@ const PREBOOK_API_BASE =
 // ⭐ Single Pre-booking API URL (same path for create + confirm)
 const PREBOOK_API_URL = `${PREBOOK_API_BASE}/prebook/create-order`;
 
+// ⭐ Instant Report APIs (customer flow)
+// ✅ Env helper: supports both Vite (import.meta.env) and CRA/Webpack (process.env)
+const getEnv = (key) => {
+  try {
+    if (typeof import.meta !== "undefined" && import.meta?.env?.[key] != null) {
+      return import.meta.env[key];
+    }
+  } catch {}
+  try {
+    if (typeof process !== "undefined" && process?.env?.[key] != null) {
+      return process.env[key];
+    }
+  } catch {}
+  return "";
+};
+
+// Configure these in Amplify env vars.
+// Recommended for Vite builds: VITE_INSTANT_CREATE_ORDER_URL / VITE_INSTANT_CONFIRM_GENERATE_URL / VITE_STATUS_API
+// CRA fallback supported: REACT_APP_INSTANT_CREATE_ORDER_URL / REACT_APP_INSTANT_CONFIRM_GENERATE_URL / REACT_APP_INSTANT_STATUS_URL
+const INSTANT_API_BASE =
+  getEnv("VITE_INSTANT_API_BASE") || getEnv("REACT_APP_INSTANT_API_BASE") || "";
+
+const INSTANT_CREATE_ORDER_URL =
+  getEnv("VITE_INSTANT_CREATE_ORDER_URL") ||
+  getEnv("REACT_APP_INSTANT_CREATE_ORDER_URL") ||
+  (INSTANT_API_BASE ? `${INSTANT_API_BASE}/instant-report/create-order` : "") ||
+  // ✅ Safe prod default (from your test page)
+  "https://jp1bupouyl.execute-api.ap-south-1.amazonaws.com/prod/instant-report/create-order";
+
+const INSTANT_CONFIRM_GENERATE_URL =
+  getEnv("VITE_INSTANT_CONFIRM_GENERATE_URL") ||
+  getEnv("VITE_CONFIRM_API") ||
+  getEnv("REACT_APP_INSTANT_CONFIRM_GENERATE_URL") ||
+  (INSTANT_API_BASE ? `${INSTANT_API_BASE}/instant-report/confirm` : "") ||
+  // ✅ Safe prod default (from your test page)
+  "https://jp1bupouyl.execute-api.ap-south-1.amazonaws.com/prod/instant-report/confirm";
+
+const INSTANT_STATUS_URL =
+  getEnv("VITE_INSTANT_STATUS_URL") ||
+  getEnv("VITE_STATUS_API") ||
+  getEnv("REACT_APP_INSTANT_STATUS_URL") ||
+  (INSTANT_API_BASE ? `${INSTANT_API_BASE}/instant-report/status` : "") ||
+  // ✅ Safe prod default (from employee lab env)
+  "https://jp1bupouyl.execute-api.ap-south-1.amazonaws.com/prod/instant-report/status";
+const INSTANT_DEFAULT_QUESTIONS = [
+  "What is the current market overview and market size, with recent trends?",
+  "What are the key segments/sub-segments and how is demand distributed?",
+  "What are the main growth drivers, constraints, risks, and challenges?",
+  "Who are the key players and what is the competitive landscape?",
+  "What is the 3–5 year outlook with opportunities and recommendations?",
+];
+
 // ✅ Google Ads conversion for PREBOOK (₹499) — hardcoded
 const PREBOOK_CONV_SEND_TO = "AW-824378442/X8klCKyRw9EbEMqIjIkD";
+// ✅ Google Ads conversion for INSTANT (₹199)
+const INSTANT_CONV_SEND_TO = "AW-824378442/6TR6CLvQ1-kbEMqIjIkD";
 
 // ✅ Search input max length
 const MAX_QUERY_CHARS = 50;
@@ -95,6 +152,52 @@ function fireGoogleAdsPrebookConversion({ paymentId, valueINR }) {
     }
   } catch (e) {
     console.error("[Ads] Prebook conversion fire error:", e);
+  }
+}
+
+// Fire Google Ads conversion safely (once per paymentId) — Instant ₹199
+function fireGoogleAdsInstantConversion({ paymentId, valueINR = 199 }) {
+  try {
+    // ✅ Prevent firing the same conversion multiple times per payment
+    const key = `rbr_ads_conv_instant_${paymentId || "na"}`;
+    if (paymentId && sessionStorage.getItem(key) === "1") return;
+
+    const sendTo = "AW-824378442/6TR6CLvQ1-kbEMqIjIkD";
+    const conversionValue = Number(valueINR) || 199;
+
+    const attemptFire = () => {
+      if (typeof window.gtag !== "function") return false;
+
+      window.gtag("event", "conversion", {
+        send_to: sendTo,
+        value: conversionValue,
+        currency: "INR",
+        transaction_id: paymentId || undefined,
+      });
+
+      if (paymentId) sessionStorage.setItem(key, "1");
+      return true;
+    };
+
+    // Try immediately
+    if (attemptFire()) return;
+
+    // Retry briefly in case the tag script is still loading
+    const started = Date.now();
+    const retry = () => {
+      if (attemptFire()) return;
+      if (Date.now() - started > 2000) {
+        console.warn("[GoogleAds] gtag not ready; conversion not fired", {
+          paymentId,
+          sendTo,
+        });
+        return;
+      }
+      setTimeout(retry, 120);
+    };
+    retry();
+  } catch (e) {
+    console.warn("Google Ads conversion fire failed (instant)", e);
   }
 }
 
@@ -155,6 +258,7 @@ const renderGenericHint = (query) => (
 const ReportsMobile = () => {
   const store = useContext(Store);
   const state = store?.state;
+  const dispatch = store?.dispatch;
   const navigate = useNavigate();
 
   const [q, setQ] = useState("");
@@ -195,7 +299,107 @@ const ReportsMobile = () => {
   const [prebookName, setPrebookName] = useState("");
   const [prebookPhone, setPrebookPhone] = useState("");
   const [prebookError, setPrebookError] = useState("");
+  const [instantChooserError, setInstantChooserError] = useState("");
   const [prebookHasKnownUser, setPrebookHasKnownUser] = useState(false);
+
+  // ======================
+  // ✅ OTP Modal (for Instant) — reuse same OTP system as Login.jsx
+  // ======================
+  const SEND_OTP_API =
+    getEnv("VITE_SEND_OTP_API") ||
+    getEnv("REACT_APP_SEND_OTP_API") ||
+    "https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/send-otp";
+
+  const VERIFY_OTP_API =
+    getEnv("VITE_VERIFY_OTP_API") ||
+    getEnv("REACT_APP_VERIFY_OTP_API") ||
+    "https://eg3s8q87p7.execute-api.ap-south-1.amazonaws.com/default/verify-otp";
+
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [otpPhone, setOtpPhone] = useState(""); // 10-digit
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const pendingInstantRef = useRef(null);
+  const pendingChooserSnapshotRef = useRef(null);
+
+  // ✅ Inline OTP step (instead of a second big popup)
+  const [instantOtpStep, setInstantOtpStep] = useState(false);
+  const OTP_LEN = 6; // change to 4 later if your OTP becomes 4-digit
+  const otpBoxesRef = useRef([]);
+
+  // ======================
+  // ✅ Instant Report UI State (customer flow)
+  // ======================
+  const [instantQuestionsOpen, setInstantQuestionsOpen] = useState(false);
+  const [showInstantPaymentSuccess, setShowInstantPaymentSuccess] =
+    useState(false);
+  const [instantTopic, setInstantTopic] = useState("");
+  const [instantQuestions, setInstantQuestions] = useState(
+    INSTANT_DEFAULT_QUESTIONS
+  );
+  const [instantError, setInstantError] = useState("");
+  const [instantPayCtx, setInstantPayCtx] = useState(null);
+
+  // Loading modal (employee-portal style)
+  const [instantModalOpen, setInstantModalOpen] = useState(false);
+  const [instantModalTitle, setInstantModalTitle] =
+    useState("Generating report…");
+  const [instantModalSub, setInstantModalSub] = useState("Initializing…");
+  const [instantProgressPct, setInstantProgressPct] = useState(5);
+  const [instantBusy, setInstantBusy] = useState(false);
+
+  const instantMountedRef = useRef(true);
+  const instantAbortRef = useRef({ aborted: false });
+
+  useEffect(() => {
+    instantMountedRef.current = true;
+    return () => {
+      instantMountedRef.current = false;
+      instantAbortRef.current.aborted = true;
+    };
+  }, []);
+
+  // ✅ When OTP inline step opens, focus the first empty box
+  useEffect(() => {
+    if (!instantOtpStep) return;
+    const t = setTimeout(() => {
+      const current = String(otpValue || "").replace(/\D/g, "");
+      const idx = Math.min(current.length, OTP_LEN - 1);
+      const el = otpBoxesRef.current?.[idx];
+      if (el && typeof el.focus === "function") el.focus();
+    }, 80);
+    return () => clearTimeout(t);
+  }, [instantOtpStep, otpValue, OTP_LEN]);
+
+  const updateInstantQuestion = (i, val) => {
+    setInstantQuestions((prev) => prev.map((q, idx) => (idx === i ? val : q)));
+  };
+
+  async function fetchJson(url, options) {
+    const res = await fetch(url, options);
+    const text = await res.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { raw: text };
+    }
+    return { res, data };
+  }
+
+  function buildErrorMessage(res, data, fallback) {
+    return (
+      data?.error ||
+      data?.message ||
+      data?.details ||
+      (typeof data?.raw === "string" && data.raw.slice(0, 300)) ||
+      fallback ||
+      `HTTP ${res?.status || "error"}`
+    );
+  }
 
   // ✅ show error if query too long
   const showTooLongError = () => {
@@ -319,53 +523,37 @@ const ReportsMobile = () => {
         },
 
         handler: async (response) => {
-          setPrebookLoading(true);
-          let confirmOk = false;
+          // Payment success → show a quick success popup (1s) so the conversion tag has time to fire,
+          // then ask 5 questions for the Instant report.
+          const payId = response?.razorpay_payment_id;
+          const sig = response?.razorpay_signature;
 
-          fireGoogleAdsPrebookConversion({
-            paymentId: response?.razorpay_payment_id,
-            valueINR: 499,
+          setShowInstantPaymentSuccess(true);
+
+          // ✅ Google Ads conversion: Instant purchase
+          fireGoogleAdsInstantConversion({
+            paymentId: payId,
+            valueINR: 199,
           });
 
-          try {
-            const confirmResp = await fetch(PREBOOK_API_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                userPhone,
-                prebookId,
-                razorpayOrderId,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature,
-              }),
+          // After 1s, proceed to the questions modal
+          setTimeout(() => {
+            setShowInstantPaymentSuccess(false);
+
+            setInstantError("");
+            setInstantTopic(trimmed);
+            setInstantQuestions(INSTANT_DEFAULT_QUESTIONS);
+            setInstantPayCtx({
+              userPhone: (userPhone || "").replace(/\D/g, ""),
+              userName: (userName || "").trim() || "RBR User",
+              query: trimmed,
+              razorpayOrderId,
+              razorpayPaymentId: payId,
+              razorpaySignature: sig,
             });
-
-            confirmOk = confirmResp.ok;
-            if (!confirmResp.ok) {
-              const txt = await confirmResp.text();
-              console.error("prebook confirm failed:", confirmResp.status, txt);
-            }
-          } catch (e) {
-            console.error("Error in prebook confirm handler:", e);
-          } finally {
-            setPrebookLoading(false);
-          }
-
-          navigate("/prebook-success", {
-            replace: true,
-            state: {
-              prebookId,
-              reportTitle: trimmed,
-              userPhone,
-              userName: userName || "RBR User",
-              amount,
-              currency,
-              confirmOk,
-              razorpayPaymentId: response.razorpay_payment_id,
-            },
-          });
+            setInstantQuestionsOpen(true);
+          }, 1000);
         },
-
         modal: {
           ondismiss: () => {
             setPrebookLoading(false);
@@ -534,11 +722,334 @@ const ReportsMobile = () => {
     setPrebookPhone(savedPhone);
     setPrebookHasKnownUser(!!savedPhone);
     setPrebookError("");
+    setInstantChooserError("");
     setPrebookPromptOpen(true);
   };
 
-  // ✅ Instant report (₹199) — placeholder until backend is wired
-  // ✅ FORCE name/phone confirmation for NEW users: if no saved phone -> open modal and show fields, then proceed.
+  // ✅ Instant report (₹199) — Payment first, then ask 5 questions, then generate with loading modal
+  // ✅ FORCE name/phone confirmation for NEW users: if no saved phone -> fields are shown in the chooser modal.
+  const sendOtpForInstant = async (phone10) => {
+    const digits = String(phone10 || "").replace(/\D/g, "").slice(-10);
+    if (digits.length !== 10) {
+      setOtpError("Please enter a valid 10-digit mobile number.");
+      return false;
+    }
+
+    setOtpError("");
+    setOtpSending(true);
+    try {
+      const phoneE164 = `+91${digits}`;
+
+      // mirror Login.jsx payload
+      const resp = await fetch(SEND_OTP_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone_number: phoneE164 }),
+      });
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok) {
+        throw new Error(data?.message || "Could not send OTP. Please try again.");
+      }
+
+      // Optional: keep Store phone in sync (same as Login.jsx)
+      try {
+        dispatch?.({ type: "SET_PHONE", payload: phoneE164 });
+      } catch {}
+
+      setOtpSent(true);
+      return true;
+    } catch (e) {
+      setOtpError(e?.message || "Could not send OTP. Please try again.");
+      return false;
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const verifyOtpForInstant = async () => {
+    const digits = String(otpPhone || "").replace(/\D/g, "").slice(-10);
+    if (digits.length !== 10) {
+      setOtpError("Please enter a valid 10-digit mobile number.");
+      return false;
+    }
+    const code = String(otpValue || "").trim();
+    if (!code) {
+      setOtpError("Please enter the OTP.");
+      return false;
+    }
+
+    setOtpError("");
+    setOtpVerifying(true);
+    try {
+      const phoneE164 = `+91${digits}`;
+
+      // mirror Login.jsx payload
+      const resp = await fetch(VERIFY_OTP_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone_number: phoneE164, otp: code }),
+      });
+
+      const raw = await resp.text();
+      let parsed = {};
+      try {
+        parsed = raw ? JSON.parse(raw) : {};
+      } catch {
+        parsed = {};
+      }
+
+      // Some lambdas return { body: "{...}" }
+      let body = parsed;
+      if (typeof parsed?.body === "string") {
+        try {
+          body = JSON.parse(parsed.body);
+        } catch {
+          body = {};
+        }
+      }
+
+      if (!resp.ok) {
+        throw new Error(
+          body?.message || parsed?.message || "Invalid OTP. Please try again."
+        );
+      }
+
+      const token = body?.token || parsed?.token || "";
+      const baseUser = {
+        isLogin: true,
+        userId: phoneE164,
+        phone: phoneE164,
+        token,
+      };
+
+      // Persist like Login.jsx
+      try {
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("userInfo", JSON.stringify(baseUser));
+      } catch {}
+
+      try {
+        dispatch?.({ type: "USER_LOGIN", payload: baseUser });
+      } catch {}
+
+      return true;
+    } catch (e) {
+      setOtpError(e?.message || "Invalid OTP. Please try again.");
+      return false;
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
+  // ======================
+  // ✅ OTP boxes helpers (inline)
+  // ======================
+  const otpDigits = useMemo(() => {
+    const raw = String(otpValue || "");
+    const onlyNums = raw.replace(/\D/g, "");
+    const padded = (onlyNums + "".padEnd(OTP_LEN, " ")).slice(0, OTP_LEN);
+    return padded.split("").map((c) => (c === " " ? "" : c));
+  }, [otpValue, OTP_LEN]);
+
+  const setOtpAt = (idx, digit) => {
+    const d = String(digit || "").replace(/\D/g, "").slice(0, 1);
+    const arr = [...otpDigits];
+    arr[idx] = d;
+    setOtpValue(arr.join(""));
+  };
+
+  const focusOtp = (idx) => {
+    const el = otpBoxesRef.current?.[idx];
+    if (el && typeof el.focus === "function") el.focus();
+  };
+
+  const onOtpChange = (idx, e) => {
+    const val = e.target.value;
+    const digits = String(val || "").replace(/\D/g, "");
+    if (!digits) {
+      setOtpAt(idx, "");
+      return;
+    }
+
+    // If user pasted multiple digits into one box
+    if (digits.length > 1) {
+      const take = digits.slice(0, OTP_LEN - idx).split("");
+      const arr = [...otpDigits];
+      take.forEach((ch, k) => {
+        arr[idx + k] = ch;
+      });
+      setOtpValue(arr.join(""));
+      const next = Math.min(idx + take.length, OTP_LEN - 1);
+      focusOtp(next);
+      return;
+    }
+
+    setOtpAt(idx, digits);
+    if (idx < OTP_LEN - 1) focusOtp(idx + 1);
+  };
+
+  const onOtpKeyDown = (idx, e) => {
+    if (e.key === "Backspace") {
+      if (otpDigits[idx]) {
+        setOtpAt(idx, "");
+      } else if (idx > 0) {
+        focusOtp(idx - 1);
+        setOtpAt(idx - 1, "");
+      }
+    }
+    if (e.key === "ArrowLeft" && idx > 0) focusOtp(idx - 1);
+    if (e.key === "ArrowRight" && idx < OTP_LEN - 1) focusOtp(idx + 1);
+  };
+
+  const onOtpPaste = (e) => {
+    try {
+      const txt = e.clipboardData?.getData("text") || "";
+      const digits = txt.replace(/\D/g, "").slice(0, OTP_LEN);
+      if (!digits) return;
+      e.preventDefault();
+      const arr = Array.from({ length: OTP_LEN }, (_, i) => digits[i] || "");
+      setOtpValue(arr.join(""));
+      const lastFilled = Math.min(digits.length - 1, OTP_LEN - 1);
+      focusOtp(Math.max(0, lastFilled));
+    } catch {}
+  };
+
+  const startInstantPayment = async ({ query, userName, phoneDigits }) => {
+    const trimmed = (query || "").trim();
+    const nm = (userName || "RBR User").trim() || "RBR User";
+
+    // Ensure Instant endpoints exist
+    if (
+      !INSTANT_CREATE_ORDER_URL ||
+      !INSTANT_CONFIRM_GENERATE_URL ||
+      !INSTANT_STATUS_URL
+    ) {
+      setModalTitle("Instant setup incomplete");
+      setModalMsgNode(
+        <span>⚠️ Instant report setup is incomplete. Please try again later.</span>
+      );
+      setOpenModal(true);
+      return;
+    }
+
+    try {
+      setPrebookLoading(true);
+
+      // 1) Create Razorpay order for Instant
+      const { res, data } = await fetchJson(INSTANT_CREATE_ORDER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userPhone: phoneDigits,
+          userName: nm,
+          query: trimmed,
+          amount: 199,
+          currency: "INR",
+          type: "instant",
+        }),
+      });
+
+      if (!res.ok || data?.ok === false) {
+        throw new Error(
+          buildErrorMessage(res, data, "Could not start Instant payment")
+        );
+      }
+
+      // Accept multiple response shapes
+      const razorpayOrderId =
+        data?.razorpayOrderId ||
+        data?.razorpay_order_id ||
+        data?.orderId ||
+        data?.order_id;
+      const razorpayKeyId =
+        data?.razorpayKeyId ||
+        data?.razorpay_key_id ||
+        data?.keyId ||
+        data?.key_id;
+      const amount = data?.amount || 19900; // paise usually
+      const currency = data?.currency || "INR";
+
+      if (!razorpayOrderId || !razorpayKeyId) {
+        console.error("Instant create-order response:", data);
+        throw new Error(
+          "Instant payment could not be prepared. Missing Razorpay order/key."
+        );
+      }
+
+      await loadRazorpay();
+      if (!window.Razorpay) throw new Error("Payment SDK did not load");
+
+      const options = {
+        key: razorpayKeyId,
+        amount,
+        currency,
+        name: "Rajan Business Reports",
+        description: `Instant ₹199: ${trimmed}`,
+        order_id: razorpayOrderId,
+        prefill: { name: nm, contact: phoneDigits },
+        notes: {
+          type: "instant",
+          reportTitle: trimmed,
+          searchQuery: trimmed,
+          userPhone: phoneDigits,
+        },
+        handler: async (response) => {
+          // Payment success → now ask 5 questions
+          const payId = response?.razorpay_payment_id;
+          const sig = response?.razorpay_signature;
+
+          // ✅ Google Ads conversion: Instant purchase
+          fireGoogleAdsInstantConversion({
+            paymentId: payId,
+            valueINR: 199,
+          });
+
+          setInstantError("");
+          setInstantTopic(trimmed);
+          setInstantQuestions(INSTANT_DEFAULT_QUESTIONS);
+          setInstantPayCtx({
+            userPhone: phoneDigits,
+            userName: nm,
+            query: trimmed,
+            razorpayOrderId,
+            razorpayPaymentId: payId,
+            razorpaySignature: sig,
+          });
+          setInstantQuestionsOpen(true);
+        },
+        modal: {
+          ondismiss: () => {
+            setPrebookLoading(false);
+            setModalTitle("Payment cancelled");
+            setModalMsgNode(
+              <span>
+                Your payment was cancelled. You can try again, or choose{" "}
+                <strong>Pre-book</strong> instead.
+              </span>
+            );
+            setOpenModal(true);
+          },
+        },
+        theme: { color: "#0263c7" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (e) {
+      console.error("Instant trigger error:", e);
+      setModalTitle("Payment error");
+      setModalMsgNode(
+        <span>
+          ⚠️ Could not start Instant payment. Please try again in a few minutes.
+        </span>
+      );
+      setOpenModal(true);
+    } finally {
+      setPrebookLoading(false);
+    }
+  };
+
   const triggerInstant = async (query) => {
     const trimmed = (query || "").trim();
 
@@ -551,38 +1062,103 @@ const ReportsMobile = () => {
       setPrebookPhone(savedPhone);
       setPrebookHasKnownUser(!!savedPhone);
       setPrebookError("");
+      setInstantChooserError("");
       setPrebookPromptOpen(true);
       return;
     }
 
-    // If user is NOT known, validate required fields BEFORE proceeding
-    if (!prebookHasKnownUser) {
-      const nm = (prebookName || "").trim();
-      const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
+    // Validate name/phone for BOTH known + new (known users may still have bad saved phone)
+    let nm = (prebookName || "").trim();
+    const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
 
-      if (!nm) {
-        setPrebookError("Please enter your name to continue.");
-        return;
-      }
-      if (phoneDigits.length < 10) {
-        setPrebookError("Please enter a valid phone number (at least 10 digits).");
-        return;
-      }
+    if (!nm) nm = "RBR User";
+    if (phoneDigits.length < 10) {
+      setInstantChooserError(
+        prebookHasKnownUser
+          ? "Your saved phone number seems invalid. Please update your profile or contact us."
+          : "Please enter a valid phone number (at least 10 digits)."
+      );
       setPrebookError("");
+      return;
     }
 
-    // Proceed (still placeholder flow)
+    if (!prebookHasKnownUser && !(prebookName || "").trim()) {
+      setInstantChooserError("Please enter your name to continue.");
+      setPrebookError("");
+      return;
+    }
+
+    setPrebookError("");
+    setInstantChooserError("");
+
+    // If already logged in, go straight to payment.
+    const alreadyLoggedIn = !!state?.userInfo?.isLogin;
+    if (alreadyLoggedIn) {
+      setPrebookPromptOpen(false);
+      await startInstantPayment({ query: trimmed, userName: nm, phoneDigits });
+      return;
+    }
+
+    // Otherwise: OTP before payment (Option A)
+    pendingInstantRef.current = { query: trimmed, userName: nm, phoneDigits };
+    pendingChooserSnapshotRef.current = {
+      prebookQuery: trimmed,
+      prebookName: nm,
+      prebookPhone: phoneDigits,
+      prebookHasKnownUser,
+    };
+
+    // ✅ NEW UX: keep the chooser modal open and show OTP inline (no second popup)
+    setOtpPhone(phoneDigits.slice(-10));
+    setOtpValue("");
+    setOtpError("");
+    setOtpSent(false);
+    setInstantOtpStep(true);
+
+    // Auto-send OTP on step open
+    setTimeout(() => {
+      sendOtpForInstant(phoneDigits);
+    }, 0);
+  };
+
+  const cancelInstantOtp = () => {
+    // Return to chooser inputs inside the same modal
+    setInstantOtpStep(false);
+    setOtpError("");
+    setOtpValue("");
+    setOtpSent(false);
+
+    // Re-open chooser so the user can edit name/phone or pick Pre-book
+    const snap = pendingChooserSnapshotRef.current;
+    if (snap) {
+      setPrebookQuery(snap.prebookQuery || "");
+      setPrebookName(snap.prebookName || "");
+      setPrebookPhone(snap.prebookPhone || "");
+      setPrebookHasKnownUser(!!snap.prebookHasKnownUser);
+    }
+    setPrebookError("");
+    setInstantChooserError("");
+    setPrebookPromptOpen(true);
+  };
+
+  const verifyOtpAndProceedInstant = async () => {
+    const ok = await verifyOtpForInstant();
+    if (!ok) return;
+
+    setInstantOtpStep(false);
     setPrebookPromptOpen(false);
 
-    setModalTitle("Instant report coming soon");
-    setModalMsgNode(
-      <span>
-        We’re enabling <strong>Instant 10-page reports</strong> for{" "}
-        <strong>“{trimmed}”</strong>. <br />
-        Please use <strong>Pre-book Full Report (₹499)</strong> for now.
-      </span>
-    );
-    setOpenModal(true);
+    const pending = pendingInstantRef.current;
+    pendingInstantRef.current = null;
+    if (pending) {
+      await startInstantPayment(pending);
+    } else {
+      setModalTitle("Something went wrong");
+      setModalMsgNode(
+        <span>⚠️ We couldn’t continue the Instant flow. Please try again.</span>
+      );
+      setOpenModal(true);
+    }
   };
 
   const goToReportBySlug = async (reportSlug) => {
@@ -705,34 +1281,36 @@ const ReportsMobile = () => {
       }
       await logResp.json();
 
-      const reportSlug = resolveSlug(trimmed);
-      if (!reportSlug) {
-        const { items, hint } = await fetchSuggestions(trimmed);
+      const { items, hint } = await fetchSuggestions(trimmed);
 
-        if (items && items.length > 0) {
-          const mapped = items.map((it) => ({
-            title: it.title || it.slug,
-            slug: it.slug,
-          }));
-          setSuggestItems(mapped.slice(0, 3));
-          setSuggestOpen(true);
-          return;
-        }
-
-        // ✅ if lambda returns hint for generic searches, show our bold-friendly message
-        if (hint) {
-          setModalTitle("Search too generic");
-          setModalMsgNode(renderGenericHint(trimmed));
-          setOpenModal(true);
-          return;
-        }
-
-        await requestNewReport(trimmed);
-        await triggerPrebook(trimmed);
+      if (items && items.length > 0) {
+        const mapped = items.map((it) => ({
+          title: it.title || it.slug,
+          slug: it.slug,
+        }));
+        setSuggestItems(mapped.slice(0, 3));
+        setSuggestOpen(true);
         return;
       }
 
-      await goToReportBySlug(reportSlug);
+      // ✅ if lambda returns hint for generic searches, show message
+      if (hint) {
+        setModalTitle("Search too generic");
+        setModalMsgNode(renderGenericHint(trimmed));
+        setOpenModal(true);
+        return;
+      }
+
+      // fallback to hard router
+      const reportSlug = resolveSlug(trimmed);
+      if (reportSlug) {
+        await goToReportBySlug(reportSlug);
+        return;
+      }
+
+      await requestNewReport(trimmed);
+      await triggerPrebook(trimmed);
+      return;
     } catch (e) {
       console.error("Error during search flow:", e);
       setModalTitle("Error");
@@ -808,16 +1386,226 @@ const ReportsMobile = () => {
         if (openModal) setOpenModal(false);
         if (prebookPromptOpen) setPrebookPromptOpen(false);
         if (retryOpen) setRetryOpen(false);
+        if (otpOpen) setOtpOpen(false);
+        if (instantQuestionsOpen) setInstantQuestionsOpen(false);
       }
     };
-    if (openModal || suggestOpen || prebookPromptOpen || retryOpen) {
+    if (
+      openModal ||
+      suggestOpen ||
+      prebookPromptOpen ||
+      retryOpen ||
+      otpOpen ||
+      instantQuestionsOpen
+    ) {
       document.addEventListener("keydown", onKey);
     }
     return () => document.removeEventListener("keydown", onKey);
-  }, [openModal, suggestOpen, prebookPromptOpen, retryOpen]);
+  }, [openModal, suggestOpen, prebookPromptOpen, retryOpen, otpOpen, instantQuestionsOpen]);
+
+  // ✅ Safety: if chooser modal closes, also exit OTP inline step
+  useEffect(() => {
+    if (prebookPromptOpen) return;
+    if (instantOtpStep) setInstantOtpStep(false);
+    // keep otpPhone (it can help future tries), but clear code/error
+    setOtpError("");
+    setOtpValue("");
+    setOtpSent(false);
+  }, [prebookPromptOpen]);
+
+  async function pollInstantUntilDone({ userPhone, instantId }) {
+    const MAX_WAIT_MS = 120000; // 2 minutes
+    const POLL_EVERY_MS = 2500; // 2.5s
+
+    const startedAt = Date.now();
+    instantAbortRef.current.aborted = false;
+
+    if (!instantMountedRef.current) return null;
+
+    setInstantModalOpen(true);
+    setInstantModalTitle("Generating report…");
+    setInstantModalSub("Queued. Starting worker…");
+    setInstantProgressPct(8);
+
+    // Smooth progress animation up to 92%
+    const timer = setInterval(() => {
+      if (!instantMountedRef.current) return;
+      setInstantProgressPct((p) => {
+        if (p >= 92) return p;
+        return Math.min(92, p + 1);
+      });
+    }, 900);
+
+    try {
+      while (Date.now() - startedAt < MAX_WAIT_MS) {
+        if (!instantMountedRef.current) throw new Error("Page closed");
+        if (instantAbortRef.current.aborted) throw new Error("Polling aborted");
+
+        const url = new URL(INSTANT_STATUS_URL);
+        url.searchParams.set("userPhone", userPhone);
+        url.searchParams.set("instantId", instantId);
+
+        const { res, data } = await fetchJson(url.toString(), {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!res.ok || data?.ok === false) {
+          throw new Error(buildErrorMessage(res, data, "Status check failed"));
+        }
+
+        const status = String(data?.status || "").toLowerCase();
+
+        if (status === "done") {
+          setInstantModalSub("Finalizing…");
+          setInstantProgressPct(95);
+          return data;
+        }
+
+        if (status === "failed") {
+          throw new Error(
+            data?.error || data?.details || "Report generation failed"
+          );
+        }
+
+        setInstantModalSub(
+          status === "running"
+            ? "Generating content and charts…"
+            : "Queued… waiting for worker"
+        );
+
+        await new Promise((r) => setTimeout(r, POLL_EVERY_MS));
+      }
+
+      throw new Error(
+        `Still running after ${Math.round(
+          MAX_WAIT_MS / 1000
+        )}s. Please wait and check in My Profile.`
+      );
+    } finally {
+      clearInterval(timer);
+    }
+  }
+
+  async function generateInstantNow() {
+    if (instantBusy) return;
+
+    const ctx = instantPayCtx;
+    const t = (instantTopic || "").trim();
+    const qs = (instantQuestions || []).map((x) => (x || "").trim());
+
+    if (!ctx || !ctx.userPhone || !ctx.razorpayOrderId) {
+      setInstantError("Missing payment context. Please try again.");
+      return;
+    }
+
+    if (!t) {
+      setInstantError("Topic missing. Please close and try again.");
+      return;
+    }
+
+    if (qs.length !== 5 || qs.some((x) => !x)) {
+      setInstantError("Please fill all 5 questions.");
+      return;
+    }
+
+    if (!INSTANT_CONFIRM_GENERATE_URL || !INSTANT_STATUS_URL) {
+      setInstantError("Instant APIs are not configured in production env vars.");
+      return;
+    }
+
+    setInstantError("");
+    setInstantBusy(true);
+
+    try {
+      // Close questions modal and begin loading modal
+      setInstantQuestionsOpen(false);
+
+      setInstantModalOpen(true);
+      setInstantModalTitle("Generating report…");
+      setInstantModalSub("Submitting request…");
+      setInstantProgressPct(10);
+
+      const payload = {
+        userPhone: ctx.userPhone,
+        userName: ctx.userName || "RBR User",
+        query: ctx.query || t,
+        questions: qs,
+
+        razorpayOrderId: ctx.razorpayOrderId,
+        razorpayPaymentId: ctx.razorpayPaymentId,
+        razorpaySignature: ctx.razorpaySignature,
+
+        type: "instant",
+      };
+
+      const { res, data } = await fetchJson(INSTANT_CONFIRM_GENERATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok || data?.ok === false) {
+        throw new Error(buildErrorMessage(res, data, "Could not start generation"));
+      }
+
+      const userPhone = data?.userPhone || data?.user_phone || ctx.userPhone;
+      const instantId =
+        data?.instantId || data?.instant_id || data?.instant_id || data?.id;
+
+      if (!userPhone || !instantId) {
+        console.error("Confirm response:", data);
+        throw new Error("Confirm API did not return userPhone + instantId");
+      }
+
+      const statusData = await pollInstantUntilDone({ userPhone, instantId });
+      if (!statusData || !instantMountedRef.current) return;
+
+      const finalKey =
+        statusData?.s3Key ||
+        statusData?.s3_key ||
+        statusData?.finalS3Key ||
+        statusData?.final_s3_key ||
+        "";
+
+      setInstantModalSub("Ready!");
+      setInstantProgressPct(100);
+
+      setTimeout(() => {
+        if (!instantMountedRef.current) return;
+        setInstantModalOpen(false);
+
+        // Redirect to profile and highlight latest report (you said highlighting is already in place)
+        navigate("/profile", {
+          replace: true,
+          state: {
+            highlightType: "instant",
+            highlightFileKey: finalKey,
+            highlightQuery: t,
+            highlightInstantId: instantId,
+            highlightUserPhone: userPhone,
+          },
+        });
+      }, 600);
+    } catch (e) {
+      console.error("generateInstantNow error:", e);
+      setInstantModalOpen(false);
+
+      setModalTitle("Instant report failed");
+      setModalMsgNode(
+        <span>
+          ⚠️ {e?.message || "Something went wrong while generating the report."}
+        </span>
+      );
+      setOpenModal(true);
+    } finally {
+      setInstantBusy(false);
+    }
+  }
 
   const handlePrebookSubmit = async (e) => {
     e.preventDefault();
+    setInstantChooserError("");
 
     if (prebookHasKnownUser) {
       const phoneDigits = (prebookPhone || "").replace(/\D/g, "");
@@ -830,11 +1618,7 @@ const ReportsMobile = () => {
       setPrebookError("");
       setPrebookPromptOpen(false);
 
-      await startPrebookFlow(
-        prebookQuery,
-        prebookName || "RBR User",
-        phoneDigits
-      );
+      await startPrebookFlow(prebookQuery, prebookName || "RBR User", phoneDigits);
       return;
     }
 
@@ -862,8 +1646,7 @@ const ReportsMobile = () => {
         Get Instant Market &amp; Business Reports
       </h1>
       <p className="text-gray-600 text-center mb-6 text-sm sm:text-base px-2">
-        Search 1000+ industry reports. Accurate. Reliable. Ready for your
-        business.
+        Search 1000+ industry reports. Accurate. Reliable. Ready for your business.
       </p>
 
       {/* Search */}
@@ -895,25 +1678,57 @@ const ReportsMobile = () => {
             className="bg-blue-600 text-white px-4 py-3 rounded-r-xl font-semibold text-sm sm:text-base active:scale-[0.98] disabled:opacity-60"
           >
             {searchLoading ? "Searching…" : "Search"}
-          </button>
+          </but{/* Sample links */}
+      <div className="w-full mb-6">
+        <div className="mb-4">
+          <div className="text-sm font-semibold text-slate-500 mb-2">
+            Popular Reports
+          </div>
+          <ul className="space-y-1">
+            {POPULAR_REPORTS.map((t) => (
+              <li key={t}>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setQ(t.slice(0, MAX_QUERY_CHARS));
+                    setShowSuggestions(false);
+                    inputRef.current?.focus();
+                  }}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {t}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
-      </form>
 
-      {/* Example chips */}
-      <div className="w-full flex flex-wrap gap-2 mb-6">
-        {EXAMPLES.map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => {
-              setQ(t.slice(0, MAX_QUERY_CHARS));
-              setShowSuggestions(false);
-              inputRef.current?.focus();
-            }}
-            className="px-3 py-1.5 rounded-full bg-gray-100 text-gray-800 text-sm"
-          >
-            {t}
-          </button>
+        <div>
+          <div className="text-sm font-semibold text-slate-500 mb-2">
+            Trending Industries
+          </div>
+          <ul className="space-y-1">
+            {TRENDING_INDUSTRIES.map((t) => (
+              <li key={t}>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setQ(t.slice(0, MAX_QUERY_CHARS));
+                    setShowSuggestions(false);
+                    inputRef.current?.focus();
+                  }}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {t}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+       </button>
         ))}
       </div>
 
@@ -977,6 +1792,38 @@ const ReportsMobile = () => {
           </div>
         </div>
       )}
+
+      {/* ✅ Instant generation loading modal (employee-portal style) */}
+      {instantModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative z-10 bg-white rounded-2xl p-6 shadow-xl w-[92%] max-w-sm">
+            <div className="text-base font-extrabold text-gray-900">
+              {instantModalTitle}
+            </div>
+            <div className="text-xs text-gray-600 mt-1">{instantModalSub}</div>
+
+            <div className="mt-4">
+              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-2 bg-blue-600"
+                  style={{
+                    width: `${Math.max(0, Math.min(100, instantProgressPct))}%`,
+                  }}
+                />
+              </div>
+              <div className="text-right text-[11px] text-gray-600 mt-1">
+                {instantProgressPct}%
+              </div>
+            </div>
+
+            <div className="text-[11px] text-gray-500 mt-3">
+              This can take up to ~2 minutes because charts + PDF are generated
+              in the worker.
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* ✅ Retry payment modal (centered + different theme) */}
       {retryOpen && (
@@ -1081,6 +1928,198 @@ const ReportsMobile = () => {
         </div>
       )}
 
+      {/* ✅ OTP Modal (shown BEFORE Instant payment) */}
+      {otpOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center px-3 py-6"
+          onClick={cancelInstantOtp}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            className="relative z-10 w-full sm:w-[420px] rounded-2xl shadow-2xl overflow-hidden bg-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 px-5 pt-5 pb-4">
+              <div className="flex items-start justify-between">
+                <div className="min-w-0">
+                  <div className="text-white/90 text-xs font-semibold tracking-wide">
+                    Verify mobile number
+                  </div>
+                  <h2 className="text-white text-lg font-extrabold leading-tight mt-1">
+                    Enter OTP to continue
+                  </h2>
+                  <div className="mt-2 text-white/90 text-xs leading-snug">
+                    We’ll send an OTP to the number below. After verification,
+                    we’ll open the ₹199 payment gateway.
+                  </div>
+                </div>
+
+                <button
+                  onClick={cancelInstantOtp}
+                  className="shrink-0 h-9 w-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="px-5 pt-4 pb-5">
+              {otpError ? (
+                <div className="mb-3 text-sm text-red-600 font-semibold">
+                  {otpError}
+                </div>
+              ) : null}
+
+              <label className="text-xs font-bold text-gray-800">
+                Mobile number
+              </label>
+              <div className="mt-1 flex items-center gap-2">
+                <div className="shrink-0 px-3 py-2 rounded-xl bg-gray-100 text-gray-800 font-semibold">
+                  +91
+                </div>
+                <input
+                  value={otpPhone}
+                  onChange={(e) => {
+                    const digits = e.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 10);
+                    setOtpPhone(digits);
+                    setOtpSent(false);
+                  }}
+                  inputMode="numeric"
+                  placeholder="10-digit number"
+                  className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => sendOtpForInstant(otpPhone)}
+                  disabled={otpSending}
+                  className="w-full border border-blue-200 hover:border-blue-300 bg-white text-blue-700 font-extrabold py-2.5 rounded-xl disabled:opacity-60"
+                >
+                  {otpSending ? "Sending…" : otpSent ? "Resend OTP" : "Send OTP"}
+                </button>
+              </div>
+
+              <div className="mt-4">
+                <label className="text-xs font-bold text-gray-800">OTP</label>
+                <input
+                  value={otpValue}
+                  onChange={(e) =>
+                    setOtpValue(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  inputMode="numeric"
+                  placeholder="Enter 6-digit OTP"
+                  className="mt-1 w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={verifyOtpAndProceedInstant}
+                disabled={otpVerifying}
+                className="w-full mt-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-extrabold py-3 rounded-xl active:scale-[0.98]"
+              >
+                {otpVerifying ? "Verifying…" : "Verify & Continue to Payment"}
+              </button>
+
+              <button
+                type="button"
+                onClick={cancelInstantOtp}
+                className="w-full mt-2 border border-gray-200 hover:border-gray-300 bg-white text-gray-800 font-semibold py-2.5 rounded-xl"
+              >
+                Back
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Instant Questions Modal (shown AFTER payment success) */}
+      {instantQuestionsOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center px-3 py-6"
+          onClick={() => setInstantQuestionsOpen(false)}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            className="relative z-10 w-full sm:w-[580px] rounded-2xl shadow-2xl overflow-hidden max-h-[80vh] flex flex-col bg-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 px-5 pt-5 pb-4">
+              <div className="flex items-start justify-between">
+                <div className="min-w-0">
+                  <div className="text-white/90 text-xs font-semibold tracking-wide">
+                    Instant Report — ₹199 Paid ✅
+                  </div>
+                  <h2 className="text-white text-lg font-extrabold leading-tight mt-1">
+                    {instantTopic}
+                  </h2>
+                  <div className="mt-2 text-white/90 text-xs leading-snug">
+                    Tell us the 5 things you want to know. We’ll generate your
+                    report accordingly.
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setInstantQuestionsOpen(false)}
+                  className="shrink-0 h-9 w-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div
+              className="px-4 pt-4 pb-4 overflow-y-auto"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {instantError ? (
+                <div className="mb-3 text-sm text-red-600 font-semibold">
+                  {instantError}
+                </div>
+              ) : null}
+
+              {instantQuestions.map((qv, i) => (
+                <div key={i} className="mb-3">
+                  <div className="text-xs font-bold text-gray-800 mb-1">
+                    Question {i + 1}
+                  </div>
+                  <textarea
+                    value={qv}
+                    onChange={(e) => updateInstantQuestion(i, e.target.value)}
+                    rows={2}
+                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={generateInstantNow}
+                disabled={instantBusy}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-extrabold py-3 rounded-xl active:scale-[0.98]"
+              >
+                {instantBusy ? "Generating…" : "Generate report"}
+              </button>
+
+              <div className="text-[11px] text-gray-500 text-center mt-2">
+                After generation, the report will appear in{" "}
+                <strong>My Profile</strong>.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ✅ Choose between Instant vs Pre-Book — improved scroll + “single glance” */}
       {prebookPromptOpen && (
         <div
@@ -1096,160 +2135,220 @@ const ReportsMobile = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header (fixed) */}
-            <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 px-5 pt-5 pb-4">
-              <div className="flex items-start justify-between">
-                <div className="min-w-0">
-                  <div className="text-white/90 text-xs font-semibold tracking-wide">
+            {!instantOtpStep && (
+              <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 px-5 pt-5 pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0">
+                    <div className="text-white/90 text-xs font-semibold tracking-wide"></div>
+                    <h2 className="text-white text-lg font-extrabold leading-tight mt-1">
+                      Report not found for
+                      <span className="block truncate mt-0.5">
+                        “{prebookQuery}”
+                      </span>
+                    </h2>
+                    <div className="mt-2 text-white/90 text-xs leading-snug"></div>
                   </div>
-                  <h2 className="text-white text-lg font-extrabold leading-tight mt-1">
-                    Report not found for
-                    <span className="block truncate mt-0.5">
-                      “{prebookQuery}”
-                    </span>
-                  </h2>
-                  <div className="mt-2 text-white/90 text-xs leading-snug">
-                  </div>
+
+                  <button
+                    onClick={() => setPrebookPromptOpen(false)}
+                    className="shrink-0 h-9 w-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center"
+                    aria-label="Close"
+                  >
+                    ✕
+                  </button>
                 </div>
 
-                <button
-                  onClick={() => setPrebookPromptOpen(false)}
-                  className="shrink-0 h-9 w-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center"
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Trust strip */}
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <div className="rounded-xl bg-white/15 px-2 py-2 text-center">
-                  <div className="text-white text-sm">🔒</div>
-                  <div className="text-white/90 text-[10px] font-semibold">
-                    Secure pay
+                {/* Trust strip */}
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-white/15 px-2 py-2 text-center">
+                    <div className="text-white text-sm">🔒</div>
+                    <div className="text-white/90 text-[10px] font-semibold">
+                      Secure pay
+                    </div>
                   </div>
-                </div>
-                <div className="rounded-xl bg-white/15 px-2 py-2 text-center">
-                  <div className="text-white text-sm">📩</div>
-                  <div className="text-white/90 text-[10px] font-semibold">
-                    OTP login
+                  <div className="rounded-xl bg-white/15 px-2 py-2 text-center">
+                    <div className="text-white text-sm">📩</div>
+                    <div className="text-white/90 text-[10px] font-semibold">
+                      OTP login
+                    </div>
                   </div>
-                </div>
-                <div className="rounded-xl bg-white/15 px-2 py-2 text-center">
-                  <div className="text-white text-sm">👤</div>
-                  <div className="text-white/90 text-[10px] font-semibold">
-                    My Profile
+                  <div className="rounded-xl bg-white/15 px-2 py-2 text-center">
+                    <div className="text-white text-sm">👤</div>
+                    <div className="text-white/90 text-[10px] font-semibold">
+                      My Profile
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Body (scrollable) */}
             <div
               className="px-4 pt-4 pb-4 overflow-y-auto"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
-              <p className="text-gray-700 text-sm leading-snug mb-3">
-                But our database can generate a report for <strong>“{prebookQuery}”</strong>{" "} — please choose an option below.
-              </p>
+              {!instantOtpStep && (
+                <p className="text-gray-700 text-sm leading-snug mb-3">
+                  But our database can generate a report for{" "}
+                  <strong>“{prebookQuery}”</strong>{" "}
+                  — please choose an option below.
+                </p>
+              )}
 
-              {/* Single-glance chooser (two cards) */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* INSTANT */}
-                <div className="relative rounded-2xl border border-blue-200 bg-gradient-to-b from-blue-50 to-white p-3 flex flex-col">
-                  <div className="absolute -top-2 right-2">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold px-2 py-1 shadow">
-                      ⭐ Recommended
-                    </span>
-                  </div>
-
-                  <div className="text-[11px] font-semibold text-blue-700">
-                    FASTEST
-                  </div>
-                  <div className="text-sm font-extrabold text-gray-900 leading-tight mt-1">
-                    Instant 10-Page
-                  </div>
-                  <div className="text-xl font-extrabold text-blue-700 mt-1">
-                    ₹199
-                  </div>
-
-                  <div className="text-[11px] text-gray-700 mt-2 leading-snug">
-                    Quick evaluation: overview, trends, key players.
-                  </div>
-
-                  {/* FORCE confirmation for NEW users: show name/phone fields here too */}
-                  {!prebookHasKnownUser && (
-                    <div className="mt-2 space-y-2">
-                      <input
-                        type="text"
-                        value={prebookName}
-                        onChange={(e) => setPrebookName(e.target.value)}
-                        placeholder="Your name"
-                        className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <input
-                        type="tel"
-                        value={prebookPhone}
-                        onChange={(e) => setPrebookPhone(e.target.value)}
-                        placeholder="WhatsApp number"
-                        className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => triggerInstant(prebookQuery)}
-                    className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 rounded-xl active:scale-[0.98] shadow"
+              {/* ✅ Step switch: chooser ↔ OTP (inline) */}
+              {instantOtpStep ? (
+                <div className="px-1 pb-2 flex justify-center">
+                  {/* ✅ UI-only sizing change: scale down OTP verification UI by 40% */}
+                  <div
+                    style={{
+                      transform: "scale(0.6)",
+                      transformOrigin: "top center",
+                      width: "100%",
+                      marginBottom: "-120px",
+                    }}
                   >
-                    Generate
-                  </button>
+                    {/* Slim loading bar */}
+                    <div className="text-center text-3xl sm:text-4xl font-light text-gray-600 mt-1">
+                      Loading Level
+                    </div>
 
-                  <div className="text-[10px] text-gray-500 text-center mt-1">
-                    Secure checkout • View in <strong>My Profile</strong>
-                  </div>
+                    <div
+                      className="mx-auto mt-4 mb-8"
+                      style={{
+                        width: "min(520px, 92%)",
+                        background: "#ffffff",
+                        borderRadius: "999px",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.10)",
+                        padding: "12px 16px", // compact height
+                      }}
+                    >
+                      <div
+                        style={{
+                          border: "2px solid #0b3bff",
+                          borderRadius: "999px",
+                          padding: "4px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: "14px",
+                            borderRadius: "999px",
+                            background: "#d5dcff",
+                            overflow: "hidden",
+                            position: "relative",
+                          }}
+                        >
+                          <div className="rbr-otp-loadingbar" />
+                        </div>
+                        
+                        <style>{`
+                          @keyframes rbrIndeterminate {
+                            0%   { transform: translateX(-60%); }
+                            100% { transform: translateX(260%); }
+                          }
+                          .rbr-otp-loadingbar{
+                            position:absolute;
+                            top:0; left:0;
+                            height:100%;
+                            width:35%;
+                            background:#0b3bff;
+                            border-radius:999px;
+                            animation:rbrIndeterminate 1.15s ease-in-out infinite;
+                          }
+                        `}</style>
+                      </div>
+                    </div>
 
-                  <div className="mt-2 text-[10px] text-gray-500 text-center">
-                    Auto-generated (not a custom deep-dive)
+                    {/* Verification content */}
+                    <div className="text-center text-4xl sm:text-5xl font-light text-gray-700 mb-3">
+                      Verification Code
+                    </div>
+                    <div className="text-center text-lg sm:text-xl text-gray-700 mb-6">
+                      Please enter the verification code sent to your mobile
+                    </div>
+
+                    <div
+                      className="flex items-center justify-center gap-3 mb-7"
+                      onPaste={onOtpPaste}
+                    >
+                      {Array.from({ length: OTP_LEN }).map((_, i) => (
+                        <React.Fragment key={i}>
+                          <input
+                            ref={(el) => (otpBoxesRef.current[i] = el)}
+                            value={otpDigits[i] || ""}
+                            onChange={(e) => onOtpChange(i, e)}
+                            onKeyDown={(e) => onOtpKeyDown(i, e)}
+                            inputMode="numeric"
+                            maxLength={1}
+                            className={
+                              "w-12 h-12 sm:w-14 sm:h-14 text-2xl text-center border rounded-md focus:outline-none " +
+                              (i ===
+                              Math.min(
+                                otpValue.replace(/\D/g, "").length,
+                                OTP_LEN - 1
+                              )
+                                ? "border-black"
+                                : "border-gray-300")
+                            }
+                            aria-label={`OTP digit ${i + 1}`}
+                          />
+                          {i < OTP_LEN - 1 && (
+                            <span
+                              className="text-gray-500 text-2xl"
+                              aria-hidden
+                            >
+                              ·
+                            </span>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+
+                    {otpError && (
+                      <div className="text-center text-sm text-red-600 -mt-3 mb-4">
+                        {otpError}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={verifyOtpAndProceedInstant}
+                        disabled={otpVerifying}
+                        className="w-[220px] sm:w-[260px] bg-indigo-600 hover:bg-indigo-700 text-white text-xl sm:text-2xl font-medium py-3 rounded-md shadow"
+                      >
+                        {otpVerifying ? "VERIFYING…" : "VERIFY"}
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* PREBOOK */}
-                <div className="rounded-2xl border border-gray-200 bg-white p-3 flex flex-col">
-                  <div className="text-[11px] font-semibold text-gray-700">
-                    DETAILED
-                  </div>
-                  <div className="text-sm font-extrabold text-gray-900 leading-tight mt-1">
-                    Full Report
-                  </div>
-                  <div className="text-xl font-extrabold text-gray-900 mt-1">
-                    ₹499
-                  </div>
-
-                  <div className="text-[11px] text-gray-700 mt-2 leading-snug">
-                    Delivered within 72 hours. ₹499 adjusted in final price.
-                  </div>
-
-                  <details className="mt-2 rounded-xl border border-gray-200 bg-gray-50/60 px-3 py-2">
-                    <summary className="cursor-pointer select-none text-xs font-semibold text-gray-800">
-                      What happens after
-                    </summary>
-                    <div className="mt-2 text-[11px] text-gray-700 leading-relaxed">
-                      <ul className="ml-4 list-disc space-y-1">
-                        <li>OTP login to your account.</li>
-                        <li>
-                          Report unlocks in <strong>My Profile</strong>.
-                        </li>
-                        <li>
-                          Delivery: <strong>within 72 hours</strong>.
-                        </li>
-                      </ul>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {/* INSTANT */}
+                  <div className="relative rounded-2xl border border-blue-200 bg-gradient-to-b from-blue-50 to-white p-3 flex flex-col">
+                    <div className="absolute -top-2 right-2">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold px-2 py-1 shadow">
+                        ⭐ Recommended
+                      </span>
                     </div>
-                  </details>
 
-                  {/* Form is ONLY required for new users; kept as-is for pre-book */}
-                  <form onSubmit={handlePrebookSubmit} className="space-y-2 mt-2">
+                    <div className="text-[11px] font-semibold text-blue-700">
+                      FASTEST
+                    </div>
+                    <div className="text-sm font-extrabold text-gray-900 leading-tight mt-1">
+                      Instant 10-Page
+                    </div>
+                    <div className="text-xl font-extrabold text-blue-700 mt-1">
+                      ₹199
+                    </div>
+
+                    <div className="text-[11px] text-gray-700 mt-2 leading-snug">
+                      Quick evaluation: overview, trends, key players.
+                    </div>
+
+                    {/* FORCE confirmation for NEW users: show name/phone fields here too */}
                     {!prebookHasKnownUser && (
-                      <>
+                      <div className="mt-2 space-y-2">
                         <input
                           type="text"
                           value={prebookName}
@@ -1264,31 +2363,113 @@ const ReportsMobile = () => {
                           placeholder="WhatsApp number"
                           className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                      </>
+                      </div>
                     )}
 
-                    {prebookError && (
-                      <p className="text-xs text-red-600">{prebookError}</p>
+                    {instantChooserError && (
+                      <p className="text-xs text-red-600 mt-2">
+                        {instantChooserError}
+                      </p>
                     )}
 
                     <button
-                      type="submit"
-                      className="mt-1 w-full bg-gray-900 hover:bg-black text-white font-extrabold py-2.5 rounded-xl active:scale-[0.98]"
+                      type="button"
+                      onClick={() => triggerInstant(prebookQuery)}
+                      className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 rounded-xl active:scale-[0.98] shadow"
                     >
-                      Pre-book
+                      Generate
                     </button>
 
-                    <div className="text-[10px] text-gray-500 text-center -mt-1">
-                      Razorpay • OTP login • Access in <strong>My Profile</strong>
+                    <div className="text-[10px] text-gray-500 text-center mt-1">
+                      Secure checkout • View in <strong>My Profile</strong>
                     </div>
-                  </form>
+
+                    <div className="mt-2 text-[10px] text-gray-500 text-center">
+                      Auto-generated (not a custom deep-dive)
+                    </div>
+                  </div>
+
+                  {/* PREBOOK */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-3 flex flex-col">
+                    <div className="text-[11px] font-semibold text-gray-700">
+                      DETAILED
+                    </div>
+                    <div className="text-sm font-extrabold text-gray-900 leading-tight mt-1">
+                      Full Report
+                    </div>
+                    <div className="text-xl font-extrabold text-gray-900 mt-1">
+                      ₹499
+                    </div>
+
+                    <div className="text-[11px] text-gray-700 mt-2 leading-snug">
+                      Delivered within 72 hours. ₹499 adjusted in final price.
+                    </div>
+
+                    <details className="mt-2 rounded-xl border border-gray-200 bg-gray-50/60 px-3 py-2">
+                      <summary className="cursor-pointer select-none text-xs font-semibold text-gray-800">
+                        What happens after
+                      </summary>
+                      <div className="mt-2 text-[11px] text-gray-700 leading-relaxed">
+                        <ul className="ml-4 list-disc space-y-1">
+                          <li>OTP login to your account.</li>
+                          <li>
+                            Report unlocks in <strong>My Profile</strong>.
+                          </li>
+                          <li>
+                            Delivery: <strong>within 72 hours</strong>.
+                          </li>
+                        </ul>
+                      </div>
+                    </details>
+
+                    {/* Form is ONLY required for new users; kept as-is for pre-book */}
+                    <form
+                      onSubmit={handlePrebookSubmit}
+                      className="space-y-2 mt-2"
+                    >
+                      {!prebookHasKnownUser && (
+                        <>
+                          <input
+                            type="text"
+                            value={prebookName}
+                            onChange={(e) => setPrebookName(e.target.value)}
+                            placeholder="Your name"
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <input
+                            type="tel"
+                            value={prebookPhone}
+                            onChange={(e) => setPrebookPhone(e.target.value)}
+                            placeholder="WhatsApp number"
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </>
+                      )}
+
+                      {prebookError && (
+                        <p className="text-xs text-red-600">{prebookError}</p>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="mt-1 w-full bg-gray-900 hover:bg-black text-white font-extrabold py-2.5 rounded-xl active:scale-[0.98]"
+                      >
+                        Pre-book
+                      </button>
+
+                      <div className="text-[10px] text-gray-500 text-center -mt-1">
+                        Razorpay • OTP login • Access in{" "}
+                        <strong>My Profile</strong>
+                      </div>
+                    </form>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Footer reassurance */}
               <div className="mt-4 text-[11px] text-gray-500 text-center px-2">
-                By continuing, you agree to receive updates on WhatsApp / SMS
-                for your report status.
+                By continuing, you agree to receive updates on WhatsApp / SMS for
+                your report status.
               </div>
             </div>
           </div>
