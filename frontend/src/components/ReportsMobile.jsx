@@ -1765,6 +1765,9 @@ const ReportsMobile = () => {
           document.body
         )}
 
+      </form>
+
+
       {/* Loader overlay for search */}
       {searchLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
