@@ -1678,7 +1678,9 @@ const ReportsMobile = () => {
             className="bg-blue-600 text-white px-4 py-3 rounded-r-xl font-semibold text-sm sm:text-base active:scale-[0.98] disabled:opacity-60"
           >
             {searchLoading ? "Searching…" : "Search"}
-          </but{/* Sample links */}
+          </button>
+
+          {/* Sample links */}
       <div className="w-full mb-6">
         <div className="mb-4">
           <div className="text-sm font-semibold text-slate-500 mb-2">
