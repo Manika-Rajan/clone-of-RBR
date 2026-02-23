@@ -1680,9 +1680,10 @@ const ReportsMobile = () => {
             {searchLoading ? "Searching…" : "Search"}
           </button>
 
-          {/* Sample links */}
-      <div className="w-full mb-6">
-        <div className="mb-4">
+        </div>
+        {/* Sample links */}
+        <div className="w-full mb-6">
+          <div className="mb-4">
           <div className="text-sm font-semibold text-slate-500 mb-2">
             Popular Reports
           </div>
@@ -1704,7 +1705,7 @@ const ReportsMobile = () => {
               </li>
             ))}
           </ul>
-        </div>
+          </div>
 
         <div>
           <div className="text-sm font-semibold text-slate-500 mb-2">
@@ -1729,9 +1730,6 @@ const ReportsMobile = () => {
             ))}
           </ul>
         </div>
-      </div>
-       </button>
-        ))}
       </div>
 
       {/* Inline autocomplete suggestions via PORTAL */}
