@@ -1649,6 +1649,7 @@ const ReportsMobile = () => {
 const runSampleSearch = (query) => {
   const safe = (query || "").slice(0, MAX_QUERY_CHARS);
   setSamplesOpen(false);
+  setShowSuggestions(false);
   setQ(safe);
 
   // wait for state to apply, then submit the form (triggers existing onSubmit)
@@ -1708,23 +1709,37 @@ const runSampleSearch = (query) => {
 
         </div>
         
-{/* ⭐ Sample Reports (fancy button + modal) */}
+{/* ⭐ Sample Reports (fancy button + popup) */}
 <div className="w-full mb-6">
   <button
     type="button"
     onClick={() => setSamplesOpen(true)}
-    className="w-full rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition px-4 py-3 text-left"
+    className="w-full rounded-2xl border border-gray-200 bg-gradient-to-r from-gray-50 to-white hover:from-white hover:to-gray-50 transition px-4 py-3 text-left shadow-sm"
   >
     <div className="flex items-center justify-between">
       <div>
-        <div className="text-slate-900 font-semibold">✨ Sample Reports</div>
-        <div className="text-slate-500 text-xs mt-1">
-          Tap to explore clickable samples
+        <div className="text-gray-900 font-semibold">✨ Sample Reports</div>
+        <div className="text-gray-600 text-xs mt-1">
+          Open a sample, see preview, then choose Instant or Pre-book
         </div>
       </div>
-      <div className="text-slate-500">›</div>
+      <div className="text-gray-500">›</div>
     </div>
   </button>
+
+  {/* quick picks */}
+  <div className="mt-3 flex flex-wrap gap-2">
+    {[...POPULAR_REPORTS, ...TRENDING_INDUSTRIES].slice(0, 6).map((t) => (
+      <button
+        key={t}
+        type="button"
+        onClick={() => runSampleSearch(t)}
+        className="px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm transition"
+      >
+        {t}
+      </button>
+    ))}
+  </div>
 
   {samplesOpen &&
     createPortal(
