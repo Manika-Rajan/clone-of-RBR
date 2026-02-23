@@ -1812,7 +1812,6 @@ const runSampleSearch = (query) => {
       </div>,
       document.body
     )}
-</div>
 
 {/* Inline autocomplete suggestions via PORTAL */}
       {showSuggestions &&
