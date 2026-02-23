@@ -263,6 +263,10 @@ const ReportsMobile = () => {
 
   const [q, setQ] = useState("");
 
+
+  // ⭐ Sample Reports modal
+  const [samplesOpen, setSamplesOpen] = useState(false);
+
   // ✅ modal now supports rich JSX content
   const [openModal, setOpenModal] = useState(false);
   const [modalTitle, setModalTitle] = useState("📊 Rajan Business Reports");
@@ -1639,6 +1643,28 @@ const ReportsMobile = () => {
     await startPrebookFlow(prebookQuery, nm || "RBR User", phoneDigits);
   };
 
+
+
+// ⭐ Run a sample search using the same form submit flow
+const runSampleSearch = (query) => {
+  const safe = (query || "").slice(0, MAX_QUERY_CHARS);
+  setSamplesOpen(false);
+  setQ(safe);
+
+  // wait for state to apply, then submit the form (triggers existing onSubmit)
+  setTimeout(() => {
+    try {
+      inputRef.current?.focus();
+      const form = inputRef.current?.closest("form");
+      if (form) {
+        form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      }
+    } catch (e) {
+      // no-op
+    }
+  }, 60);
+};
+
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-24 pb-10">
       {/* Hero */}
@@ -1681,58 +1707,119 @@ const ReportsMobile = () => {
           </button>
 
         </div>
-        {/* Sample links */}
-        <div className="w-full mb-6">
-          <div className="mb-4">
-          <div className="text-sm font-semibold text-slate-500 mb-2">
-            Popular Reports
-          </div>
-          <ul className="space-y-1">
-            {POPULAR_REPORTS.map((t) => (
-              <li key={t}>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setQ(t.slice(0, MAX_QUERY_CHARS));
-                    setShowSuggestions(false);
-                    inputRef.current?.focus();
-                  }}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  {t}
-                </a>
-              </li>
-            ))}
-          </ul>
-          </div>
-
-        <div>
-          <div className="text-sm font-semibold text-slate-500 mb-2">
-            Trending Industries
-          </div>
-          <ul className="space-y-1">
-            {TRENDING_INDUSTRIES.map((t) => (
-              <li key={t}>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setQ(t.slice(0, MAX_QUERY_CHARS));
-                    setShowSuggestions(false);
-                    inputRef.current?.focus();
-                  }}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  {t}
-                </a>
-              </li>
-            ))}
-          </ul>
+        
+{/* ⭐ Sample Reports (fancy button + modal) */}
+<div className="w-full mb-6">
+  <button
+    type="button"
+    onClick={() => setSamplesOpen(true)}
+    className="w-full rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition px-4 py-3 text-left"
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <div className="text-slate-900 font-semibold">✨ Sample Reports</div>
+        <div className="text-slate-500 text-xs mt-1">
+          Tap to explore clickable samples
         </div>
       </div>
+      <div className="text-slate-500">›</div>
+    </div>
+  </button>
 
-      {/* Inline autocomplete suggestions via PORTAL */}
+  {samplesOpen &&
+    createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        {/* backdrop */}
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={() => setSamplesOpen(false)}
+        />
+
+        {/* modal */}
+        <div className="relative w-full max-w-[560px] rounded-3xl border border-white/10 bg-[#0b1220]/95 shadow-2xl">
+          {/* glow */}
+          <div className="pointer-events-none absolute -inset-1 rounded-3xl bg-gradient-to-r from-cyan-400/15 via-blue-400/10 to-fuchsia-400/15 blur-xl" />
+
+          {/* header */}
+          <div className="relative flex items-center justify-between px-5 py-4 border-b border-white/10">
+            <div>
+              <div className="text-white text-lg font-semibold">Sample Reports</div>
+              <div className="text-white/60 text-xs mt-1">
+                Click one to open preview
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSamplesOpen(false)}
+              className="h-9 w-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/80"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* body */}
+          <div className="relative p-4 max-h-[70vh] overflow-auto">
+            <div className="mb-4">
+              <div className="text-white/70 text-xs font-semibold mb-2">POPULAR REPORTS</div>
+              <div className="grid gap-2">
+                {POPULAR_REPORTS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => runSampleSearch(t)}
+                    className="group w-full text-left rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-3 transition"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-white">{t}</div>
+                      <div className="text-white/60 group-hover:text-white">→</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-white/70 text-xs font-semibold mb-2">TRENDING INDUSTRIES</div>
+              <div className="grid gap-2">
+                {TRENDING_INDUSTRIES.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => runSampleSearch(t)}
+                    className="group w-full text-left rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-3 transition"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-white">{t}</div>
+                      <div className="text-white/60 group-hover:text-white">→</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* footer */}
+          <div className="relative px-5 py-4 border-t border-white/10 flex items-center justify-between">
+            <div className="text-white/50 text-xs">
+              Tip: You can edit these samples in the frontend anytime.
+            </div>
+            <button
+              type="button"
+              onClick={() => setSamplesOpen(false)}
+              className="rounded-full px-4 py-2 text-sm bg-white/5 hover:bg-white/10 border border-white/10 text-white/80"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+</div>
+
+{/* Inline autocomplete suggestions via PORTAL */}
       {showSuggestions &&
         matches.length > 0 &&
         createPortal(
