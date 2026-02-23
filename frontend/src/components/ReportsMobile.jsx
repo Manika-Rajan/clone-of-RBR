@@ -1667,13 +1667,13 @@ const runSampleSearch = (query) => {
 };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-24 pb-10">
+    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-16 pb-10">
 {/* Sample Reports */}
-<div className="w-full max-w-3xl flex justify-end -mt-2 mb-3">
+<div className="w-full max-w-3xl flex justify-end mt-0 mb-4">
   <button
     type="button"
     onClick={() => setSamplesOpen(true)}
-    className="rounded-full bg-gray-900 text-white px-4 py-2 text-sm font-semibold shadow hover:bg-gray-800 active:scale-[0.99] transition"
+    className="rounded-full bg-blue-600 text-white px-4 py-2 text-sm font-semibold shadow hover:bg-blue-700 active:scale-[0.99] transition"
   >
     Sample Reports
   </button>
