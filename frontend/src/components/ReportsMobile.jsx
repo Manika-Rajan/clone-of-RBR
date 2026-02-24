@@ -1667,9 +1667,9 @@ const runSampleSearch = (query) => {
 };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-16 pb-10">
+    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-16 pb-10 relative">
 {/* Sample Reports */}
-<div className="w-full max-w-3xl flex justify-end -mt-14 mb-4">
+<div className="absolute top-2 right-4 sm:right-6">
   <button
     type="button"
     onClick={() => setSamplesOpen(true)}
@@ -1679,8 +1679,7 @@ const runSampleSearch = (query) => {
   </button>
 </div>
 
-
-      {/* Hero */}
+{/* Hero */}
       <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-3 px-1">
         Get Instant Market &amp; Business Reports
       </h1>
