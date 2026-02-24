@@ -1673,14 +1673,14 @@ const runSampleSearch = (query) => {
   <button
     type="button"
     onClick={() => setSamplesOpen(true)}
-    className="rounded-full bg-blue-600 text-white px-4 py-2 text-sm font-semibold shadow hover:bg-blue-700 active:scale-[0.99] transition"
+    className="rounded-full bg-blue-600/20 text-blue-700 px-4 py-2 text-sm font-semibold border border-blue-600/30 shadow-sm hover:bg-blue-600/30 active:scale-[0.99] transition"
   >
     Sample Reports
   </button>
 </div>
 
 {/* Hero */}
-      <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-3 px-1">
+      <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mt-12 mb-3 px-1">
         Get Instant Market &amp; Business Reports
       </h1>
       <p className="text-gray-600 text-center mb-6 text-sm sm:text-base px-2">
