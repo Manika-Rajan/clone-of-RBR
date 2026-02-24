@@ -14,6 +14,8 @@ import React, {
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Store } from "../Store";
+import { Worker, Viewer } from "@react-pdf-viewer/core";
+import "@react-pdf-viewer/core/lib/styles/index.css";
 
 const POPULAR_REPORTS = [
   "Restaurant Business in India",
@@ -266,6 +268,11 @@ const ReportsMobile = () => {
 
   // ⭐ Sample Reports modal
   const [samplesOpen, setSamplesOpen] = useState(false);
+
+  // ⭐ Sample reports -> open preview in embedded PDF viewer
+  const [samplePreviewMode, setSamplePreviewMode] = useState(false);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [pdfViewerUrl, setPdfViewerUrl] = useState("");
 
   // ✅ modal now supports rich JSX content
   const [openModal, setOpenModal] = useState(false);
@@ -1225,6 +1232,13 @@ const ReportsMobile = () => {
         }
       } catch {}
 
+      if (samplePreviewMode) {
+        setPdfViewerUrl(url);
+        setPdfViewerOpen(true);
+        setSamplePreviewMode(false);
+        return;
+      }
+
       navigate("/report-display", { state: { reportSlug, reportId } });
     } catch (e) {
       console.error("goToReportBySlug error:", e);
@@ -1237,6 +1251,8 @@ const ReportsMobile = () => {
       setOpenModal(true);
     } finally {
       setSearchLoading(false);
+      // Safety: reset sample mode if something failed mid-way
+      setSamplePreviewMode(false);
     }
   };
 
@@ -1650,6 +1666,7 @@ const runSampleSearch = (query) => {
   const safe = (query || "").slice(0, MAX_QUERY_CHARS);
   setSamplesOpen(false);
   setShowSuggestions(false);
+  setSamplePreviewMode(true);
   setQ(safe);
 
   // wait for state to apply, then submit the form (triggers existing onSubmit)
@@ -1669,7 +1686,7 @@ const runSampleSearch = (query) => {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-24 pb-10 relative">
 {/* Sample Reports */}
-<div className="absolute top-2 right-4 sm:right-6">
+<div className="absolute -top-10 right-4 sm:right-6">
   <button
     type="button"
     onClick={() => setSamplesOpen(true)}
@@ -2010,6 +2027,50 @@ const runSampleSearch = (query) => {
           </div>
         </div>
       )}
+
+
+      {/* 📄 PDF Viewer (used for Sample Reports) */}
+      {pdfViewerOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          onClick={() => setPdfViewerOpen(false)}
+        >
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative z-10 w-[96%] sm:w-[820px] h-[82vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+              <div className="text-slate-900 font-semibold text-sm">
+                Sample Report Preview
+              </div>
+              <button
+                type="button"
+                onClick={() => setPdfViewerOpen(false)}
+                className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700"
+                aria-label="Close PDF"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="h-[calc(82vh-52px)]">
+              {pdfViewerUrl ? (
+                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                  <Viewer fileUrl={pdfViewerUrl} />
+                </Worker>
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-600 text-sm">
+                  Loading preview…
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* ✅ OTP Modal (shown BEFORE Instant payment) */}
       {otpOpen && (
