@@ -1692,7 +1692,7 @@ const runSampleSearch = (query) => {
     onClick={() => setSamplesOpen(true)}
     className="rounded-full bg-blue-600/20 text-blue-700 px-4 py-2 text-sm font-semibold border border-blue-600/30 shadow-sm hover:bg-blue-600/30 active:scale-[0.99] transition"
   >
-    Sample Reports
+    View Sample Reports
   </button>
 </div>
 
