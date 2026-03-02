@@ -1686,7 +1686,7 @@ const runSampleSearch = (query) => {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-24 pb-10 relative">
 {/* Sample Reports */}
-<div className="absolute top-6 right-4 sm:right-6">
+<div className="absolute top-1 right-1 sm:right-6">
   <button
     type="button"
     onClick={() => setSamplesOpen(true)}
