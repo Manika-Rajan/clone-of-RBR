@@ -2675,7 +2675,13 @@ const runSampleSearch = (query) => {
 
             <button
               type="button"
-              onClick={() => setSuggestOpen(false)}
+              onClick={async () => {
+                const query = (lastQuery || "").trim();
+                setSuggestOpen(false);
+                if (!query) return;
+                await requestNewReport(query);
+                await triggerPrebook(query);
+              }}
               className="mt-3 w-full border border-blue-100 hover:border-blue-200 bg-[#DFF1FF] hover:bg-[#D6ECFF] text-blue-900 font-semibold py-2.5 rounded-xl active:scale-[0.98] transition-all"
             >
               None of these
