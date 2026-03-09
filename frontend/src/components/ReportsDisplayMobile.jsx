@@ -19,7 +19,7 @@ const LEAD_API_URL =
 
 // 🔹 How many pages are fully free to read (0-based index)
 //    1 => pages 0 and 1 (i.e. page 1 & page 2)
-const UNLOCKED_MAX_PAGE = 1;
+const UNLOCKED_MAX_PAGE = 3;
 
 const ReportsDisplayMobile = () => {
   const navigate = useNavigate();
