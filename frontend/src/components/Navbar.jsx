@@ -86,7 +86,7 @@ const Navbar = () => {
               aria-label="Toggle navigation"
               aria-expanded={mobileOpen ? "true" : "false"}
               onClick={() => {
-                  setMobileOpen((prev) => !prev);
+                  setMobileOpen(false);
               
                   // Open RBR mobile report library
                   window.dispatchEvent(
