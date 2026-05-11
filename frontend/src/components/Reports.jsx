@@ -388,7 +388,7 @@ const Reports = () => {
           {catalogNavItems.map((item) => (
             <button key={item} className="catalog-nav-item" type="button">
               {item}
-              <span className="catalog-nav-caret">⌄</span>
+              <span className="catalog-nav-caret" aria-hidden="true"></span>
             </button>
           ))}
         </div>
