@@ -424,3 +424,73 @@ letter-spacing: 0.03em;
     stroke-dashoffset: 280;
   }
 }
+
+/* test bar feature */
+/* Catalog Navigation Bar - added for RBR institutional library feel */
+.catalog-nav-bar {
+  width: 100%;
+  background: #082f5f;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.catalog-nav-scroll {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0 14px;
+}
+
+.catalog-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.catalog-nav-item {
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 15px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.catalog-nav-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.catalog-nav-caret {
+  margin-left: 6px;
+  font-size: 15px;
+  opacity: 0.9;
+}
+
+/* Mobile: horizontal swipe bar */
+@media (max-width: 768px) {
+  .catalog-nav-bar {
+    position: relative;
+  }
+
+  .catalog-nav-scroll {
+    justify-content: flex-start;
+    padding: 0 10px;
+  }
+
+  .catalog-nav-item {
+    font-size: 13px;
+    padding: 11px 12px;
+  }
+}
