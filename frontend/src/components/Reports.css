@@ -426,29 +426,29 @@ letter-spacing: 0.03em;
 }
 
 /* test bar feature */
-/* Catalog Navigation Bar - added for RBR institutional library feel */
 .catalog-nav-bar {
   width: 100%;
   background: #082f5f;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  position: sticky;
-  top: 0;
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  position: relative;
   z-index: 50;
 }
 
 .catalog-nav-scroll {
   max-width: 1240px;
   margin: 0 auto;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 22px;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 0 14px;
+  padding: 0 16px;
 }
 
 .catalog-nav-scroll::-webkit-scrollbar {
@@ -459,46 +459,45 @@ letter-spacing: 0.03em;
   border: 0;
   background: transparent;
   color: #ffffff;
-  font-size: 14px;
-  font-weight: 700;
-  padding: 13px 15px;
+  height: 42px;
+  padding: 0;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease;
-
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  line-height: 1;
 }
 
 .catalog-nav-item:hover {
-  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
+  background: transparent;
 }
 
 .catalog-nav-caret {
-  margin-left: 0;
-  font-size: 14px;
-  opacity: 0.9;
-  line-height: 1;
-  transform: translateY(-1px);
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  margin-left: 3px;
+  font-size: 0;
+  line-height: 0;
+  opacity: 0.95;
 }
 
-/* Mobile: horizontal swipe bar */
 @media (max-width: 768px) {
-  .catalog-nav-bar {
-    position: relative;
-  }
-
   .catalog-nav-scroll {
     justify-content: flex-start;
-    padding: 0 10px;
+    gap: 18px;
+    padding: 0 12px;
   }
 
   .catalog-nav-item {
     font-size: 13px;
-    padding: 11px 12px;
   }
 }
