@@ -440,15 +440,15 @@ letter-spacing: 0.03em;
 .catalog-nav-scroll {
   max-width: 1240px;
   margin: 0 auto;
-  height: 42px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: 28px;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 0 16px;
+  padding: 0 18px;
 }
 
 .catalog-nav-scroll::-webkit-scrollbar {
@@ -459,17 +459,18 @@ letter-spacing: 0.03em;
   border: 0;
   background: transparent;
   color: #ffffff;
-  height: 42px;
+  height: 46px;
   padding: 0;
   white-space: nowrap;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  line-height: 42px;
+  line-height: 46px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
+  letter-spacing: 0.1px;
 }
 
 .catalog-nav-item:hover {
@@ -483,8 +484,8 @@ letter-spacing: 0.03em;
   height: 7px;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
-  transform: rotate(45deg) translateY(-2px);
-  margin-left: 3px;
+  transform: rotate(45deg) translateY(-1px);
+  margin-left: 4px;
   font-size: 0;
   line-height: 0;
   opacity: 0.95;
