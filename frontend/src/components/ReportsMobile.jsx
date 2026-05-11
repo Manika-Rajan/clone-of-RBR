@@ -1941,14 +1941,14 @@ const runSampleSearch = (query) => {
     <div className="fixed inset-0 z-[9999] bg-white">
       {/* Blue menu header - similar to competitor mobile behavior */}
       <div className="sticky top-0 z-20 bg-blue-700 text-white shadow-sm">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="h-9 w-9 rounded bg-white/10 border border-white/20 flex items-center justify-center text-xs font-black">
+            <div className="h-8 w-8 rounded bg-white/10 border border-white/20 flex items-center justify-center text-[11px] font-black">
               RBR
             </div>
             <div className="leading-tight min-w-0">
-              <div className="text-sm font-bold truncate">Rajan Business Reports</div>
-              <div className="text-[11px] text-white/75 truncate">Report Library</div>
+              <div className="text-[13px] font-bold truncate">Rajan Business Reports</div>
+              <div className="text-[10px] text-white/75 truncate">Report Library</div>
             </div>
           </div>
 
@@ -1960,7 +1960,7 @@ const runSampleSearch = (query) => {
                 setCatalogActiveIndustry(null);
                 setTimeout(() => inputRef.current?.focus(), 0);
               }}
-              className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center"
+              className="h-8 w-8 rounded-full hover:bg-white/10 flex items-center justify-center"
               aria-label="Search"
             >
               🔍
@@ -1972,7 +1972,7 @@ const runSampleSearch = (query) => {
                 setCatalogOpen(false);
                 setCatalogActiveIndustry(null);
               }}
-              className="h-10 w-10 rounded-full hover:bg-white/10 flex items-center justify-center text-3xl leading-none"
+              className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center text-3xl leading-none"
               aria-label="Close menu"
             >
               ×
@@ -1981,8 +1981,8 @@ const runSampleSearch = (query) => {
         </div>
       </div>
 
-      <div className="h-[calc(100vh-64px)] overflow-auto px-5 py-3">
-        <div className="border-b border-slate-300 pb-3">
+      <div className="h-[calc(100vh-58px)] overflow-auto px-5 py-2">
+        <div className="border-b border-slate-300 pb-2">
           {MOBILE_CATALOG_NAV.map((industry) => {
             const industryOpen = catalogActiveIndustry?.name === industry.name;
 
@@ -1998,17 +1998,17 @@ const runSampleSearch = (query) => {
                       openCatalogIndustry(industry);
                     }
                   }}
-                  className={`w-full py-3 text-left flex items-center justify-between gap-3 ${
+                  className={`w-full py-2.5 text-left flex items-center justify-between gap-3 ${
                     industryOpen ? "font-bold underline text-slate-950" : "font-semibold text-slate-900"
                   }`}
                 >
-                  <span className="text-[19px] leading-snug">{industry.name}</span>
-                  <span className="text-xl text-slate-700">{industryOpen ? "⌃" : "⌄"}</span>
+                  <span className="text-[17px] leading-snug">{industry.name}</span>
+                  <span className="text-lg text-slate-700">{industryOpen ? "⌃" : "⌄"}</span>
                 </button>
 
                 {industryOpen ? (
                   <div className="pb-3">
-                    <div className="text-[15px] font-extrabold text-slate-900 py-2 border-b border-slate-300">
+                    <div className="text-[14px] font-extrabold text-slate-900 py-1.5 border-b border-slate-300">
                       {industry.name} Market Research
                     </div>
 
@@ -2023,17 +2023,17 @@ const runSampleSearch = (query) => {
                           <button
                             type="button"
                             onClick={() => toggleCatalogSegment(segment.name)}
-                            className="w-full py-3 text-left flex items-center justify-between gap-3"
+                            className="w-full py-2.5 text-left flex items-center justify-between gap-3"
                           >
-                            <span className={`text-[16px] ${segmentOpen ? "font-semibold underline" : "font-medium"} text-slate-900`}>
+                            <span className={`text-[15px] ${segmentOpen ? "font-semibold underline" : "font-medium"} text-slate-900`}>
                               {segment.name}
                             </span>
-                            <span className="text-xl text-slate-700">{segmentOpen ? "⌃" : "⌄"}</span>
+                            <span className="text-lg text-slate-700">{segmentOpen ? "⌃" : "⌄"}</span>
                           </button>
 
                           {segmentOpen ? (
                             <div className="pb-2">
-                              <div className="text-[15px] font-extrabold text-slate-900 py-2">
+                              <div className="text-[14px] font-extrabold text-slate-900 py-1.5">
                                 All {segment.name} Market Research
                               </div>
 
@@ -2042,7 +2042,7 @@ const runSampleSearch = (query) => {
                                   key={reportName}
                                   type="button"
                                   onClick={() => runCatalogSearch(reportName)}
-                                  className="w-full py-2.5 text-left text-[16px] text-slate-800 active:text-blue-700"
+                                  className="w-full py-2 text-left text-[15px] text-slate-800 active:text-blue-700"
                                 >
                                   {reportName}
                                 </button>
@@ -2052,7 +2052,7 @@ const runSampleSearch = (query) => {
                                 <button
                                   type="button"
                                   onClick={() => toggleCatalogSegment(segment.name)}
-                                  className="w-full py-2.5 text-left text-[15px] font-bold text-blue-700"
+                                  className="w-full py-2 text-left text-[14px] font-bold text-blue-700"
                                 >
                                   {segmentOpen ? "View less" : `View more (${segment.reports.length - 8})`}
                                 </button>
@@ -2069,39 +2069,61 @@ const runSampleSearch = (query) => {
           })}
         </div>
 
-        <div className="py-4 border-b border-slate-300">
+        <div className="py-2.5 border-b border-slate-300">
+          <div className="w-full py-1 text-left text-[14px] font-semibold text-slate-900">
+            Resources <span className="ml-1">⌄</span>
+          </div>
           <button
             type="button"
-            onClick={() => setSamplesOpen(true)}
-            className="w-full py-2 text-left text-[15px] font-semibold text-slate-900"
+            onClick={() => {
+              setCatalogOpen(false);
+              setCatalogActiveIndustry(null);
+              navigate("/about");
+            }}
+            className="w-full py-1.5 text-left text-[14px] font-medium text-slate-900"
           >
-            View Sample Reports
+            About
           </button>
           <button
             type="button"
             onClick={() => {
               setCatalogOpen(false);
               setCatalogActiveIndustry(null);
-              setTimeout(() => inputRef.current?.focus(), 0);
+              navigate("/contact");
             }}
-            className="w-full py-2 text-left text-[15px] font-semibold text-slate-900"
+            className="w-full py-1.5 text-left text-[14px] font-medium text-slate-900"
           >
-            Search Reports
+            Contact
+          </button>
+          <button
+            type="button"
+            onClick={() => setSamplesOpen(true)}
+            className="w-full py-1.5 text-left text-[14px] font-medium text-slate-900"
+          >
+            View Sample Reports
           </button>
         </div>
 
-        <div className="py-4">
+        <div className="py-2.5">
           <button
             type="button"
-            onClick={() => navigate("/login")}
-            className="w-full py-2 text-left text-[15px] font-medium text-slate-900"
+            onClick={() => {
+              setCatalogOpen(false);
+              setCatalogActiveIndustry(null);
+              navigate("/login");
+            }}
+            className="w-full py-1.5 text-left text-[14px] font-medium text-slate-900"
           >
             Log In
           </button>
           <button
             type="button"
-            onClick={() => navigate("/login")}
-            className="w-full py-2 text-left text-[15px] font-medium text-slate-900"
+            onClick={() => {
+              setCatalogOpen(false);
+              setCatalogActiveIndustry(null);
+              navigate("/login");
+            }}
+            className="w-full py-1.5 text-left text-[14px] font-medium text-slate-900"
           >
             Register
           </button>
