@@ -2079,20 +2079,17 @@ const runSampleSearch = (query) => {
                 setCatalogActiveIndustry(null);
                 setCatalogExpanded({});
               }}
-              className="w-full py-2.5 text-left flex items-center justify-between gap-3 font-semibold text-slate-900"
+              className="w-full mt-1 mb-1 rounded-xl bg-blue-50 px-3 py-2.5 text-left flex items-center justify-between gap-3 font-bold text-blue-700"
             >
-              <span className="text-[17px] leading-snug">
+              <span className="text-[15px] leading-snug">
                 {catalogShowAllIndustries ? "Show fewer categories" : `View all categories (${MOBILE_CATALOG_NAV.length - 3} more)`}
               </span>
-              <span className="text-lg text-slate-700">{catalogShowAllIndustries ? "⌃" : "⌄"}</span>
+              <span className="text-base text-blue-700">{catalogShowAllIndustries ? "⌃" : "⌄"}</span>
             </button>
           ) : null}
         </div>
 
         <div className="py-2.5 border-b border-slate-300">
-          <div className="w-full py-1 text-left text-[14px] font-semibold text-slate-900">
-            Resources <span className="ml-1">⌄</span>
-          </div>
           <button
             type="button"
             onClick={() => {
@@ -2135,17 +2132,6 @@ const runSampleSearch = (query) => {
             className="w-full py-1.5 text-left text-[14px] font-medium text-slate-900"
           >
             Log In
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setCatalogOpen(false);
-              setCatalogActiveIndustry(null);
-              navigate("/login");
-            }}
-            className="w-full py-1.5 text-left text-[14px] font-medium text-slate-900"
-          >
-            Register
           </button>
         </div>
       </div>
