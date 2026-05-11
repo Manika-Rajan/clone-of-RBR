@@ -552,6 +552,26 @@ const ReportsMobile = () => {
     };
   }, []);
 
+  // ✅ Allows the existing mobile Navbar hamburger to open this catalog menu.
+  // In Navbar.jsx, call: window.dispatchEvent(new CustomEvent("rbr:open-mobile-catalog"))
+  useEffect(() => {
+    const openCatalogMenu = () => {
+      setCatalogOpen(true);
+      setCatalogActiveIndustry(null);
+      setCatalogExpanded({});
+    };
+
+    window.addEventListener("rbr:open-mobile-catalog", openCatalogMenu);
+    window.openRbrMobileCatalog = openCatalogMenu;
+
+    return () => {
+      window.removeEventListener("rbr:open-mobile-catalog", openCatalogMenu);
+      try {
+        delete window.openRbrMobileCatalog;
+      } catch {}
+    };
+  }, []);
+
   // ✅ When OTP inline step opens, focus the first empty box
   useEffect(() => {
     if (!instantOtpStep) return;
@@ -1581,6 +1601,10 @@ const ReportsMobile = () => {
   useEffect(() => {
     const onKey = (ev) => {
       if (ev.key === "Escape") {
+        if (catalogOpen) {
+          setCatalogOpen(false);
+          setCatalogActiveIndustry(null);
+        }
         if (suggestOpen) setSuggestOpen(false);
         if (openModal) setOpenModal(false);
         if (prebookPromptOpen) setPrebookPromptOpen(false);
@@ -1595,12 +1619,13 @@ const ReportsMobile = () => {
       prebookPromptOpen ||
       retryOpen ||
       otpOpen ||
-      instantQuestionsOpen
+      instantQuestionsOpen ||
+      catalogOpen
     ) {
       document.addEventListener("keydown", onKey);
     }
     return () => document.removeEventListener("keydown", onKey);
-  }, [openModal, suggestOpen, prebookPromptOpen, retryOpen, otpOpen, instantQuestionsOpen]);
+  }, [openModal, suggestOpen, prebookPromptOpen, retryOpen, otpOpen, instantQuestionsOpen, catalogOpen]);
 
   // ✅ Safety: if chooser modal closes, also exit OTP inline step
   useEffect(() => {
@@ -1899,76 +1924,47 @@ const runSampleSearch = (query) => {
 };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-0 pb-10 relative">
-{/* Mobile Report Library + Sample Reports */}
-<div className="w-full mb-4">
+    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-3 pb-10 relative">
+{/* Sample Reports */}
+<div className="w-full flex justify-end mb-5">
   <button
     type="button"
-    onClick={() => {
-      setCatalogOpen(true);
-      setCatalogActiveIndustry(null);
-    }}
-    className="w-full rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 px-3 py-2.5 shadow-sm active:scale-[0.99]"
+    onClick={() => setSamplesOpen(true)}
+    className="rounded-full bg-slate-100 text-slate-500 px-4 py-2 text-sm font-medium border border-slate-200 opacity-70 hover:opacity-100 transition"
   >
-    <div className="flex items-center justify-between gap-3">
-      <div className="min-w-0 text-left">
-        <div className="text-[10px] uppercase tracking-wide font-bold text-blue-700 leading-none">
-          Report Library
-        </div>
-        <div className="text-[13px] font-extrabold text-slate-900 truncate mt-1">
-          Browse Market & Industry Reports
-        </div>
-      </div>
-      <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm text-sm">
-        ˅
-      </div>
-    </div>
+    View Sample Reports
   </button>
-
-  <div className="flex justify-end mt-2">
-    <button
-      type="button"
-      onClick={() => setSamplesOpen(true)}
-      className="rounded-full bg-slate-100 text-slate-500 px-4 py-2 text-sm font-medium border border-slate-200 opacity-70 hover:opacity-100 transition"
-    >
-      View Sample Reports
-    </button>
-  </div>
 </div>
 
 {catalogOpen &&
   createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-end justify-center">
-      <div
-        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
-        onClick={() => {
-          setCatalogOpen(false);
-          setCatalogActiveIndustry(null);
-        }}
-      />
-
-      <div className="relative w-full max-w-[520px] rounded-t-3xl bg-white shadow-2xl max-h-[86vh] overflow-hidden">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-4">
-          <div className="flex items-center gap-3">
-            {catalogActiveIndustry ? (
-              <button
-                type="button"
-                onClick={() => setCatalogActiveIndustry(null)}
-                className="h-9 w-9 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center"
-                aria-label="Back"
-              >
-                ←
-              </button>
-            ) : null}
-
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-blue-700">
-                RBR Report Library
-              </div>
-              <div className="text-base font-extrabold text-slate-950 truncate">
-                {catalogActiveIndustry ? catalogActiveIndustry.name : "Browse Report Library"}
-              </div>
+    <div className="fixed inset-0 z-[9999] bg-white">
+      {/* Blue menu header - similar to competitor mobile behavior */}
+      <div className="sticky top-0 z-20 bg-blue-700 text-white shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-9 w-9 rounded bg-white/10 border border-white/20 flex items-center justify-center text-xs font-black">
+              RBR
             </div>
+            <div className="leading-tight min-w-0">
+              <div className="text-sm font-bold truncate">Rajan Business Reports</div>
+              <div className="text-[11px] text-white/75 truncate">Report Library</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setCatalogOpen(false);
+                setCatalogActiveIndustry(null);
+                setTimeout(() => inputRef.current?.focus(), 0);
+              }}
+              className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center"
+              aria-label="Search"
+            >
+              🔍
+            </button>
 
             <button
               type="button"
@@ -1976,92 +1972,139 @@ const runSampleSearch = (query) => {
                 setCatalogOpen(false);
                 setCatalogActiveIndustry(null);
               }}
-              className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center"
-              aria-label="Close"
+              className="h-10 w-10 rounded-full hover:bg-white/10 flex items-center justify-center text-3xl leading-none"
+              aria-label="Close menu"
             >
-              ✕
+              ×
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="p-4 overflow-auto max-h-[calc(86vh-74px)]">
-          {!catalogActiveIndustry ? (
-            <div className="grid gap-2">
-              {MOBILE_CATALOG_NAV.map((industry) => (
+      <div className="h-[calc(100vh-64px)] overflow-auto px-5 py-3">
+        <div className="border-b border-slate-300 pb-3">
+          {MOBILE_CATALOG_NAV.map((industry) => {
+            const industryOpen = catalogActiveIndustry?.name === industry.name;
+
+            return (
+              <div key={industry.name} className="border-b border-slate-100 last:border-b-0">
                 <button
-                  key={industry.name}
                   type="button"
-                  onClick={() => openCatalogIndustry(industry)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left active:scale-[0.99]"
+                  onClick={() => {
+                    if (industryOpen) {
+                      setCatalogActiveIndustry(null);
+                      setCatalogExpanded({});
+                    } else {
+                      openCatalogIndustry(industry);
+                    }
+                  }}
+                  className={`w-full py-3 text-left flex items-center justify-between gap-3 ${
+                    industryOpen ? "font-bold underline text-slate-950" : "font-semibold text-slate-900"
+                  }`}
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-slate-900 truncate">
-                        {industry.name}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-0.5">
-                        {industry.segments.length} segment{industry.segments.length > 1 ? "s" : ""}
-                      </div>
-                    </div>
-                    <div className="text-slate-400 text-lg">›</div>
-                  </div>
+                  <span className="text-[19px] leading-snug">{industry.name}</span>
+                  <span className="text-xl text-slate-700">{industryOpen ? "⌃" : "⌄"}</span>
                 </button>
-              ))}
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {catalogActiveIndustry.segments.map((segment) => {
-                const expanded = !!catalogExpanded[segment.name];
-                const visibleReports = expanded
-                  ? segment.reports
-                  : segment.reports.slice(0, 8);
 
-                return (
-                  <div
-                    key={segment.name}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden"
-                  >
-                    <div className="px-4 py-3 border-b border-slate-200">
-                      <div className="text-sm font-extrabold text-slate-950">
-                        {segment.name}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-0.5">
-                        {segment.reports.length} report{segment.reports.length > 1 ? "s" : ""}
-                      </div>
+                {industryOpen ? (
+                  <div className="pb-3">
+                    <div className="text-[15px] font-extrabold text-slate-900 py-2 border-b border-slate-300">
+                      {industry.name} Market Research
                     </div>
 
-                    <div className="bg-white">
-                      {visibleReports.map((reportName) => (
-                        <button
-                          key={reportName}
-                          type="button"
-                          onClick={() => runCatalogSearch(reportName)}
-                          className="w-full px-4 py-3 text-left border-b border-slate-100 last:border-b-0 active:bg-blue-50"
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="text-sm font-medium text-slate-800">
-                              {reportName}
+                    {industry.segments.map((segment) => {
+                      const segmentOpen = !!catalogExpanded[segment.name];
+                      const visibleReports = segmentOpen
+                        ? segment.reports
+                        : segment.reports.slice(0, 8);
+
+                      return (
+                        <div key={segment.name} className="border-b border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => toggleCatalogSegment(segment.name)}
+                            className="w-full py-3 text-left flex items-center justify-between gap-3"
+                          >
+                            <span className={`text-[16px] ${segmentOpen ? "font-semibold underline" : "font-medium"} text-slate-900`}>
+                              {segment.name}
+                            </span>
+                            <span className="text-xl text-slate-700">{segmentOpen ? "⌃" : "⌄"}</span>
+                          </button>
+
+                          {segmentOpen ? (
+                            <div className="pb-2">
+                              <div className="text-[15px] font-extrabold text-slate-900 py-2">
+                                All {segment.name} Market Research
+                              </div>
+
+                              {visibleReports.map((reportName) => (
+                                <button
+                                  key={reportName}
+                                  type="button"
+                                  onClick={() => runCatalogSearch(reportName)}
+                                  className="w-full py-2.5 text-left text-[16px] text-slate-800 active:text-blue-700"
+                                >
+                                  {reportName}
+                                </button>
+                              ))}
+
+                              {segment.reports.length > 8 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleCatalogSegment(segment.name)}
+                                  className="w-full py-2.5 text-left text-[15px] font-bold text-blue-700"
+                                >
+                                  {segmentOpen ? "View less" : `View more (${segment.reports.length - 8})`}
+                                </button>
+                              ) : null}
                             </div>
-                            <div className="text-blue-600">→</div>
-                          </div>
-                        </button>
-                      ))}
-
-                      {segment.reports.length > 8 ? (
-                        <button
-                          type="button"
-                          onClick={() => toggleCatalogSegment(segment.name)}
-                          className="w-full px-4 py-3 text-left text-sm font-bold text-blue-700 bg-blue-50"
-                        >
-                          {expanded ? "View less" : `View more (${segment.reports.length - 8})`}
-                        </button>
-                      ) : null}
-                    </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-          )}
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="py-4 border-b border-slate-300">
+          <button
+            type="button"
+            onClick={() => setSamplesOpen(true)}
+            className="w-full py-2 text-left text-[15px] font-semibold text-slate-900"
+          >
+            View Sample Reports
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCatalogOpen(false);
+              setCatalogActiveIndustry(null);
+              setTimeout(() => inputRef.current?.focus(), 0);
+            }}
+            className="w-full py-2 text-left text-[15px] font-semibold text-slate-900"
+          >
+            Search Reports
+          </button>
+        </div>
+
+        <div className="py-4">
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="w-full py-2 text-left text-[15px] font-medium text-slate-900"
+          >
+            Log In
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="w-full py-2 text-left text-[15px] font-medium text-slate-900"
+          >
+            Register
+          </button>
         </div>
       </div>
     </div>,
