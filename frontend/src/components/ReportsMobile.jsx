@@ -443,6 +443,7 @@ const ReportsMobile = () => {
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [catalogActiveIndustry, setCatalogActiveIndustry] = useState(null);
   const [catalogExpanded, setCatalogExpanded] = useState({});
+  const [catalogShowAllIndustries, setCatalogShowAllIndustries] = useState(false);
 
 
   // ⭐ Sample Reports modal
@@ -559,6 +560,7 @@ const ReportsMobile = () => {
       setCatalogOpen(true);
       setCatalogActiveIndustry(null);
       setCatalogExpanded({});
+      setCatalogShowAllIndustries(false);
     };
 
     window.addEventListener("rbr:open-mobile-catalog", openCatalogMenu);
@@ -1604,6 +1606,7 @@ const ReportsMobile = () => {
         if (catalogOpen) {
           setCatalogOpen(false);
           setCatalogActiveIndustry(null);
+          setCatalogShowAllIndustries(false);
         }
         if (suggestOpen) setSuggestOpen(false);
         if (openModal) setOpenModal(false);
@@ -1983,7 +1986,7 @@ const runSampleSearch = (query) => {
 
       <div className="h-[calc(100vh-58px)] overflow-auto px-5 py-2">
         <div className="border-b border-slate-300 pb-2">
-          {MOBILE_CATALOG_NAV.map((industry) => {
+          {(catalogShowAllIndustries ? MOBILE_CATALOG_NAV : MOBILE_CATALOG_NAV.slice(0, 3)).map((industry) => {
             const industryOpen = catalogActiveIndustry?.name === industry.name;
 
             return (
@@ -2067,6 +2070,23 @@ const runSampleSearch = (query) => {
               </div>
             );
           })}
+
+          {MOBILE_CATALOG_NAV.length > 3 ? (
+            <button
+              type="button"
+              onClick={() => {
+                setCatalogShowAllIndustries((prev) => !prev);
+                setCatalogActiveIndustry(null);
+                setCatalogExpanded({});
+              }}
+              className="w-full py-2.5 text-left flex items-center justify-between gap-3 font-semibold text-slate-900"
+            >
+              <span className="text-[17px] leading-snug">
+                {catalogShowAllIndustries ? "Show fewer categories" : `View all categories (${MOBILE_CATALOG_NAV.length - 3} more)`}
+              </span>
+              <span className="text-lg text-slate-700">{catalogShowAllIndustries ? "⌃" : "⌄"}</span>
+            </button>
+          ) : null}
         </div>
 
         <div className="py-2.5 border-b border-slate-300">
