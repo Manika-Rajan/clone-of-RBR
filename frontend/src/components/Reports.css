@@ -465,6 +465,12 @@ letter-spacing: 0.03em;
   white-space: nowrap;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  line-height: 1;
 }
 
 .catalog-nav-item:hover {
@@ -473,9 +479,11 @@ letter-spacing: 0.03em;
 }
 
 .catalog-nav-caret {
-  margin-left: 6px;
-  font-size: 15px;
+  margin-left: 0;
+  font-size: 14px;
   opacity: 0.9;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 /* Mobile: horizontal swipe bar */
