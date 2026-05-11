@@ -86,13 +86,13 @@ const Navbar = () => {
               aria-label="Toggle navigation"
               aria-expanded={mobileOpen ? "true" : "false"}
               onClick={() => {
+                if (window.location.pathname === "/reports" || window.location.pathname === "/") {
                   setMobileOpen(false);
-              
-                  // Open RBR mobile report library
-                  window.dispatchEvent(
-                    new CustomEvent("rbr:open-mobile-catalog")
-                  );
-                }}
+                  window.dispatchEvent(new CustomEvent("rbr:open-mobile-catalog"));
+                } else {
+                  setMobileOpen((prev) => !prev);
+                }
+              }}
             >
               <span className="navbar-toggler-icon" />
             </button>
