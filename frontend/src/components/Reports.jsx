@@ -51,6 +51,19 @@ const LoaderRing = () => (
 
 
 
+
+const catalogNavItems = [
+  "Consumer Goods",
+  "Food & Beverage",
+  "Heavy Industry",
+  "Services",
+  "Public Sector",
+  "Life Sciences",
+  "Tech & Media",
+  "Marketing",
+  "More",
+];
+
 const Reports = () => {
   const navigate = useNavigate();
   const { state, dispatch: cxtDispatch } = useContext(Store);
@@ -369,6 +382,17 @@ const Reports = () => {
   return (
     <>
       <Navbar reports />
+
+      <div className="catalog-nav-bar">
+        <div className="catalog-nav-scroll">
+          {catalogNavItems.map((item) => (
+            <button key={item} className="catalog-nav-item" type="button">
+              {item}
+              <span className="catalog-nav-caret">⌄</span>
+            </button>
+          ))}
+        </div>
+      </div>
           <div className="search-hero">
             <h2 className="search-hero-heading">All Your Market Questions, Answered Instantly</h2>
             <p className="search-hero-sub">
