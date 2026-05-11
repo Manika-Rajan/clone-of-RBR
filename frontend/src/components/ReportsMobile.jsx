@@ -49,6 +49,180 @@ const ROUTER = [
   { slug: "paper_industry", keywords: ["paper industry", "paper manufacturing"] },
 ];
 
+// ✅ Mobile report library navigation - static test data for dev.
+// Later this can be replaced by a test DynamoDB-backed API response.
+const MOBILE_CATALOG_NAV = [
+  {
+    name: "Consumer Goods",
+    segments: [
+      {
+        name: "Consumer Goods & Retailing",
+        reports: [
+          "Apparel Market in India",
+          "Consumer Electronics Market in India",
+          "Cosmetics & Personal Care Market in India",
+          "House & Home Products Market in India",
+          "Luxury Goods Market in India",
+          "Office Furniture Market in India",
+          "Pet Services & Supplies Market in India",
+          "Retailing Market in India",
+          "Sporting Goods Market in India",
+        ],
+      },
+      {
+        name: "Travel & Leisure",
+        reports: ["Entertainment Market in India", "Travel Services Market in India"],
+      },
+    ],
+  },
+  {
+    name: "Food & Beverage",
+    segments: [
+      {
+        name: "Food Products",
+        reports: [
+          "Packaged Food Market in India",
+          "Frozen Food Market in India",
+          "Bakery Products Market in India",
+          "Snacks Market in India",
+        ],
+      },
+      {
+        name: "Beverages",
+        reports: [
+          "Non-Alcoholic Beverages Market in India",
+          "Bottled Water Market in India",
+          "Tea Market in India",
+          "Coffee Market in India",
+        ],
+      },
+    ],
+  },
+  {
+    name: "Heavy Industry",
+    segments: [
+      {
+        name: "Manufacturing & Materials",
+        reports: [
+          "Steel Industry in India",
+          "Cement Market in India",
+          "Paper Industry in India",
+          "Industrial Machinery Market in India",
+        ],
+      },
+      {
+        name: "Energy & Infrastructure",
+        reports: [
+          "Solar Energy Market in India",
+          "Power Equipment Market in India",
+          "Construction Equipment Market in India",
+        ],
+      },
+    ],
+  },
+  {
+    name: "Services",
+    segments: [
+      {
+        name: "Business Services",
+        reports: [
+          "Consulting Services Market in India",
+          "Facility Management Market in India",
+          "Logistics Services Market in India",
+          "Digital Marketing Services Market in India",
+        ],
+      },
+      {
+        name: "Consumer Services",
+        reports: [
+          "Restaurant Business in India",
+          "Salon Services Market in India",
+          "Education Services Market in India",
+        ],
+      },
+    ],
+  },
+  {
+    name: "Public Sector",
+    segments: [
+      {
+        name: "Government & Civic Markets",
+        reports: [
+          "Public Infrastructure Market in India",
+          "Smart Cities Market in India",
+          "Waste Management Market in India",
+          "Water Management Market in India",
+        ],
+      },
+    ],
+  },
+  {
+    name: "Life Sciences",
+    segments: [
+      {
+        name: "Healthcare & Pharma",
+        reports: [
+          "Pharmaceutical Market in India",
+          "Hospital Services Market in India",
+          "Medical Devices Market in India",
+          "Diagnostics Market in India",
+        ],
+      },
+    ],
+  },
+  {
+    name: "Tech & Media",
+    segments: [
+      {
+        name: "Technology",
+        reports: [
+          "IT Services Market in India",
+          "SaaS Market in India",
+          "Cybersecurity Market in India",
+          "Artificial Intelligence Market in India",
+        ],
+      },
+      {
+        name: "Media",
+        reports: [
+          "Digital Media Market in India",
+          "OTT Market in India",
+          "Gaming Market in India",
+        ],
+      },
+    ],
+  },
+  {
+    name: "Marketing",
+    segments: [
+      {
+        name: "Marketing & Consumer Intelligence",
+        reports: [
+          "B2B Marketing Market in India",
+          "Influencer Marketing Market in India",
+          "Consumer Behavior FMCG India",
+          "Retail POS Data India",
+        ],
+      },
+    ],
+  },
+  {
+    name: "More",
+    segments: [
+      {
+        name: "Emerging Opportunities",
+        reports: [
+          "EV Charging Business India",
+          "D2C Beauty Market Share",
+          "Edtech Growth Forecast",
+          "Competitor Analysis Pharma",
+        ],
+      },
+    ],
+  },
+];
+
+
 // Endpoints
 const SEARCH_LOG_URL =
   "https://ypoucxtxgh.execute-api.ap-south-1.amazonaws.com/default/search-log";
@@ -264,6 +438,11 @@ const ReportsMobile = () => {
   const navigate = useNavigate();
 
   const [q, setQ] = useState("");
+
+  // ✅ Mobile report library bottom sheet state
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [catalogActiveIndustry, setCatalogActiveIndustry] = useState(null);
+  const [catalogExpanded, setCatalogExpanded] = useState({});
 
 
   // ⭐ Sample Reports modal
@@ -1661,6 +1840,42 @@ const ReportsMobile = () => {
 
 
 
+
+// ⭐ Run a catalog report search using the existing search/suggestion flow
+const runCatalogSearch = (query) => {
+  const safe = (query || "").slice(0, MAX_QUERY_CHARS);
+  setCatalogOpen(false);
+  setCatalogActiveIndustry(null);
+  setShowSuggestions(false);
+  setQ(safe);
+
+  // wait for state to apply, then submit the form (triggers existing onSubmit)
+  setTimeout(() => {
+    try {
+      inputRef.current?.focus();
+      const form = inputRef.current?.closest("form");
+      if (form) {
+        form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      }
+    } catch (e) {
+      // no-op
+    }
+  }, 60);
+};
+
+const openCatalogIndustry = (industry) => {
+  setCatalogActiveIndustry(industry);
+  setCatalogExpanded({});
+};
+
+const toggleCatalogSegment = (segmentName) => {
+  setCatalogExpanded((prev) => ({
+    ...prev,
+    [segmentName]: !prev[segmentName],
+  }));
+};
+
+
 // ⭐ Run a sample search using the same form submit flow
 const runSampleSearch = (query) => {
   const safe = (query || "").slice(0, MAX_QUERY_CHARS);
@@ -1695,6 +1910,164 @@ const runSampleSearch = (query) => {
     View Sample Reports
   </button>
 </div>
+
+{/* Mobile Report Library */}
+<div className="w-full mb-5">
+  <button
+    type="button"
+    onClick={() => {
+      setCatalogOpen(true);
+      setCatalogActiveIndustry(null);
+    }}
+    className="w-full rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 px-4 py-3 shadow-sm active:scale-[0.99]"
+  >
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0 text-left">
+        <div className="text-[11px] uppercase tracking-wide font-bold text-blue-700">
+          Report Library
+        </div>
+        <div className="text-sm font-extrabold text-slate-900 truncate">
+          Browse Market & Industry Reports
+        </div>
+      </div>
+      <div className="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
+        ˅
+      </div>
+    </div>
+  </button>
+</div>
+
+{catalogOpen &&
+  createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center">
+      <div
+        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+        onClick={() => {
+          setCatalogOpen(false);
+          setCatalogActiveIndustry(null);
+        }}
+      />
+
+      <div className="relative w-full max-w-[520px] rounded-t-3xl bg-white shadow-2xl max-h-[86vh] overflow-hidden">
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-4 py-4">
+          <div className="flex items-center gap-3">
+            {catalogActiveIndustry ? (
+              <button
+                type="button"
+                onClick={() => setCatalogActiveIndustry(null)}
+                className="h-9 w-9 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center"
+                aria-label="Back"
+              >
+                ←
+              </button>
+            ) : null}
+
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-blue-700">
+                RBR Report Library
+              </div>
+              <div className="text-base font-extrabold text-slate-950 truncate">
+                {catalogActiveIndustry ? catalogActiveIndustry.name : "Browse Report Library"}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCatalogOpen(false);
+                setCatalogActiveIndustry(null);
+              }}
+              className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div className="p-4 overflow-auto max-h-[calc(86vh-74px)]">
+          {!catalogActiveIndustry ? (
+            <div className="grid gap-2">
+              {MOBILE_CATALOG_NAV.map((industry) => (
+                <button
+                  key={industry.name}
+                  type="button"
+                  onClick={() => openCatalogIndustry(industry)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left active:scale-[0.99]"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-slate-900 truncate">
+                        {industry.name}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {industry.segments.length} segment{industry.segments.length > 1 ? "s" : ""}
+                      </div>
+                    </div>
+                    <div className="text-slate-400 text-lg">›</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {catalogActiveIndustry.segments.map((segment) => {
+                const expanded = !!catalogExpanded[segment.name];
+                const visibleReports = expanded
+                  ? segment.reports
+                  : segment.reports.slice(0, 8);
+
+                return (
+                  <div
+                    key={segment.name}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden"
+                  >
+                    <div className="px-4 py-3 border-b border-slate-200">
+                      <div className="text-sm font-extrabold text-slate-950">
+                        {segment.name}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {segment.reports.length} report{segment.reports.length > 1 ? "s" : ""}
+                      </div>
+                    </div>
+
+                    <div className="bg-white">
+                      {visibleReports.map((reportName) => (
+                        <button
+                          key={reportName}
+                          type="button"
+                          onClick={() => runCatalogSearch(reportName)}
+                          className="w-full px-4 py-3 text-left border-b border-slate-100 last:border-b-0 active:bg-blue-50"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="text-sm font-medium text-slate-800">
+                              {reportName}
+                            </div>
+                            <div className="text-blue-600">→</div>
+                          </div>
+                        </button>
+                      ))}
+
+                      {segment.reports.length > 8 ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleCatalogSegment(segment.name)}
+                          className="w-full px-4 py-3 text-left text-sm font-bold text-blue-700 bg-blue-50"
+                        >
+                          {expanded ? "View less" : `View more (${segment.reports.length - 8})`}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  )}
 
 {/* Hero */}
       <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-3 px-1">
