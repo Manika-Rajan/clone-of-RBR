@@ -1899,42 +1899,41 @@ const runSampleSearch = (query) => {
 };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-24 pb-10 relative">
-{/* Sample Reports */}
-<div className="absolute top-1 right-0 sm:right-1">
-  <button
-    type="button"
-    onClick={() => setSamplesOpen(true)}
-    className="rounded-full bg-slate-100 text-slate-500 px-4 py-2 text-sm font-medium border border-slate-200 opacity-60 hover:opacity-100 transition"
-  >
-    View Sample Reports
-  </button>
-</div>
-
-{/* Mobile Report Library */}
-<div className="w-full mb-5">
+    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-20 pb-10 relative">
+{/* Mobile Report Library + Sample Reports */}
+<div className="w-full mb-4">
   <button
     type="button"
     onClick={() => {
       setCatalogOpen(true);
       setCatalogActiveIndustry(null);
     }}
-    className="w-full rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 px-4 py-3 shadow-sm active:scale-[0.99]"
+    className="w-full rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 px-3 py-2.5 shadow-sm active:scale-[0.99]"
   >
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0 text-left">
-        <div className="text-[11px] uppercase tracking-wide font-bold text-blue-700">
+        <div className="text-[10px] uppercase tracking-wide font-bold text-blue-700 leading-none">
           Report Library
         </div>
-        <div className="text-sm font-extrabold text-slate-900 truncate">
+        <div className="text-[13px] font-extrabold text-slate-900 truncate mt-1">
           Browse Market & Industry Reports
         </div>
       </div>
-      <div className="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
+      <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm text-sm">
         ˅
       </div>
     </div>
   </button>
+
+  <div className="flex justify-end mt-2">
+    <button
+      type="button"
+      onClick={() => setSamplesOpen(true)}
+      className="rounded-full bg-slate-100 text-slate-500 px-4 py-2 text-sm font-medium border border-slate-200 opacity-70 hover:opacity-100 transition"
+    >
+      View Sample Reports
+    </button>
+  </div>
 </div>
 
 {catalogOpen &&
