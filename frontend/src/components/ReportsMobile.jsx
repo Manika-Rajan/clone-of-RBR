@@ -40,59 +40,6 @@ const SUGGESTIONS = [
   "Pharma competitor analysis",
 ];
 
-const MOBILE_FOOTER_SECTIONS = [
-  {
-    id: "company",
-    icon: "👥",
-    title: "Get to Know Us",
-    links: [
-      { label: "About Us", href: "/about" },
-      { label: "Careers", href: "/careers" },
-    ],
-  },
-  {
-    id: "earn",
-    icon: "💼",
-    title: "Make Money with Us",
-    links: [
-      { label: "Sell on our Business Ideas Page", href: "/business-ideas" },
-      { label: "Sell on our Field Reports Page", href: "/field-reports" },
-      { label: "RB Ideas Global Selling", href: "/global-selling" },
-      { label: "Become an Affiliate", href: "/affiliate" },
-      { label: "Fulfilment by RB Ideas", href: "/fulfilment" },
-      { label: "Advertise Your Products", href: "/advertise" },
-      { label: "RB Ideas Pay", href: "/rb-ideas-pay" },
-    ],
-  },
-  {
-    id: "help",
-    icon: "🛠",
-    title: "Let Us Help You",
-    links: [
-      { label: "Your Account", href: "/profile" },
-      { label: "Help", href: "/help" },
-    ],
-  },
-  {
-    id: "connect",
-    icon: "🌐",
-    title: "Connect with Us",
-    links: [{ label: "Contact us", href: "/contact" }],
-  },
-];
-
-const MOBILE_FOOTER_LEGAL_LINKS = [
-  { label: "Terms & Conditions", href: "/terms" },
-  { label: "Refund Policy", href: "/refund-policy" },
-  { label: "Privacy Policy", href: "/privacy-policy" },
-];
-
-const MOBILE_FOOTER_SOCIAL_LINKS = [
-  { label: "Facebook", short: "f", href: "https://www.facebook.com/" },
-  { label: "Twitter", short: "𝕏", href: "https://x.com/" },
-  { label: "LinkedIn", short: "in", href: "https://www.linkedin.com/" },
-];
-
 // Router of known reports — navigate only if query clearly matches one of these.
 const ROUTER = [
   { slug: "ev_charging", keywords: ["ev charging", "charging station"] },
@@ -491,10 +438,6 @@ const ReportsMobile = () => {
   const navigate = useNavigate();
 
   const [q, setQ] = useState("");
-  const [footerOpenSections, setFooterOpenSections] = useState({
-    company: true,
-  });
-  const [footerEmail, setFooterEmail] = useState("");
 
   // ✅ Mobile report library bottom sheet state
   const [catalogOpen, setCatalogOpen] = useState(false);
@@ -1961,36 +1904,6 @@ const toggleCatalogSegment = (segmentName) => {
 };
 
 
-const toggleFooterSection = (sectionId) => {
-  setFooterOpenSections((prev) => ({
-    ...prev,
-    [sectionId]: !prev[sectionId],
-  }));
-};
-
-const handleFooterNotify = (e) => {
-  e.preventDefault();
-  const email = (footerEmail || "").trim();
-
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    setModalTitle("Enter a valid email");
-    setModalMsgNode(
-      <span>Please enter a valid email address so we can notify you.</span>
-    );
-    setOpenModal(true);
-    return;
-  }
-
-  // This is intentionally frontend-only for now.
-  // Later, connect this to your lead-capture / report-request API.
-  setFooterEmail("");
-  setModalTitle("Thank you");
-  setModalMsgNode(
-    <span>We’ll notify you when relevant new reports and opportunities are added.</span>
-  );
-  setOpenModal(true);
-};
-
 // ⭐ Run a sample search using the same form submit flow
 const runSampleSearch = (query) => {
   const safe = (query || "").slice(0, MAX_QUERY_CHARS);
@@ -2393,130 +2306,6 @@ const runSampleSearch = (query) => {
         )}
 
       </form>
-
-      {/* Premium mobile footer */}
-      <footer className="mt-10 -mx-4 w-[calc(100%+2rem)] bg-gradient-to-b from-[#253a5f] to-[#192c4d] text-white">
-        <div className="px-5 pt-8 pb-7">
-          <div className="flex items-center gap-3 pb-6 border-b border-white/10">
-            <div className="h-12 w-12 rounded-xl bg-blue-600 border border-white/15 shadow-sm flex items-center justify-center text-[9px] font-black leading-[0.9] text-center">
-              Rajan<br />Business<br />Reports
-            </div>
-            <div className="min-w-0">
-              <div className="text-base font-extrabold tracking-tight truncate">
-                Rajan Business Reports
-              </div>
-              <div className="mt-1 text-xs leading-relaxed text-white/68">
-                Trusted business insights for entrepreneurs, investors and decision makers.
-              </div>
-            </div>
-          </div>
-
-          <div className="divide-y divide-white/10">
-            {MOBILE_FOOTER_SECTIONS.map((section) => {
-              const isOpen = !!footerOpenSections[section.id];
-
-              return (
-                <div key={section.id} className="py-1">
-                  <button
-                    type="button"
-                    onClick={() => toggleFooterSection(section.id)}
-                    className="w-full py-4 flex items-center justify-between gap-3 text-left"
-                    aria-expanded={isOpen}
-                  >
-                    <span className="flex items-center gap-2 min-w-0">
-                      <span className="text-base opacity-90" aria-hidden="true">
-                        {section.icon}
-                      </span>
-                      <span className="text-[15px] font-extrabold tracking-tight">
-                        {section.title}
-                      </span>
-                    </span>
-                    <span className="h-7 w-7 rounded-full bg-white/8 border border-white/10 flex items-center justify-center text-white/80 text-lg leading-none">
-                      {isOpen ? "−" : "+"}
-                    </span>
-                  </button>
-
-                  {isOpen ? (
-                    <div className="pb-4 pl-7 grid gap-2.5">
-                      {section.links.map((link) => (
-                        <a
-                          key={link.label}
-                          href={link.href}
-                          className="text-[13px] leading-snug text-white/75 no-underline active:text-white hover:text-white"
-                        >
-                          {link.label}
-                        </a>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="pt-5 border-t border-white/10">
-            <div className="flex items-center justify-center gap-3">
-              {MOBILE_FOOTER_SOCIAL_LINKS.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={social.label}
-                  className="h-9 w-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-sm font-extrabold text-white/90 no-underline active:scale-95"
-                >
-                  {social.short}
-                </a>
-              ))}
-            </div>
-
-            <form onSubmit={handleFooterNotify} className="mt-6 rounded-3xl bg-white/8 border border-white/10 p-4">
-              <div className="text-sm font-extrabold">
-                Need a custom report or industry insight?
-              </div>
-              <div className="mt-1 text-xs leading-relaxed text-white/65">
-                Get notified when relevant reports and new opportunities are added.
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <label htmlFor="footer-email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="footer-email"
-                  type="email"
-                  value={footerEmail}
-                  onChange={(e) => setFooterEmail(e.target.value)}
-                  placeholder="Enter email address"
-                  className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-white text-slate-900 px-3 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                />
-                <button
-                  type="submit"
-                  className="shrink-0 rounded-2xl bg-blue-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-sm active:scale-[0.98]"
-                >
-                  Notify Me
-                </button>
-              </div>
-            </form>
-
-            <div className="mt-5 text-center text-[12px] leading-relaxed text-white/70">
-              © 2026 Rajan Business Reports Pvt. Ltd.
-            </div>
-
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
-              {MOBILE_FOOTER_LEGAL_LINKS.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-[12px] text-white/70 no-underline hover:text-white active:text-white"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
 
 
       {/* Loader overlay for search */}
