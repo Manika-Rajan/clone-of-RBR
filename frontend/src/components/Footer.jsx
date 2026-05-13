@@ -47,20 +47,7 @@ const Footer = () => {
   return (
     <div className="row footer">
 
-      {/* BRAND BLOCK */}
-      <div className="footer-brand-mobile">
-        <div className="footer-brand-logo">
-          Rajan<br />Business<br />Reports
-        </div>
-
-        <div className="footer-brand-content">
-          <h3>Rajan Business Reports</h3>
-          <p>
-            Trusted business insights for entrepreneurs,
-            investors and decision makers.
-          </p>
-        </div>
-      </div>
+      
 
       <div className="row">
 
