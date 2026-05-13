@@ -2,7 +2,7 @@
   width: 100%;
   background: #263a5a;
   color: #ffffff;
-  padding: 50px 36px 42px;
+  padding: 46px 36px 28px;
   box-sizing: border-box;
 }
 
@@ -78,24 +78,26 @@
 .rbr-notify input {
   width: 250px;
   max-width: 100%;
+  height: 48px;
   border: 0;
   border-radius: 8px 0 0 8px;
-  padding: 12px;
+  padding: 0 12px;
   outline: none;
 }
 
 .rbr-notify button {
+  height: 48px;
   border: 0;
   background: #0263c7;
   color: white;
-  padding: 12px 18px;
+  padding: 0 22px;
   border-radius: 0 8px 8px 0;
   font-weight: 600;
 }
 
 .rbr-footer-bottom {
   max-width: 1240px;
-  margin: 38px auto 0;
+  margin: 34px auto 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -116,7 +118,7 @@
 /* MOBILE ONLY */
 @media (max-width: 768px) {
   .rbr-footer {
-    padding: 0 18px 26px;
+    padding: 14px 18px 26px;
     background: linear-gradient(180deg, #263a5a 0%, #1c304f 100%);
   }
 
@@ -137,7 +139,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    font-size: 20px;
+    font-size: 19px;
     line-height: 1.25;
     cursor: pointer;
   }
@@ -219,12 +221,14 @@
     min-width: 0;
     flex: 1;
     width: auto;
+    height: auto;
     border-radius: 12px;
     padding: 11px 12px;
     font-size: 13px;
   }
 
   .rbr-notify button {
+    height: auto;
     border-radius: 12px;
     padding: 11px 14px;
     font-size: 13px;
@@ -233,6 +237,7 @@
 
   .rbr-footer-bottom {
     margin-top: 18px;
+    padding-top: 4px;
     display: block;
     text-align: center;
   }
